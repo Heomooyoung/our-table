@@ -168,8 +168,10 @@ begin
 end $$;
 
 -- ═══════════ 실시간 (투표 개표·오늘 메뉴가 가족 폰에 바로 뜨게) ═══════════
-alter publication supabase_realtime add table plans, votes, ballots, menus;
+alter publication supabase_realtime add table plans, votes, ballots, menus, shopping_extras, shopping_checked;
 
--- ═══════════ Storage (사진) — SQL 아님, 대시보드에서 ═══════════
--- Storage → New bucket: 이름 photos, Public bucket 체크.
--- 업로드 정책: authenticated(익명 포함) insert 허용, 읽기는 public.
+-- ═══════════ Storage (사진) ═══════════
+-- 버킷은 API/대시보드에서: 이름 photos, Public bucket 체크. (public 읽기)
+-- 업로드 정책 (익명 포함 로그인 유저 허용):
+create policy "photos_upload" on storage.objects
+  for insert to authenticated with check (bucket_id = 'photos');

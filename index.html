@@ -332,6 +332,10 @@ textarea.in{height:auto;min-height:58px;padding:11px 13px;resize:vertical;line-h
 .fam{display:flex;align-items:center;gap:9px;padding:8px 2px;border-bottom:1px solid var(--line2)}
 .fam:last-child{border-bottom:0}
 .fam b{flex:1;font-size:14.5px;font-weight:700}
+#syncdot{width:9px;height:9px;border-radius:99px;background:var(--line);display:inline-block;margin-right:3px}
+#syncdot.on{background:#43A968}
+.obcode{font:800 30px var(--mono);letter-spacing:.3em;text-align:center;color:var(--acc);
+  background:var(--soft);border-radius:14px;padding:18px 8px 18px calc(8px + .3em);margin:14px 0;user-select:all}
 
 /* ── 토스트 ── */
 #toast{position:fixed;left:50%;bottom:calc(88px + env(safe-area-inset-bottom));transform:translate(-50%,14px);
@@ -356,9 +360,12 @@ textarea.in{height:auto;min-height:58px;padding:11px 13px;resize:vertical;line-h
 <div id="app">
   <header class="hdr">
     <div class="wm"><span>Family Recipe Box</span><b>우리집 식탁</b></div>
+    <div style="display:flex;align-items:center;gap:2px">
+    <span id="syncdot" title="로컬 모드"></span>
     <button class="icobtn" data-a="settings" aria-label="설정">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 7h9M17 7h3M4 12h3M11 12h9M4 17h9M17 17h3"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="15" cy="17" r="2"/></svg>
     </button>
+    </div>
   </header>
   <main id="scr"></main>
 </div>
@@ -406,6 +413,13 @@ function hearts(r,cls,act){let h=`<span class="hearts ${cls||''}">`;for(let i=1;
 function phEl(m,cls){ if(m.photo) return `<div class="ph ${cls||''}" style="background-image:url(${m.photo})"></div>`;
  return `<div class="mono-ph ${cls||''}"><b>${esc((m.name||'?').slice(0,1))}</b>${m.no?`<i>No.${pad(m.no)}</i>`:''}</div>`}
 
+/* ═══════════ 서버 설정 ═══════════ */
+window.OT_CONFIG={
+ url:'https://bpevbqnadfboebntayrf.supabase.co',
+ anon:'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJwZXZicW5hZGZib2VibnRheXJmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEzMzQ0MTAsImV4cCI6MjA5NjkxMDQxMH0.n39IWOm0nWKh_l-QT-G_a2kN1naYeDrzEJz73aLD3mA',
+ page:'https://heomooyoung.github.io/our-table/'
+};
+
 /* ═══════════ 상태 ═══════════ */
 let S=null;
 let ui={tab:'home',_last:'',week:0,shopWeek:0,shopInit:false,sort:'best',cat:'',q:'',pendingSlot:null};
@@ -449,6 +463,10 @@ async function flush(){ try{ if(idbOK){await dbSet(S);return} }catch(e){idbOK=fa
 document.addEventListener('visibilitychange',()=>{if(document.hidden)flush()});
 
 function menu(id){return S.menus.find(m=>m.id===id)}
+function slotName(v){return v==='DELIV'?'배달 찬스':(v&&menu(v)?menu(v).name:null)}
+function setPlan(date,meal,val){const p=(S.plan[date]=S.plan[date]||{});
+ if(val==null)delete p[meal];else p[meal]=val;
+ save(); if(typeof syncOn!=='undefined'&&syncOn)pushPlan(date,meal,val)}
 function ingNames(){const s=new Set();S.menus.forEach(m=>(m.ingredients||[]).forEach(g=>{if(g.name)s.add(g.name)}));return[...s]}
 function brandNames(){const s=new Set();S.menus.forEach(m=>(m.ingredients||[]).forEach(g=>{if(g.brand)s.add(g.brand)}));return[...s]}
 function bestSorted(){return [...S.menus].sort((a,b)=>(b.rating-a.rating)||(b.cookCount-a.cookCount)||b.createdAt.localeCompare(a.createdAt))}
@@ -469,8 +487,10 @@ function render(){
 function vHome(){
  const t=new Date(), ti=todayISO();
  const dateLn=`${t.getMonth()+1}.${t.getDate()} ${WDE[t.getDay()]} — TONIGHT`;
- const td=(S.today&&S.today.date===ti)?S.today:null;
- const pick=td?(td.delivery?{name:'배달 찬스',no:0,photo:''}:menu(td.menu)):null;
+ const tp=S.plan[ti]||{}; let td=null;
+ for(const mk of ['d','l','b']) if(tp[mk]){td={meal:mk,val:tp[mk],delivery:tp[mk]==='DELIV'};break}
+ if(td&&!td.delivery&&!menu(td.val)) td=null;
+ const pick=td?(td.delivery?{name:'배달 찬스',no:0,photo:''}:menu(td.val)):null;
  let hero;
  if(pick){
   hero=`<section class="hero"><div class="date">${dateLn}</div>
@@ -487,10 +507,10 @@ function vHome(){
    <div class="acts"><button class="btn pri" data-a="openLadder">사다리 타기</button>
     <button class="btn gho" data-a="openVote">가족 투표</button></div></section>`;
  }
- const days=weekDays(weekOf(0)).map(d=>{const k=iso(d),p=S.plan[k]||{};const dm=p.d?menu(p.d):null;
+ const days=weekDays(weekOf(0)).map(d=>{const k=iso(d);const nm=slotName((S.plan[k]||{}).d);
   return `<button class="dcol ${k===ti?'today':''}" data-a="go" data-t="plan">
    <span class="dl">${WDE[d.getDay()][0]}</span>
-   <span class="dn ${dm?'':'none'}">${dm?esc(dm.name):'·'}</span></button>`}).join('');
+   <span class="dn ${nm?'':'none'}">${nm?esc(nm):'·'}</span></button>`}).join('');
  return hero+
   `<section class="sec"><div class="sec-h"><div><div class="eyebrow">This Week</div><h2>이번 주 저녁</h2></div></div>
     <div class="strip">${days}</div></section>`;
@@ -537,9 +557,9 @@ function vPlan(){
  const ti=todayISO();
  const rows=weekDays(weekOf(ui.week)).map(d=>{const k=iso(d),p=S.plan[k]||{};
   const ms=MEALS.filter(([mk])=>S.allMeals||mk==='d'||p[mk]);
-  const slots=ms.map(([mk,ml])=>{const m=p[mk]?menu(p[mk]):null;
-   return m?`<button class="slot fill" data-a="slot" data-date="${k}" data-m="${mk}">
-     <span class="ml">${ml}</span><span class="snm">${esc(m.name)}</span>
+  const slots=ms.map(([mk,ml])=>{const nm=slotName(p[mk]);
+   return nm?`<button class="slot fill" data-a="slot" data-date="${k}" data-m="${mk}">
+     <span class="ml">${ml}</span><span class="snm">${esc(nm)}</span>
      <span class="sx" data-a="slotX" data-date="${k}" data-m="${mk}" role="button" aria-label="비우기">${I.x}</span></button>`
     :`<button class="slot" data-a="slot" data-date="${k}" data-m="${mk}">
      <span class="ml">${ml}</span><span class="snm">메뉴 정하기</span><span class="sx" style="color:var(--line)">${I.plus}</span></button>`}).join('');
@@ -670,8 +690,8 @@ function saveMenu(){
  if(F.editId){m=menu(F.editId);Object.assign(m,{name,ingredients:ings,steps,memo,photo:F.photo,rating:F.rating,cat:F.cat})}
  else{m={id:uid(),no:S.seq++,name,cat:F.cat,rating:F.rating,cookCount:0,lastCookedAt:'',createdAt:new Date().toISOString(),
    photo:F.photo,memo,ingredients:ings,steps}; S.menus.push(m)}
- m.updatedAt=new Date().toISOString();   // 동기화 대비
- save();
+ m.updatedAt=new Date().toISOString();
+ save(); if(syncOn)pushMenu(m);
  const ps=ui.pendingSlot; ui.pendingSlot=null;
  shCloseAll();
  if(ps){(S.plan[ps.date]=S.plan[ps.date]||{})[ps.m]=m.id;save();go('plan');
@@ -684,9 +704,9 @@ function saveMenu(){
 function openChooser(id){const m=menu(id);if(!m)return;
  const days=[];for(let i=0;i<14;i++){const d=new Date();d.setDate(d.getDate()+i);days.push(d)}
  const rows=days.map(d=>{const k=iso(d),p=S.plan[k]||{};
-  const cells=MEALS.map(([mk,ml])=>{const cur=p[mk]?menu(p[mk]):null;
-   return `<button class="slot ${cur?'fill':''}" style="flex:1" data-a="slotPut" data-id="${id}" data-date="${k}" data-m="${mk}">
-    <span class="ml">${ml}</span><span class="snm">${cur?esc(cur.name):'비어있음'}</span></button>`}).join('');
+  const cells=MEALS.map(([mk,ml])=>{const nm=slotName(p[mk]);
+   return `<button class="slot ${nm?'fill':''}" style="flex:1" data-a="slotPut" data-id="${id}" data-date="${k}" data-m="${mk}">
+    <span class="ml">${ml}</span><span class="snm">${nm?esc(nm):'비어있음'}</span></button>`}).join('');
   return `<div class="day"><div class="dt"><div class="w">${WDE[d.getDay()]}</div><div class="n">${d.getDate()}</div></div>
    <div class="slots" style="flex-direction:row;gap:5px">${cells}</div></div>`}).join('');
  sheet(`<div class="sec-h" style="margin-top:4px"><div><div class="eyebrow">Add to Plan</div>
@@ -707,14 +727,18 @@ function openPicker(date,mk){ui.pendingSlot={date,m:mk};
 function openSettings(){
  const kb=Math.max(1,Math.round(JSON.stringify(S).length/1024));
  sheet(`<div class="sec-h" style="margin-top:4px"><div><div class="eyebrow">Our Table</div><h2>보관함 관리</h2></div>
-   <span class="cnt">v0.1</span></div>
+   <span class="cnt">v1.0</span></div>
   <div class="paper" style="padding:14px"><div class="mut" style="font-family:var(--mono);letter-spacing:.04em">
-   메뉴 ${S.menus.length}가지 · 데이터 약 ${kb}KB<br>이 브라우저 안에만 저장돼요. 가끔 백업해 두세요.</div></div>
+   메뉴 ${S.menus.length}가지 · 데이터 약 ${kb}KB<br>${syncOn
+    ?`우리집 계정 연결됨 · 코드 ${HOMEINFO?HOMEINFO.code:'—'}<br>가족: ${MEMBERS.map(x=>esc(x.name)).join(', ')||'—'}`
+    :'이 브라우저 안에만 저장 중 (로컬 모드)'}</div></div>
   <div class="dacts">
-   <button class="btn pri blk" data-a="exp">백업 파일 내려받기</button>
+   ${syncOn?`<button class="btn pri blk" data-a="shareInvite">가족 초대 링크 보내기 — 코드 ${HOMEINFO?HOMEINFO.code:''}</button>`
+    :`<button class="btn pri blk" data-a="ob">우리집 계정 연결하기 (가족 공유)</button>`}
+   <button class="btn gho blk" data-a="exp">백업 파일 내려받기</button>
    <button class="btn gho blk" data-a="impBtn">백업 파일 불러오기</button>
    <input type="file" id="impF" accept="application/json,.json" hidden>
-   <button class="btn gho blk" data-a="fam">가족 구성원 관리 (${S.family.length}명)</button>
+   <button class="btn gho blk" data-a="fam">돌려찍기용 가족 명단 (${S.family.length}명)</button>
    <div class="tbtns"><button class="tbtn warn" data-a="wipe">전부 지우고 처음부터</button></div></div>
   <hr class="hr"><div class="mut">휴대폰 홈 화면에 붙여두려면 — 브라우저 공유 메뉴에서 <b>‘홈 화면에 추가’</b>를 눌러주세요. 앱처럼 열려요.</div>`)}
 
@@ -788,8 +812,7 @@ function ladderGo(i){ if(G.ran)return; G.ran=true;
   $('#gacts').style.visibility='visible';$('#gdecide').dataset.id=G.pickId},1550)}
 
 function decide(id){const m=menu(id||G.pickId);if(!m)return;
- const k=todayISO();(S.plan[k]=S.plan[k]||{})[G.meal]=m.id;
- S.today={date:k,menu:m.id,meal:G.meal};save();shCloseAll();go('home');
+ setPlan(todayISO(),G.meal,m.id);shCloseAll();go('home');
  toast(`오늘 ${MEAL[G.meal]}은 ${m.name}! 식단표에도 넣어뒀어요`)}
 
 /* ═══════════ 가족 투표 ═══════════ */
@@ -797,7 +820,7 @@ const DELIV={name:'배달 찬스',no:0,photo:''};
 function vnm(k){return k==='DELIV'?'배달 찬스':(menu(k)?menu(k).name:'?')}
 function openVote(){
  if(S.menus.length<2){toast('메뉴가 2가지는 있어야 투표할 수 있어요');return}
- if(S.family.length<2){openFamily(true);return}
+ if(!syncOn&&S.family.length<2){openFamily(true);return}
  V={meal:'d',sel:new Set(bestSorted().slice(0,3).map(m=>m.id)),deliv:false};
  const rows=bestSorted().map(m=>`<button class="vopt ${V.sel.has(m.id)?'on':''}" data-a="vsel" data-id="${m.id}">
    ${phEl(m)}<span class="vnm">${esc(m.name)}</span>${hearts(m.rating)}</button>`).join('');
@@ -806,7 +829,10 @@ function openVote(){
   <div class="mchips">${MEALS.map(([k,v])=>`<button class="chip ${k==='d'?'on':''}" data-a="vmeal" data-m="${k}">${v}</button>`).join('')}</div>
   <button class="vopt" id="vdeliv" data-a="vdeliv">${phEl(DELIV)}<span class="vnm">배달 찬스</span><span class="cooked">치트키</span></button>
   ${rows}
-  <div class="dacts"><button class="btn pri blk" data-a="vstart">투표 시작 — ${S.family.length}명</button></div></div>`)}
+  <div class="dacts">
+   ${syncOn?`<button class="btn pri blk" data-a="vstartRemote">가족 폰으로 투표 링크 보내기</button>`:''}
+   <button class="btn ${syncOn?'gho':'pri'} blk" data-a="vstart">이 폰 하나로 돌려찍기${S.family.length>=2?` — ${S.family.length}명`:''}</button>
+  </div></div>`)}
 function vTurn(){$('#vbody').innerHTML=`<div class="vturn"><div class="vt1">Vote ${V.turn+1} / ${S.family.length}</div>
   <div class="vt2">${esc(S.family[V.turn].name)} 차례</div>
   <div class="vt3">폰을 건네받았으면 아래를 눌러주세요.<br>서로 화면은 보지 않기!</div></div>
@@ -828,8 +854,8 @@ function vResult(forced){const {cnt,winners}=tallyV();
   <div class="dacts">${win?`<button class="btn pri blk" data-a="vdecide" data-k="${win}">이걸로 결정</button>
    <button class="btn gho blk" data-a="vre">다시 투표</button>`
   :`<button class="btn pri blk" data-a="vtie">동점 — 운명의 뽑기</button>`}</div>`}
-function vDecide(k){const meal=V.meal,d=todayISO();
- if(k==='DELIV'){S.today={date:d,meal,delivery:true};save();shCloseAll();go('home');toast(`오늘 ${MEAL[meal]}은 배달 찬스!`)}
+function vDecide(k){const meal=V.meal;
+ if(k==='DELIV'){setPlan(todayISO(),meal,'DELIV');shCloseAll();go('home');toast(`오늘 ${MEAL[meal]}은 배달 찬스!`)}
  else{G.meal=meal;decide(k)}}
 
 /* ── 가족 구성원 ── */
@@ -844,6 +870,212 @@ function openFamily(toVote){
    <button class="btn pri" style="height:42px;padding:0 14px" data-a="famAdd">추가</button></div>
   ${toVote?`<div class="dacts"><button class="btn pri blk" data-a="famDone">저장하고 투표 시작</button></div>
    <div class="ghint">투표는 2명부터 할 수 있어요</div>`:''}`)}
+
+/* ═══════════ 서버 동기화 (Supabase) ═══════════ */
+let sb=null,HOME=null,ME=null,HOMEINFO=null,MEMBERS=[],syncOn=false,pendingHash=null,LIVE=null;
+function updateSyncBadge(){const d=$('#syncdot');if(!d)return;
+ d.classList.toggle('on',syncOn);d.title=syncOn?'우리집 계정 연결됨':'로컬 모드'}
+function parseHash(){const h=location.hash;if(!h)return;
+ let m=h.match(/vote=([\w-]+)/);if(m)pendingHash={vote:m[1]};
+ m=h.match(/join=([A-Za-z0-9]+)/);if(m)pendingHash=Object.assign(pendingHash||{},{join:m[1]});
+ history.replaceState(history.state,'',location.pathname+location.search)}
+async function syncInit(){
+ if(!window.OT_CONFIG)return;
+ try{const mod=await import('https://esm.sh/@supabase/supabase-js@2');
+  sb=mod.createClient(OT_CONFIG.url,OT_CONFIG.anon)}catch(e){return} // 아티팩트/오프라인 → 로컬 모드
+ try{
+  let {data:{session}}=await sb.auth.getSession();
+  if(!session){const r=await sb.auth.signInAnonymously();session=r.data&&r.data.session}
+  if(!session)return;
+  parseHash();
+  const ok=await connectAsMember(true);
+  if(!ok&&(pendingHash||!sessionStorage.getItem('obSkip')))openOnboard();
+ }catch(e){}
+ updateSyncBadge()}
+async function connectAsMember(initial){
+ const u=await sb.auth.getUser();const uid_=u.data&&u.data.user&&u.data.user.id;if(!uid_)return false;
+ const {data:mem,error}=await sb.from('members').select('*');
+ if(error||!mem)return false;
+ MEMBERS=mem;ME=mem.find(x=>x.user_id===uid_);
+ if(!ME)return false;
+ HOME=ME.home_id;syncOn=true;updateSyncBadge();
+ const {data:hi}=await sb.from('homes').select('*').eq('id',HOME).maybeSingle();if(hi)HOMEINFO=hi;
+ if(!initial&&S.menus.length){
+  const {count}=await sb.from('menus').select('id',{count:'exact',head:true});
+  if(!count)openConfirm(`이 폰의 메뉴 ${S.menus.length}개를 우리집 계정에 올릴까요?`,'네, 올릴게요',()=>pushLocalAll())}
+ await flushDirty();await pullAll();subscribeRT();
+ if(pendingHash&&pendingHash.vote){const v=pendingHash.vote;pendingHash=null;openVoteLive(v)}
+ return true}
+
+/* ── 온보딩 ── */
+function openOnboard(){
+ const jc=pendingHash&&pendingHash.join?pendingHash.join:'';
+ sheet(`<div class="sec-h" style="margin-top:4px"><div><div class="eyebrow">Our Table</div><h2>우리집 계정 연결</h2></div></div>
+  <div class="mut" style="margin-bottom:4px">연결하면 가족이 같은 메뉴판·식단·장보기를 실시간으로 봐요. 기기마다 한 번만 하면 됩니다.</div>
+  <div class="fld"><label>내 이름</label><input id="ob-name" class="in" placeholder="예) 엄마 / 아빠 / 하몽" autocomplete="off"></div>
+  <div class="fld"><label>초대 코드 (가족이 보내줬다면)</label><input id="ob-code" class="in" placeholder="6자리 코드" value="${esc(jc)}" autocomplete="off" style="text-transform:uppercase;font-family:var(--mono);letter-spacing:.2em"></div>
+  <div class="dacts">
+   <button class="btn pri blk" data-a="obJoin">코드로 우리집 합류</button>
+   <button class="btn gho blk" data-a="obCreate">새로 우리집 만들기</button>
+   <div class="tbtns"><button class="tbtn" data-a="obSkip">나중에 할게요 — 이 폰에만 저장</button></div></div>`)}
+async function obCreate(){const n=($('#ob-name').value||'').trim();
+ if(!n){toast('이름을 적어주세요');$('#ob-name').focus();return}
+ try{const {data,error}=await sb.rpc('create_home',{member_name:n});if(error)throw error;
+  const r=data[0];HOMEINFO={id:r.home_id,code:r.code};
+  shCloseAll();
+  sheet(`<div class="vturn"><div class="vt1">Invite Code</div><div class="vt2">우리집이 생겼어요!</div>
+   <div class="vt3">가족은 이 코드(또는 초대 링크)로<br>같은 메뉴판에 합류할 수 있어요.</div></div>
+   <div class="obcode">${r.code}</div>
+   <div class="dacts"><button class="btn pri blk" data-a="shareInvite">가족에게 초대 링크 보내기</button>
+    <button class="btn gho blk" data-a="obDone">시작하기</button></div>`)}
+ catch(e){toast('만들지 못했어요 — 인터넷을 확인해주세요')}}
+async function obJoin(){const n=($('#ob-name').value||'').trim(),c=($('#ob-code').value||'').trim();
+ if(!n){toast('이름을 적어주세요');return}
+ if(c.length!==6){toast('초대 코드 6자리를 확인해주세요');return}
+ try{const {error}=await sb.rpc('join_home',{invite_code:c,member_name:n});if(error)throw error;
+  shCloseAll();toast('우리집에 합류했어요!');connectAsMember(false)}
+ catch(e){toast('코드가 맞지 않아요')}}
+function shareInvite(){const c=HOMEINFO&&HOMEINFO.code;if(!c){toast('아직 초대 코드가 없어요');return}
+ shareText(`'우리집 식탁'에 합류해줘! 초대 코드: ${c}`,OT_CONFIG.page+'#join='+c)}
+async function shareText(text,url){
+ if(navigator.share){try{await navigator.share({text:text+'\n'+url})}catch(e){}}
+ else{try{await navigator.clipboard.writeText(text+'\n'+url);toast('복사했어요 — 카톡에 붙여넣기')}catch(e){}}}
+
+/* ── 당겨오기 · 실시간 ── */
+let pullT=null;
+function pullSoon(){clearTimeout(pullT);pullT=setTimeout(()=>pullAll(),400)}
+async function pullAll(){try{
+ const [me,pl,ex,ck,mb]=await Promise.all([
+  sb.from('menus').select('*').eq('deleted',false).order('no'),
+  sb.from('plans').select('*'),
+  sb.from('shopping_extras').select('*'),
+  sb.from('shopping_checked').select('*'),
+  sb.from('members').select('*')]);
+ if(me.error)throw me.error;
+ S.menus=(me.data||[]).map(r=>({id:r.id,no:r.no,name:r.name,cat:r.cat||'',rating:r.rating||0,
+  cookCount:r.cook_count||0,lastCookedAt:r.last_cooked_at||'',photo:r.photo_url||'',memo:r.memo||'',
+  ingredients:r.ingredients||[],steps:r.steps||[],createdAt:r.created_at,updatedAt:r.updated_at}));
+ S.seq=Math.max(2,...S.menus.map(m=>(m.no||0)+1),S.menus.length+1);
+ S.plan={};(pl.data||[]).forEach(r=>{(S.plan[r.date]=S.plan[r.date]||{})[r.meal]=r.delivery?'DELIV':r.menu_id});
+ S.extra={};(ex.data||[]).forEach(r=>{(S.extra[r.week]=S.extra[r.week]||[]).push({id:r.id,name:r.name,amount:r.amount||''})});
+ S.checked={};(ck.data||[]).forEach(r=>{if(r.checked)S.checked[r.week+'|'+r.item_key]=true});
+ if(mb.data)MEMBERS=mb.data;
+ save();render()}catch(e){}}
+let RTCH=null;
+function subscribeRT(){if(RTCH||!sb)return;
+ RTCH=sb.channel('home-sync');
+ ['menus','plans','shopping_extras','shopping_checked','votes','ballots'].forEach(t=>{
+  RTCH.on('postgres_changes',{event:'*',schema:'public',table:t},()=>{
+   if(t==='ballots'||t==='votes')refreshVoteLive();
+   pullSoon()})});
+ RTCH.subscribe()}
+window.addEventListener('online',()=>{if(syncOn)flushDirty()});
+
+/* ── 올리기 ── */
+function dirty(t,k){((S._dirty=S._dirty||{})[t]=S._dirty[t]||{})[k]=true;save();
+ toast('저장은 됐어요 — 인터넷 연결되면 가족에게도 반영돼요')}
+async function flushDirty(){const D=S._dirty||{};
+ for(const id of Object.keys(D.menus||{})){const m=menu(id);
+  if(m)await pushMenu(m,true);else await pushMenuDelete(id,true)}
+ for(const k of Object.keys(D.plans||{})){const i=k.indexOf('|');
+  await pushPlan(k.slice(0,i),k.slice(i+1),(S.plan[k.slice(0,i)]||{})[k.slice(i+1)]??null,true)}
+ S._dirty={};save()}
+async function maybeUpload(p){if(!p||!p.startsWith('data:'))return p||'';
+ const blob=await (await fetch(p)).blob();
+ const path=HOME+'/'+uid()+'.jpg';
+ const {error}=await sb.storage.from('photos').upload(path,blob,{contentType:'image/jpeg'});
+ if(error)throw error;
+ return sb.storage.from('photos').getPublicUrl(path).data.publicUrl}
+async function pushMenu(m,noDirty){try{
+ m.photo=await maybeUpload(m.photo);
+ for(const g of m.ingredients||[])g.photo=await maybeUpload(g.photo);
+ save();
+ const {error}=await sb.from('menus').upsert({id:m.id,home_id:HOME,no:m.no||0,name:m.name,
+  cat:m.cat||'',rating:m.rating||0,cook_count:m.cookCount||0,last_cooked_at:m.lastCookedAt||null,
+  photo_url:m.photo||'',memo:m.memo||'',ingredients:m.ingredients||[],steps:m.steps||[],
+  deleted:false,updated_at:new Date().toISOString()});
+ if(error)throw error}catch(e){if(!noDirty)dirty('menus',m.id)}}
+async function pushMenuDelete(id,noDirty){try{
+ const {error}=await sb.from('menus').update({deleted:true,updated_at:new Date().toISOString()}).eq('id',id);
+ if(error)throw error}catch(e){if(!noDirty)dirty('menus',id)}}
+async function pushPlan(date,meal,val,noDirty){try{
+ if(val==null){const {error}=await sb.from('plans').delete().match({home_id:HOME,date,meal});if(error)throw error}
+ else{const {error}=await sb.from('plans').upsert({home_id:HOME,date,meal,
+  menu_id:val==='DELIV'?null:val,delivery:val==='DELIV',updated_at:new Date().toISOString()});if(error)throw error}
+}catch(e){if(!noDirty)dirty('plans',date+'|'+meal)}}
+async function pushExtra(wk,x,del){try{
+ if(del)await sb.from('shopping_extras').delete().eq('id',x.id);
+ else await sb.from('shopping_extras').insert({id:x.id,home_id:HOME,week:wk,name:x.name,amount:x.amount||''});
+}catch(e){}}
+async function pushChecked(wk,key,on){try{
+ if(on)await sb.from('shopping_checked').upsert({home_id:HOME,week:wk,item_key:key,checked:true,updated_at:new Date().toISOString()});
+ else await sb.from('shopping_checked').delete().match({home_id:HOME,week:wk,item_key:key});
+}catch(e){}}
+async function pushLocalAll(){toast('우리집 계정에 올리는 중…');
+ for(const m of S.menus)await pushMenu(m);
+ for(const [dt,p] of Object.entries(S.plan||{}))for(const [ml,v] of Object.entries(p))if(v)await pushPlan(dt,ml,v);
+ for(const [wk,xs] of Object.entries(S.extra||{}))for(const x of xs)await pushExtra(wk,x,false);
+ for(const key of Object.keys(S.checked||{})){const i=key.indexOf('|');
+  await pushChecked(key.slice(0,i),key.slice(i+1),true)}
+ await pullAll();toast('다 올렸어요! 이제 가족과 같이 써요')}
+
+/* ── 원격 투표 (각자 폰) ── */
+async function vstartRemote(){V.cands=[...V.sel,...(V.deliv?['DELIV']:[])];
+ if(V.cands.length<2){toast('후보를 2개 이상 골라주세요');return}
+ try{const {data,error}=await sb.from('votes').insert({home_id:HOME,date:todayISO(),meal:V.meal,
+   candidates:V.cands,created_by:ME.id}).select().single();
+  if(error)throw error;
+  shClose();openVoteLive(data.id,true)}
+ catch(e){toast('투표를 만들지 못했어요 — 인터넷 확인')}}
+async function openVoteLive(id,justCreated){
+ if(!syncOn){toast('우리집 계정 연결이 필요해요');return}
+ try{const {data:v,error}=await sb.from('votes').select('*').eq('id',id).single();
+  if(error||!v)throw error;
+  LIVE={id,vote:v,justCreated:!!justCreated};
+  sheet(`<div id="vlive"></div>`);
+  refreshVoteLive()}
+ catch(e){toast('투표를 찾지 못했어요')}}
+async function refreshVoteLive(){
+ if(!LIVE||!$('#vlive'))return;
+ const {data:v2}=await sb.from('votes').select('*').eq('id',LIVE.id).maybeSingle();if(v2)LIVE.vote=v2;
+ const {data:bs}=await sb.from('ballots').select('*').eq('vote_id',LIVE.id);
+ const v=LIVE.vote,ballots=bs||[],closed=v.status==='closed';
+ const my=ballots.find(b=>b.member_id===(ME&&ME.id));
+ const cnt={};(v.candidates||[]).forEach(k=>cnt[k]=0);ballots.forEach(b=>{if(cnt[b.choice]!=null)cnt[b.choice]++});
+ const nm=k=>k==='DELIV'?'배달 찬스':(menu(k)?menu(k).name:'?');
+ const bars=[...(v.candidates||[])].sort((a,b)=>cnt[b]-cnt[a]).map(k=>`<div class="vbar">
+  <span class="vn">${esc(nm(k))}</span><span class="vtrack"><span class="vfill" style="width:${Math.round(cnt[k]/Math.max(1,MEMBERS.length)*100)}%"></span></span>
+  <span class="vc">${cnt[k]}</span></div>`).join('');
+ const opts=closed?'':(v.candidates||[]).map(k=>`<button class="vopt ${my&&my.choice===k?'on':''}" data-a="vlCast" data-k="${k}">
+  ${phEl(k==='DELIV'?DELIV:(menu(k)||{name:'?',no:0,photo:''}))}<span class="vnm">${esc(nm(k))}</span>${my&&my.choice===k?'<span class="cooked">내 표</span>':''}</button>`).join('');
+ const el=$('#vlive');if(!el)return;
+ el.innerHTML=`<div class="vturn" style="padding:8px 0 8px"><div class="vt1">${closed?'Result':'Family Vote'}</div>
+  <div class="vt2">오늘 ${MEAL[v.meal]}, 뭐 먹을까?</div>
+  <div class="vt3">${ballots.length} / ${MEMBERS.length}명 투표${closed?' · 마감됨':' · 실시간 개표 중'}</div></div>
+  ${bars}
+  ${opts?`<div style="margin-top:14px">${opts}</div>`:''}
+  <div class="dacts">
+   ${!closed?`<button class="btn gho blk" data-a="vlShare">가족에게 투표 링크 보내기</button>`:''}
+   ${!closed&&ballots.length?`<button class="btn pri blk" data-a="vlFinish">마감하고 오늘 식단에 반영</button>`:''}
+  </div>`}
+async function vlCast(k){try{
+ const {error}=await sb.from('ballots').upsert({vote_id:LIVE.id,member_id:ME.id,choice:k});
+ if(error)throw error;refreshVoteLive()}
+ catch(e){toast('투표가 안 들어갔어요 — 인터넷 확인')}}
+async function vlFinish(){try{
+ const {data:bs}=await sb.from('ballots').select('*').eq('vote_id',LIVE.id);
+ const v=LIVE.vote,cnt={};(v.candidates||[]).forEach(k=>cnt[k]=0);
+ (bs||[]).forEach(b=>{if(cnt[b.choice]!=null)cnt[b.choice]++});
+ const mx=Math.max(...Object.values(cnt));
+ const ws=v.candidates.filter(k=>cnt[k]===mx);
+ const win=ws[Math.floor(Math.random()*ws.length)];
+ await sb.from('votes').update({status:'closed'}).eq('id',LIVE.id);
+ setPlan(v.date,v.meal,win==='DELIV'?'DELIV':win);
+ LIVE=null;shCloseAll();go('home');
+ toast(win==='DELIV'?`오늘 ${MEAL[v.meal]}은 배달 찬스!`:`오늘 ${MEAL[v.meal]}은 ${menu(win)?menu(win).name:'결정'}!`)}
+ catch(e){toast('마감하지 못했어요')}}
+function vlShare(){if(!LIVE)return;
+ shareText(`오늘 ${MEAL[LIVE.vote.meal]} 뭐 먹을지 투표해줘!`,OT_CONFIG.page+'#vote='+LIVE.id)}
 
 /* ═══════════ 사진 ═══════════ */
 function grabPhoto(cb){const inp=document.createElement('input');inp.type='file';inp.accept='image/*';
@@ -871,40 +1103,40 @@ const ACT={
  cat:d=>{ui.cat=d.c;render()},
  wk:d=>{ui.week=d.d==='0'?0:ui.week+Number(d.d);render()},
  swk:d=>{ui.shopWeek=d.d==='0'?0:ui.shopWeek+Number(d.d);render()},
- slot:d=>{const p=S.plan[d.date]||{};if(p[d.m])openDetail(p[d.m]);else openPicker(d.date,d.m)},
- slotX:(d,el,e)=>{const p=S.plan[d.date];if(p){delete p[d.m];
-   if(S.today&&S.today.date===d.date&&S.today.meal===d.m)S.today=null;
-   save();render()}},
+ slot:d=>{const v=(S.plan[d.date]||{})[d.m];
+  if(v&&v!=='DELIV'&&menu(v))openDetail(v);else openPicker(d.date,d.m)},
+ slotX:d=>{setPlan(d.date,d.m,null);render()},
  pick:d=>{const ps=ui.pendingSlot;if(!ps)return;ui.pendingSlot=null;
-  (S.plan[ps.date]=S.plan[ps.date]||{})[ps.m]=d.id;
-  if(ps.date===todayISO())S.today={date:ps.date,menu:d.id,meal:ps.m};
-  save();shClose();render();toast(`${mdot(ps.date)} ${MEAL[ps.m]} — ${menu(d.id).name}`)},
+  setPlan(ps.date,ps.m,d.id);
+  shClose();render();toast(`${mdot(ps.date)} ${MEAL[ps.m]} — ${menu(d.id).name}`)},
  pickNew:()=>openForm(),
- slotPut:d=>{(S.plan[d.date]=S.plan[d.date]||{})[d.m]=d.id;
-  if(d.date===todayISO())S.today={date:d.date,menu:d.id,meal:d.m};
-  save();shClose();render();toast(`${mdot(d.date)} ${MEAL[d.m]}에 넣었어요`)},
+ slotPut:d=>{setPlan(d.date,d.m,d.id);
+  shClose();render();toast(`${mdot(d.date)} ${MEAL[d.m]}에 넣었어요`)},
  toPlan:d=>openChooser(d.id),
  cook:d=>{const m=menu(d.id);if(!m)return;
   if(m.lastCookedAt===todayISO()){toast('오늘은 이미 기록했어요');return}
-  m.cookCount++;m.lastCookedAt=todayISO();m.updatedAt=new Date().toISOString();save();render();
+  m.cookCount++;m.lastCookedAt=todayISO();m.updatedAt=new Date().toISOString();save();if(syncOn)pushMenu(m);render();
   toast(`${m.cookCount}번째 기록! 맛있게 드세요`)},
  rate:(d,el)=>{const wrap=el.closest('.hearts');const id=wrap&&wrap.dataset.id;const m=id&&menu(id);if(!m)return;
-  m.rating=Number(d.v);m.updatedAt=new Date().toISOString();save();
+  m.rating=Number(d.v);m.updatedAt=new Date().toISOString();save();if(syncOn)pushMenu(m);
   wrap.querySelectorAll('svg').forEach((s,i)=>s.classList.toggle('on',i<m.rating));render()},
  edit:d=>openForm(d.id),
  delMenu:d=>{const m=menu(d.id);openConfirm(`‘${esc(m.name)}’ 를 메뉴판에서 뺄까요?`,'네, 뺄게요',()=>{
    S.menus=S.menus.filter(x=>x.id!==d.id);
-   Object.values(S.plan).forEach(p=>MEALS.forEach(([k])=>{if(p[k]===d.id)delete p[k]}));
-   if(S.today&&S.today.menu===d.id)S.today=null;
-   save();shCloseAll();render();toast('뺐어요')})},
+   Object.entries(S.plan).forEach(([dt,p])=>MEALS.forEach(([k])=>{if(p[k]===d.id)setPlan(dt,k,null)}));
+   save();if(typeof syncOn!=='undefined'&&syncOn)pushMenuDelete(d.id);
+   shCloseAll();render();toast('뺐어요')})},
  confYes:()=>{const f=CONF;CONF=null;shClose();f&&f()},
  chk:d=>{const wk=iso(weekOf(ui.shopWeek));const key=wk+'|'+d.k;
-  S.checked[key]=!S.checked[key];if(!S.checked[key])delete S.checked[key];save();render()},
+  S.checked[key]=!S.checked[key];if(!S.checked[key])delete S.checked[key];save();
+  if(syncOn)pushChecked(wk,d.k,!!S.checked[key]);render()},
  xadd:()=>{const n=$('#xn').value.trim();if(!n){$('#xn').focus();return}
-  const wk=iso(weekOf(ui.shopWeek));(S.extra[wk]=S.extra[wk]||[]).push({id:uid().slice(0,8),name:n,amount:$('#xa').value.trim()});
-  save();render();toast('추가했어요')},
+  const wk=iso(weekOf(ui.shopWeek));const x={id:uid(),name:n,amount:$('#xa').value.trim()};
+  (S.extra[wk]=S.extra[wk]||[]).push(x);
+  save();if(typeof syncOn!=='undefined'&&syncOn)pushExtra(wk,x,false);render();toast('추가했어요')},
  xdel:(d)=>{const wk=iso(weekOf(ui.shopWeek));S.extra[wk]=(S.extra[wk]||[]).filter(x=>x.id!==d.id);
-  delete S.checked[wk+'|x'+d.id];save();render()},
+  delete S.checked[wk+'|x'+d.id];save();
+  if(syncOn){pushExtra(wk,{id:d.id},true);pushChecked(wk,'x'+d.id,false)}render()},
  fphoto:()=>grabPhoto(u=>{F.photo=u;const b=$('#f-photo');b.classList.add('has');b.style.backgroundImage=`url(${u})`}),
  frate:(d,el)=>{F.rating=Number(d.v);
   $('#f-hearts').querySelectorAll('svg').forEach((s,i)=>s.classList.toggle('on',i<F.rating))},
@@ -921,9 +1153,9 @@ const ACT={
  wipe:()=>openConfirm('정말 전부 지울까요? 되돌릴 수 없어요.','네, 처음부터 할게요',()=>{
   S=seed();save();shCloseAll();ui={...ui,week:0,shopWeek:0,shopInit:false,cat:'',q:''};render();toast('새 보관함을 꺼냈어요')}),
  openLadder:openLadder,
- retoday:()=>{if(S.today){const p=S.plan[S.today.date];
-   if(p&&p[S.today.meal]===S.today.menu)delete p[S.today.meal]}
-  S.today=null;save();render()},
+ retoday:()=>{const ti=todayISO(),p=S.plan[ti]||{};
+  for(const mk of ['d','l','b'])if(p[mk]){setPlan(ti,mk,null);break}
+  render()},
  mealsToggle:()=>{S.allMeals=!S.allMeals;save();render()},
  gmeal:(d)=>{G.meal=d.m;$$('.mchips .chip').forEach(c=>c.classList.toggle('on',c.dataset.m===d.m))},
  ladderAgain:()=>{shClose();openLadder()},
@@ -934,7 +1166,8 @@ const ACT={
   else if(V.sel.size>=4){toast('후보는 4개까지만!')}else{V.sel.add(d.id);el.classList.add('on')}},
  vdeliv:(d,el)=>{V.deliv=!V.deliv;el.classList.toggle('on',V.deliv)},
  vmeal:(d,el)=>{V.meal=d.m;el.parentElement.querySelectorAll('.chip').forEach(c=>c.classList.toggle('on',c.dataset.m===d.m))},
- vstart:()=>{V.cands=[...V.sel,...(V.deliv?['DELIV']:[])];
+ vstart:()=>{if(S.family.length<2){openFamily(true);return}
+  V.cands=[...V.sel,...(V.deliv?['DELIV']:[])];
   if(V.cands.length<2){toast('후보를 2개 이상 골라주세요');return}V.votes=[];V.turn=0;vTurn()},
  vballot:vBallot,
  vcast:d=>{V.votes.push(d.k);V.turn++;V.turn<S.family.length?vTurn():vResult()},
@@ -947,7 +1180,16 @@ const ACT={
   $('#famList').innerHTML=famRows();const c=$('#famCnt');if(c)c.textContent=S.family.length+'명';i.value='';i.focus()},
  famDel:d=>{S.family=S.family.filter(f=>f.id!==d.id);save();
   $('#famList').innerHTML=famRows();const c=$('#famCnt');if(c)c.textContent=S.family.length+'명'},
- famDone:()=>{if(S.family.length<2){toast('2명은 있어야 투표할 수 있어요');return}shClose();openVote()}
+ famDone:()=>{if(S.family.length<2){toast('2명은 있어야 투표할 수 있어요');return}shClose();openVote()},
+ ob:()=>openOnboard(),
+ obCreate:obCreate, obJoin:obJoin,
+ obSkip:()=>{sessionStorage.setItem('obSkip','1');shClose()},
+ obDone:()=>{shCloseAll();connectAsMember(false)},
+ shareInvite:shareInvite,
+ vstartRemote:vstartRemote,
+ vlCast:d=>vlCast(d.k),
+ vlFinish:vlFinish,
+ vlShare:vlShare
 };
 document.addEventListener('click',e=>{const el=e.target.closest('[data-a]');if(!el)return;
  const a=ACT[el.dataset.a];if(a){e.preventDefault();a(el.dataset,el,e)}});
@@ -969,5 +1211,6 @@ document.addEventListener('change',e=>{if(e.target.id==='impF')importJson(e.targ
  if(!S){S=seed();flush()}
  if(!S.extra)S.extra={}; if(!S.checked)S.checked={}; if(!S.seq)S.seq=S.menus.length+1; if(!S.family)S.family=[];
  render();
+ syncInit();
 })();
 </script>
