@@ -336,6 +336,8 @@ textarea.in{height:auto;min-height:58px;padding:11px 13px;resize:vertical;line-h
 #syncdot.on{background:#43A968}
 .obcode{font:800 30px var(--mono);letter-spacing:.3em;text-align:center;color:var(--acc);
   background:var(--soft);border-radius:14px;padding:18px 8px 18px calc(8px + .3em);margin:14px 0;user-select:all}
+.connbar{width:100%;margin-top:12px;background:var(--heart-soft);color:var(--heart);border:1.5px solid var(--heart);
+  border-radius:12px;padding:11px 14px;font-size:13px;font-weight:700;text-align:left;letter-spacing:-.01em;line-height:1.5}
 
 /* ── 토스트 ── */
 #toast{position:fixed;left:50%;bottom:calc(88px + env(safe-area-inset-bottom));transform:translate(-50%,14px);
@@ -511,7 +513,9 @@ function vHome(){
   return `<button class="dcol ${k===ti?'today':''}" data-a="go" data-t="plan">
    <span class="dl">${WDE[d.getDay()][0]}</span>
    <span class="dn ${nm?'':'none'}">${nm?esc(nm):'·'}</span></button>`}).join('');
- return hero+
+ const connbar=(window.OT_CONFIG&&typeof sb!=='undefined'&&sb&&!syncOn)
+  ?`<button class="connbar" data-a="ob">아직 우리집 계정에 연결 안 됐어요 — 가족과 같이 보려면 여기를 눌러 연결</button>`:'';
+ return connbar+hero+
   `<section class="sec"><div class="sec-h"><div><div class="eyebrow">This Week</div><h2>이번 주 저녁</h2></div></div>
     <div class="strip">${days}</div></section>`;
 }
@@ -757,7 +761,9 @@ function importJson(f){if(!f)return;const rd=new FileReader();
    if(!o||!Array.isArray(o.menus))throw 0;
    S=Object.assign(seed(),o);
    S.seq=Math.max(S.seq||2,S.menus.length+1,...S.menus.map(m=>(m.no||0)+1));
-   save(); shCloseAll(); render(); toast('불러왔어요 — 그대로 이어서 쓰면 돼요')}
+   save(); shCloseAll(); render();
+   if(typeof syncOn!=='undefined'&&syncOn){toast('가져온 데이터를 우리집 계정에 올리는 중…');pushLocalAll()}
+   else toast('불러왔어요 — 그대로 이어서 쓰면 돼요')}
   catch(e){toast('이 파일은 우리집 식탁 백업이 아니에요')}};
  rd.readAsText(f)}
 
@@ -874,7 +880,8 @@ function openFamily(toVote){
 /* ═══════════ 서버 동기화 (Supabase) ═══════════ */
 let sb=null,HOME=null,ME=null,HOMEINFO=null,MEMBERS=[],syncOn=false,pendingHash=null,LIVE=null;
 function updateSyncBadge(){const d=$('#syncdot');if(!d)return;
- d.classList.toggle('on',syncOn);d.title=syncOn?'우리집 계정 연결됨':'로컬 모드'}
+ d.classList.toggle('on',syncOn);d.title=syncOn?'우리집 계정 연결됨':'로컬 모드';
+ if(S)render()}
 function parseHash(){const h=location.hash;if(!h)return;
  let m=h.match(/vote=([\w-]+)/);if(m)pendingHash={vote:m[1]};
  m=h.match(/join=([A-Za-z0-9]+)/);if(m)pendingHash=Object.assign(pendingHash||{},{join:m[1]});
@@ -900,10 +907,11 @@ async function connectAsMember(initial){
  if(!ME)return false;
  HOME=ME.home_id;syncOn=true;updateSyncBadge();
  const {data:hi}=await sb.from('homes').select('*').eq('id',HOME).maybeSingle();if(hi)HOMEINFO=hi;
- if(!initial&&S.menus.length){
-  const {count}=await sb.from('menus').select('id',{count:'exact',head:true});
-  if(!count)openConfirm(`이 폰의 메뉴 ${S.menus.length}개를 우리집 계정에 올릴까요?`,'네, 올릴게요',()=>pushLocalAll())}
- await flushDirty();await pullAll();subscribeRT();
+ await flushDirty();
+ const {count}=await sb.from('menus').select('id',{count:'exact',head:true});
+ if(!count&&S.menus.length)await pushLocalAll();   // 서버가 비어있으면 이 폰 데이터(사진 포함) 자동 이관
+ else await pullAll();
+ subscribeRT();
  if(pendingHash&&pendingHash.vote){const v=pendingHash.vote;pendingHash=null;openVoteLive(v)}
  return true}
 
@@ -1150,8 +1158,10 @@ const ACT={
  saveMenu:saveMenu,
  exp:exportJson,
  impBtn:()=>$('#impF').click(),
- wipe:()=>openConfirm('정말 전부 지울까요? 되돌릴 수 없어요.','네, 처음부터 할게요',()=>{
-  S=seed();save();shCloseAll();ui={...ui,week:0,shopWeek:0,shopInit:false,cat:'',q:''};render();toast('새 보관함을 꺼냈어요')}),
+ wipe:()=>openConfirm(syncOn?'이 폰만 비우고 우리집 계정에서 다시 내려받을까요?':'정말 전부 지울까요? 되돌릴 수 없어요.',
+  syncOn?'네, 새로 받을게요':'네, 처음부터 할게요',()=>{
+  S=seed();save();shCloseAll();ui={...ui,week:0,shopWeek:0,shopInit:false,cat:'',q:''};render();
+  if(syncOn)pullAll();else toast('새 보관함을 꺼냈어요')}),
  openLadder:openLadder,
  retoday:()=>{const ti=todayISO(),p=S.plan[ti]||{};
   for(const mk of ['d','l','b'])if(p[mk]){setPlan(ti,mk,null);break}
