@@ -1,0 +1,979 @@
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>우리집 식탁</title>
+<style>
+/* ── 디자인 토큰: 종이 노트 × 법랑 그린. 밤에는 '밤의 주방' ── */
+:root{
+  --paper:#F4F4EF; --card:#FFFFFF; --ink:#212820; --sub:#6F7A6C;
+  --line:#DFE1D6; --line2:#ECEDE5;
+  --acc:#2C5B45; --acc-bg:#2C5B45; --acc-ink:#FFFFFF; --soft:#E9F0E9;
+  --heart:#C2492F; --heart-soft:#F6E7E1;
+  --sh:0 1px 2px rgba(30,40,30,.05),0 10px 28px rgba(30,40,30,.07);
+  --kr:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo",Pretendard,"Noto Sans KR","Malgun Gothic",sans-serif;
+  --mono:ui-monospace,"SF Mono",SFMono-Regular,"Cascadia Mono",Consolas,"Liberation Mono",monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme=light]){
+    --paper:#121813; --card:#1A231C; --ink:#E8ECE3; --sub:#92A08E;
+    --line:#2A352C; --line2:#222C24;
+    --acc:#92C6A8; --acc-bg:#2F6349; --acc-ink:#F2F7F0; --soft:#212E25;
+    --heart:#E36F4F; --heart-soft:#33231C;
+    --sh:0 1px 2px rgba(0,0,0,.35),0 10px 28px rgba(0,0,0,.4);
+  }
+}
+:root[data-theme=dark]{
+  --paper:#121813; --card:#1A231C; --ink:#E8ECE3; --sub:#92A08E;
+  --line:#2A352C; --line2:#222C24;
+  --acc:#92C6A8; --acc-bg:#2F6349; --acc-ink:#F2F7F0; --soft:#212E25;
+  --heart:#E36F4F; --heart-soft:#33231C;
+  --sh:0 1px 2px rgba(0,0,0,.35),0 10px 28px rgba(0,0,0,.4);
+}
+
+*{margin:0;padding:0;box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{background:var(--paper);color:var(--ink);font:400 15px/1.6 var(--kr);
+  -webkit-font-smoothing:antialiased;min-height:100dvh}
+body.lock{overflow:hidden}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;-webkit-tap-highlight-color:transparent}
+input,textarea{font:inherit;color:inherit}
+svg{display:block}
+:focus-visible{outline:2px solid var(--acc);outline-offset:2px;border-radius:4px}
+
+#app{max-width:520px;margin:0 auto;padding:0 18px calc(96px + env(safe-area-inset-bottom))}
+
+/* ── 헤더 ── */
+.hdr{display:flex;align-items:center;justify-content:space-between;padding:18px 2px 6px}
+.hdr .wm{display:flex;flex-direction:column;gap:1px}
+.hdr .wm b{font-size:16px;font-weight:800;letter-spacing:-.02em}
+.hdr .wm span{font:600 9px var(--mono);letter-spacing:.28em;color:var(--sub);text-transform:uppercase}
+.icobtn{width:38px;height:38px;border-radius:12px;display:grid;place-items:center;color:var(--sub)}
+.icobtn:active{background:var(--line2)}
+
+/* ── 섹션 공통 ── */
+.eyebrow{font:700 10px var(--mono);letter-spacing:.24em;text-transform:uppercase;color:var(--acc)}
+.sec{margin-top:26px}
+.sec-h{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:12px}
+.sec-h h2{font-size:18px;font-weight:800;letter-spacing:-.02em;margin-top:3px;text-wrap:balance}
+.sec-h .cnt{font:600 11px var(--mono);color:var(--sub)}
+
+/* ── 홈 히어로 ── */
+.hero{background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:var(--sh);
+  padding:26px 22px 22px;margin-top:14px;position:relative;overflow:hidden}
+.hero .date{font:600 10px var(--mono);letter-spacing:.24em;color:var(--sub);text-transform:uppercase}
+.hero h1{font-size:33px;line-height:1.22;font-weight:900;letter-spacing:-.045em;margin:10px 0 6px;text-wrap:balance}
+.hero .sub{color:var(--sub);font-size:13.5px}
+.hero .acts{display:flex;gap:8px;margin-top:18px}
+.hero-menu{display:flex;gap:14px;align-items:center;margin:14px 0 4px}
+.hero-menu .ph,.hero-menu .mono-ph{width:86px;height:86px;border-radius:12px;flex:none}
+.hero-menu .nm{font-size:22px;font-weight:800;letter-spacing:-.03em;line-height:1.3;text-wrap:balance}
+.hero-menu .mt{font:600 11px var(--mono);color:var(--sub);margin-top:4px}
+
+/* ── 주간 스트립 ── */
+.strip{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;margin-top:2px}
+.strip .dcol{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:8px 4px;
+  display:flex;flex-direction:column;align-items:center;gap:5px;min-width:0}
+.strip .dcol.today{border-color:var(--acc);border-width:1.5px}
+.strip .dl{font:700 10px var(--mono);color:var(--sub);letter-spacing:.08em}
+.strip .dn{font-size:10.5px;color:var(--ink);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.strip .dn.none{color:var(--line)}
+
+/* ── 가로 레일 (베스트) ── */
+.rail{display:flex;gap:10px;overflow-x:auto;padding:2px 2px 8px;scroll-snap-type:x proximity;scrollbar-width:none}
+.rail::-webkit-scrollbar{display:none}
+.rcard{flex:0 0 132px;scroll-snap-align:start;background:var(--card);border:1px solid var(--line);
+  border-radius:12px;overflow:hidden;text-align:left;position:relative}
+.rcard .ph,.rcard .mono-ph{height:92px;border-radius:0}
+.rcard .b{padding:9px 10px 11px}
+.rcard .nm{font-size:13px;font-weight:700;letter-spacing:-.02em;line-height:1.35;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.rcard .rk{position:absolute;top:8px;left:8px;background:var(--ink);color:var(--paper);
+  font:700 9px var(--mono);letter-spacing:.1em;padding:3px 6px;border-radius:5px}
+.rcard .rk.r1{background:var(--heart);color:#fff}
+
+/* ── 사진 · 모노그램 ── */
+.ph{background-size:cover;background-position:center;border-radius:10px}
+.mono-ph{border-radius:10px;display:grid;place-items:center;position:relative;color:var(--acc);
+  background:repeating-linear-gradient(0deg,transparent 0 13px,var(--line2) 13px 14px),var(--soft)}
+.mono-ph b{font-size:30px;font-weight:900;letter-spacing:-.04em}
+.mono-ph i{position:absolute;bottom:6px;right:8px;font:600 8px var(--mono);letter-spacing:.14em;font-style:normal;opacity:.55}
+
+/* ── 메뉴판 ── */
+.tools{display:flex;flex-direction:column;gap:10px;margin-bottom:14px}
+.search{display:flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--line);
+  border-radius:11px;padding:0 12px;height:42px}
+.search input{flex:1;border:0;background:none;outline:none;font-size:16px}
+.search input::placeholder{color:var(--sub);font-family:var(--mono);font-size:12px;letter-spacing:.08em}
+.chips{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:none;font-size:12px;font-weight:600;color:var(--sub);border:1px solid var(--line);
+  background:var(--card);border-radius:999px;padding:6px 12px;letter-spacing:-.01em}
+.chip.on{background:var(--acc-bg);border-color:var(--acc-bg);color:var(--acc-ink)}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:11px}
+.mcard{background:var(--card);border:1px solid var(--line);border-radius:13px;overflow:hidden;
+  text-align:left;box-shadow:var(--sh);position:relative;display:flex;flex-direction:column}
+.mcard .ph,.mcard .mono-ph{height:118px;border-radius:0}
+.mcard .b{padding:11px 12px 12px;display:flex;flex-direction:column;gap:6px;flex:1}
+.mcard .nm{font-size:14.5px;font-weight:800;letter-spacing:-.025em;line-height:1.35;text-wrap:balance}
+.mcard .mt{display:flex;align-items:center;justify-content:space-between;margin-top:auto}
+.mcard .no{position:absolute;top:8px;right:9px;font:600 9px var(--mono);letter-spacing:.12em;
+  color:#fff;background:rgba(20,26,20,.42);padding:3px 6px;border-radius:5px;backdrop-filter:blur(4px)}
+.mcard .mono-ph~.b~.no, .no.dim{color:var(--sub);background:none;backdrop-filter:none}
+.cooked{font:600 10.5px var(--mono);color:var(--sub);letter-spacing:.04em}
+
+/* ── 하트 ── */
+.hearts{display:inline-flex;gap:2.5px}
+.hearts svg{width:14px;height:14px;fill:var(--line);transition:fill .15s,transform .15s}
+.hearts svg.on{fill:var(--heart)}
+.hearts.big svg{width:26px;height:26px}
+.hearts.tap svg:active{transform:scale(1.25)}
+
+/* ── 식단표 ── */
+.wknav{display:flex;align-items:center;justify-content:space-between;background:var(--card);
+  border:1px solid var(--line);border-radius:12px;padding:9px 10px;margin-bottom:14px}
+.wknav .wtit{text-align:center}
+.wknav .wtit b{font-size:15px;font-weight:800;letter-spacing:-.02em}
+.wknav .wtit div{font:600 10px var(--mono);color:var(--sub);letter-spacing:.1em;margin-top:1px}
+.wknav .icobtn{width:34px;height:34px}
+.day{display:flex;gap:12px;padding:13px 2px;border-bottom:1px solid var(--line2)}
+.day:last-child{border-bottom:0}
+.day .dt{width:40px;flex:none;text-align:center;padding-top:2px}
+.day .dt .w{font:700 9.5px var(--mono);letter-spacing:.18em;color:var(--sub)}
+.day .dt .n{font:700 19px var(--mono);letter-spacing:-.04em;margin-top:1px;font-variant-numeric:tabular-nums}
+.day.today .dt .n{color:var(--acc)}
+.day.today .dt .w{color:var(--acc)}
+.slots{flex:1;display:flex;flex-direction:column;gap:6px;min-width:0}
+.slot{display:flex;align-items:center;gap:8px;border:1px dashed var(--line);border-radius:10px;
+  padding:8px 10px;min-height:38px;text-align:left;width:100%}
+.slot .ml{font:700 9px var(--mono);letter-spacing:.16em;color:var(--sub);flex:none;width:26px}
+.slot .snm{flex:1;min-width:0;font-size:13px;font-weight:600;letter-spacing:-.02em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--sub)}
+.slot.fill{border-style:solid;background:var(--card);border-color:var(--line)}
+.slot.fill .snm{color:var(--ink)}
+.slot .sx{flex:none;width:22px;height:22px;display:grid;place-items:center;color:var(--sub);border-radius:7px}
+.slot .sx:active{background:var(--line2)}
+
+/* ── 장보기 ── */
+.prog{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:13px 14px;margin-bottom:13px}
+.prog .pt{display:flex;justify-content:space-between;align-items:baseline}
+.prog .pt b{font-size:14px;font-weight:800;letter-spacing:-.02em}
+.prog .pt span{font:600 11px var(--mono);color:var(--sub);font-variant-numeric:tabular-nums}
+.pbar{height:5px;background:var(--line2);border-radius:99px;margin-top:9px;overflow:hidden}
+.pbar i{display:block;height:100%;background:var(--acc-bg);border-radius:99px;transition:width .3s ease}
+.sitem{display:flex;align-items:flex-start;gap:11px;padding:12px 2px;border-bottom:1px solid var(--line2);width:100%;text-align:left}
+.sitem:last-child{border-bottom:0}
+.cbox{flex:none;width:22px;height:22px;border:1.5px solid var(--line);border-radius:8px;margin-top:2px;
+  display:grid;place-items:center;color:transparent;transition:all .15s}
+.sitem.done .cbox{background:var(--acc-bg);border-color:var(--acc-bg);color:var(--acc-ink)}
+.sitem .sb{flex:1;min-width:0}
+.sitem .snm2{font-size:14.5px;font-weight:700;letter-spacing:-.02em;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.sitem.done .snm2{color:var(--sub);text-decoration:line-through;text-decoration-color:var(--sub)}
+.sitem .src{font-size:11.5px;color:var(--sub);margin-top:2px;line-height:1.5}
+.sitem .thumb{flex:none;width:40px;height:40px;border-radius:9px;background-size:cover;background-position:center;border:1px solid var(--line)}
+.brand{display:inline-block;font:600 9.5px var(--mono);letter-spacing:.06em;color:var(--acc);
+  border:1px solid var(--acc);border-radius:5px;padding:1px 5px;opacity:.85}
+.xadd{display:flex;gap:7px;margin-top:14px}
+.xadd input{flex:1;min-width:0;background:var(--card);border:1px solid var(--line);border-radius:10px;height:42px;padding:0 12px;outline:none;font-size:16px}
+.xadd input:focus{border-color:var(--acc)}
+.xadd input.amt{flex:0 0 88px}
+
+/* ── 리스트 공용 카드 ── */
+.paper{background:var(--card);border:1px solid var(--line);border-radius:13px;box-shadow:var(--sh);padding:4px 14px}
+
+/* ── 버튼 ── */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;height:46px;padding:0 18px;
+  border-radius:12px;font-size:14.5px;font-weight:700;letter-spacing:-.01em}
+.btn.pri{background:var(--acc-bg);color:var(--acc-ink)}
+.btn.pri:active{filter:brightness(1.08)}
+.btn.gho{border:1.5px solid var(--line);color:var(--ink);background:var(--card)}
+.btn.gho:active{background:var(--line2)}
+.btn.blk{width:100%}
+.btn.warn{color:var(--heart)}
+.tbtns{display:flex;justify-content:center;gap:22px;margin-top:6px}
+.tbtn{font-size:13px;font-weight:600;color:var(--sub);padding:8px 4px}
+.tbtn.warn{color:var(--heart)}
+
+/* ── 탭바 + FAB ── */
+.tabbar{position:fixed;left:0;right:0;bottom:0;z-index:40;
+  background:var(--card);background:color-mix(in srgb,var(--card) 88%,transparent);backdrop-filter:blur(14px) saturate(1.4);
+  border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom)}
+.tabin{max-width:520px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr 76px 1fr 1fr;align-items:center;height:62px}
+.tb{display:flex;flex-direction:column;align-items:center;gap:3px;color:var(--sub);padding:6px 0}
+.tb svg{width:22px;height:22px}
+.tb span{font-size:9.5px;font-weight:700;letter-spacing:.02em}
+.tb.act{color:var(--acc)}
+.fabwrap{display:grid;place-items:center}
+.fab{width:52px;height:52px;border-radius:17px;background:var(--acc-bg);color:var(--acc-ink);
+  display:grid;place-items:center;box-shadow:0 6px 18px rgba(30,60,40,.3);transform:translateY(-12px)}
+.fab:active{transform:translateY(-12px) scale(.94)}
+.fab svg{width:24px;height:24px}
+
+/* ── 시트 ── */
+.sw{position:fixed;inset:0;z-index:60}
+.sw .sb{position:absolute;inset:0;background:rgba(16,22,16,.45);opacity:0;transition:opacity .24s}
+.sw .sp{position:absolute;left:0;right:0;bottom:0;margin:0 auto;max-width:520px;background:var(--paper);
+  border-radius:20px 20px 0 0;max-height:92dvh;overflow-y:auto;overscroll-behavior:contain;
+  padding:8px 18px calc(26px + env(safe-area-inset-bottom));
+  transform:translateY(100%);transition:transform .26s cubic-bezier(.32,.72,.3,1)}
+.sw.on .sb{opacity:1}
+.sw.on .sp{transform:translateY(0)}
+.sw.closing .sb{opacity:0}
+.sw.closing .sp{transform:translateY(100%)}
+.grab{width:38px;height:4px;border-radius:99px;background:var(--line);margin:6px auto 14px}
+
+/* ── 상세 ── */
+.dhero{position:relative;margin:2px 0 16px}
+.dhero .ph,.dhero .mono-ph{height:200px;border-radius:14px}
+.dhero .mono-ph b{font-size:52px}
+.dhero .no{position:absolute;top:10px;left:11px;font:600 10px var(--mono);letter-spacing:.14em;
+  color:#fff;background:rgba(20,26,20,.45);padding:4px 8px;border-radius:6px;backdrop-filter:blur(4px)}
+.dhero .mono-ph+.no{color:var(--acc);background:none;backdrop-filter:none}
+.dtit{display:flex;flex-direction:column;gap:7px}
+.dtit h3{font-size:23px;font-weight:900;letter-spacing:-.04em;line-height:1.3;text-wrap:balance}
+.dmeta{font:600 11px var(--mono);color:var(--sub);letter-spacing:.05em}
+.ing{display:flex;align-items:center;gap:10px;padding:10.5px 0;border-bottom:1px dashed var(--line2)}
+.ing:last-child{border-bottom:0}
+.ing .thumb{flex:none;width:34px;height:34px;border-radius:8px;background-size:cover;background-position:center;border:1px solid var(--line)}
+.ing .leader{flex:1;display:flex;align-items:baseline;gap:8px;min-width:0}
+.ing .inm{font-size:14px;font-weight:600;letter-spacing:-.02em;flex:none;max-width:60%}
+.ing .dots{flex:1;border-bottom:2px dotted var(--line);transform:translateY(-4px);min-width:16px}
+.ing .amt{font:600 12px var(--mono);color:var(--sub);flex:none;font-variant-numeric:tabular-nums}
+.steps{counter-reset:st;display:flex;flex-direction:column;gap:12px}
+.steps li{list-style:none;display:flex;gap:12px;align-items:flex-start}
+.steps li::before{counter-increment:st;content:counter(st,decimal-leading-zero);
+  font:700 11px var(--mono);color:var(--acc);letter-spacing:.06em;padding-top:3px;flex:none}
+.note{background:var(--soft);border-radius:11px;padding:12px 14px;font-size:13.5px;color:var(--ink);white-space:pre-line}
+.dacts{display:flex;flex-direction:column;gap:8px;margin-top:20px}
+
+/* ── 폼 ── */
+.fld{margin-top:16px}
+.fld>label{display:block;font:700 10px var(--mono);letter-spacing:.2em;text-transform:uppercase;color:var(--sub);margin-bottom:8px}
+.in{width:100%;background:var(--card);border:1px solid var(--line);border-radius:11px;height:46px;
+  padding:0 13px;outline:none;font-size:16px;transition:border-color .15s}
+.in:focus{border-color:var(--acc)}
+textarea.in{height:auto;min-height:58px;padding:11px 13px;resize:vertical;line-height:1.55}
+.in::placeholder{color:var(--sub);opacity:.7}
+#f-name{height:52px;font-size:17px;font-weight:700}
+.fphoto{width:100%;height:120px;border:1.5px dashed var(--line);border-radius:13px;display:flex;
+  align-items:center;justify-content:center;gap:8px;color:var(--sub);font-size:13px;font-weight:600;
+  background-size:cover;background-position:center}
+.fphoto.has{border-style:solid;color:transparent}
+.irow{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:9px;margin-bottom:8px}
+.ir1{display:flex;gap:7px}
+.ir1 .in{border:0;background:var(--line2);height:42px;font-size:16px}
+.ir1 .i-n{flex:1;min-width:0}
+.ir1 .i-a{flex:0 0 96px}
+.ir2{display:flex;gap:7px;margin-top:7px;align-items:center}
+.ir2 .i-b{flex:1;min-width:0;border:0;background:var(--line2);height:38px;font-size:16px}
+.pbtn{flex:none;width:36px;height:36px;border-radius:9px;border:1px solid var(--line);display:grid;
+  place-items:center;color:var(--sub);background-size:cover;background-position:center}
+.pbtn.has{color:transparent;border-color:var(--acc)}
+.xbtn{flex:none;width:32px;height:36px;display:grid;place-items:center;color:var(--sub)}
+.addrow{width:100%;border:1.5px dashed var(--line);border-radius:12px;height:44px;color:var(--sub);
+  font-size:13px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:6px}
+.srow{display:flex;gap:9px;align-items:flex-start;margin-bottom:8px}
+.srow b{font:700 11px var(--mono);color:var(--acc);padding-top:13px;flex:none}
+.srow textarea{flex:1}
+.srow .xbtn{margin-top:3px}
+.fcats{display:flex;gap:6px;flex-wrap:wrap}
+
+/* ── 뽑기 · 사다리 ── */
+.game{min-height:420px;display:flex;flex-direction:column}
+.mchips{display:flex;gap:6px;justify-content:center;margin-bottom:16px}
+.gcard{position:relative;background:var(--card);border:1px solid var(--line);border-radius:16px;
+  box-shadow:var(--sh);padding:22px;display:flex;flex-direction:column;align-items:center;gap:12px;
+  min-height:230px;justify-content:center;text-align:center}
+.gcard .ph,.gcard .mono-ph{width:110px;height:110px}
+.gcard .gnm{font-size:21px;font-weight:900;letter-spacing:-.035em;line-height:1.3;text-wrap:balance}
+.gcard.spin .gnm{opacity:.85}
+.stamp{position:absolute;top:12px;right:12px;transform:rotate(9deg);border:2.5px solid var(--heart);
+  color:var(--heart);font:800 12px var(--mono);letter-spacing:.22em;padding:5px 8px 5px 10px;border-radius:5px;opacity:0}
+.gcard.done .stamp{animation:stampIn .32s cubic-bezier(.2,1.5,.4,1) .05s forwards}
+@keyframes stampIn{from{opacity:0;transform:rotate(9deg) scale(1.7)}to{opacity:1;transform:rotate(9deg) scale(1)}}
+.gacts{display:flex;gap:8px;margin-top:18px}
+.gacts .btn{flex:1}
+.lsvg{width:100%;height:auto;margin-top:4px}
+.lsvg .rail{stroke:var(--line);stroke-width:3;stroke-linecap:round}
+.lsvg .rung{stroke:var(--line);stroke-width:3;stroke-linecap:round}
+.lsvg .trail{stroke:var(--acc);stroke-width:4;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.lsvg .snode circle{fill:var(--card);stroke:var(--line);stroke-width:2}
+.lsvg .snode text{fill:var(--ink);font:700 13px var(--mono)}
+.lsvg .snode.hot circle{fill:var(--acc-bg);stroke:var(--acc-bg)}
+.lsvg .snode.hot text{fill:var(--acc-ink)}
+.lsvg .cand{fill:var(--sub);font:600 11px var(--kr)}
+.lsvg .cand.win{fill:var(--acc);font-weight:800}
+.ghint{text-align:center;color:var(--sub);font-size:12.5px;margin-top:10px}
+
+/* ── 픽커 ── */
+.prow{display:flex;align-items:center;gap:11px;width:100%;text-align:left;padding:10px 2px;border-bottom:1px solid var(--line2)}
+.prow .ph,.prow .mono-ph{width:44px;height:44px;flex:none}
+.prow .mono-ph b{font-size:18px}
+.prow .pb{flex:1;min-width:0}
+.prow .pnm{font-size:14.5px;font-weight:700;letter-spacing:-.02em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* ── 메뉴 리스트 ── */
+.lrow{display:flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--line);
+  border-radius:13px;box-shadow:var(--sh);padding:9px 10px;margin-bottom:9px}
+.lmain{flex:1;min-width:0;display:flex;align-items:center;gap:11px;text-align:left}
+.lmain .ph,.lmain .mono-ph{width:52px;height:52px;flex:none}
+.lmain .mono-ph b{font-size:20px}
+.lb{flex:1;min-width:0;display:block}
+.lnm{display:block;font-size:15px;font-weight:800;letter-spacing:-.025em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lmt{display:flex;align-items:center;gap:8px;margin-top:3px}
+.ladd{flex:none;width:40px;height:40px;border-radius:11px;background:var(--soft);color:var(--acc);display:grid;place-items:center}
+.ladd:active{filter:brightness(.95)}
+.lmain .mono-ph i,.prow .mono-ph i,.vopt .mono-ph i{display:none}
+.hero .acts .btn{flex:1;padding:0 8px}
+
+/* ── 가족 투표 ── */
+.vopt{display:flex;align-items:center;gap:11px;width:100%;text-align:left;background:var(--card);
+  border:1.5px solid var(--line);border-radius:13px;padding:10px 12px;margin-bottom:8px}
+.vopt.on{border-color:var(--acc);background:var(--soft)}
+.vopt .ph,.vopt .mono-ph{width:44px;height:44px;flex:none}
+.vopt .mono-ph b{font-size:18px}
+.vopt .vnm{flex:1;min-width:0;font-size:14.5px;font-weight:700;letter-spacing:-.02em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.vturn{text-align:center;padding:26px 0 12px}
+.vturn .vt1{font:700 10px var(--mono);letter-spacing:.24em;color:var(--acc);text-transform:uppercase}
+.vturn .vt2{font-size:26px;font-weight:900;letter-spacing:-.04em;margin-top:8px;text-wrap:balance}
+.vturn .vt3{color:var(--sub);font-size:13px;margin-top:8px;line-height:1.6}
+.vbar{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.vbar .vn{flex:none;width:88px;font-size:13px;font-weight:700;letter-spacing:-.02em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:right}
+.vbar .vtrack{flex:1;height:24px;background:var(--line2);border-radius:8px;overflow:hidden}
+.vbar .vfill{display:block;height:100%;background:var(--acc-bg);border-radius:8px;min-width:3px;transition:width .5s ease}
+.vbar.win .vfill{background:var(--heart)}
+.vbar .vc{flex:none;font:700 13px var(--mono);width:18px;text-align:center;font-variant-numeric:tabular-nums}
+.fam{display:flex;align-items:center;gap:9px;padding:8px 2px;border-bottom:1px solid var(--line2)}
+.fam:last-child{border-bottom:0}
+.fam b{flex:1;font-size:14.5px;font-weight:700}
+
+/* ── 토스트 ── */
+#toast{position:fixed;left:50%;bottom:calc(88px + env(safe-area-inset-bottom));transform:translate(-50%,14px);
+  background:var(--ink);color:var(--paper);font-size:13px;font-weight:600;letter-spacing:-.01em;
+  padding:11px 18px;border-radius:12px;opacity:0;pointer-events:none;transition:all .25s;z-index:90;
+  max-width:86vw;text-align:center;box-shadow:var(--sh)}
+#toast.on{opacity:1;transform:translate(-50%,0)}
+
+/* ── 빈 상태 ── */
+.empty{text-align:center;padding:44px 20px;color:var(--sub)}
+.empty b{display:block;color:var(--ink);font-size:15px;font-weight:800;letter-spacing:-.02em;margin-bottom:6px}
+.empty p{font-size:13px;line-height:1.6}
+
+.mut{color:var(--sub);font-size:12px}
+.hr{border:0;border-top:1px solid var(--line2);margin:18px 0}
+
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{animation-duration:.01ms !important;transition-duration:.01ms !important}
+}
+</style>
+
+<div id="app">
+  <header class="hdr">
+    <div class="wm"><span>Family Recipe Box</span><b>우리집 식탁</b></div>
+    <button class="icobtn" data-a="settings" aria-label="설정">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 7h9M17 7h3M4 12h3M11 12h9M4 17h9M17 17h3"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="15" cy="17" r="2"/></svg>
+    </button>
+  </header>
+  <main id="scr"></main>
+</div>
+
+<nav class="tabbar"><div class="tabin">
+  <button class="tb" data-a="go" data-t="home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 13a8 8 0 0 0 16 0Z"/><path d="M4 13h16M9 9.5c0-1.6 1-1.6 1-3.2M14 9.5c0-1.6 1-1.6 1-3.2"/></svg><span>오늘</span></button>
+  <button class="tb" data-a="go" data-t="menus"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 6.5C10 5 7 5 4 6.5v12c3-1.5 6-1.5 8 0 2-1.5 5-1.5 8 0v-12c-3-1.5-6-1.5-8 0Z"/><path d="M12 6.5v12"/></svg><span>메뉴판</span></button>
+  <div class="fabwrap"><button class="fab" data-a="newMenu" aria-label="메뉴 등록"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button></div>
+  <button class="tb" data-a="go" data-t="plan"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="4" y="5" width="16" height="16" rx="2.5"/><path d="M4 10.5h16M9 3v4M15 3v4"/></svg><span>식단표</span></button>
+  <button class="tb" data-a="go" data-t="shop"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 10h15l-1.6 8.6A2 2 0 0 1 15.9 20H8.1a2 2 0 0 1-2-1.4L4.5 10Z"/><path d="M9 10l3-6 3 6"/></svg><span>장보기</span></button>
+</div></nav>
+
+<div id="toast" role="status"></div>
+
+<script>
+/* ═══════════ 유틸 ═══════════ */
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const uid=()=> (crypto.randomUUID ? crypto.randomUUID() : 'id'+Math.random().toString(36).slice(2)+Date.now());
+const pad=n=>String(n).padStart(2,'0');
+const iso=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+const todayISO=()=>iso(new Date());
+const fromISO=s=>{const[a,b,c]=s.split('-').map(Number);return new Date(a,b-1,c)};
+const WD=['일','월','화','수','목','금','토'], WDE=['SUN','MON','TUE','WED','THU','FRI','SAT'];
+function monday(d){const x=new Date(d);x.setHours(0,0,0,0);x.setDate(x.getDate()-((x.getDay()+6)%7));return x}
+function weekOf(off){const m=monday(new Date());m.setDate(m.getDate()+off*7);return m}
+function weekDays(mon){return Array.from({length:7},(_,i)=>{const d=new Date(mon);d.setDate(d.getDate()+i);return d})}
+function relW(off){return off===0?'이번 주':off===1?'다음 주':off===-1?'지난 주':(off>0?off+'주 뒤':(-off)+'주 전')}
+function mdot(s){const d=fromISO(s);return (d.getMonth()+1)+'.'+d.getDate()}
+const MEALS=[['b','아침'],['l','점심'],['d','저녁']];
+const MEAL={b:'아침',l:'점심',d:'저녁'};
+const CATS=['밥','면','국·찌개','빵·브런치','반찬','간식','기타'];
+
+const I={
+ cam:'<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="13" rx="2.5"/><circle cx="12" cy="13" r="4"/><path d="M8.5 7l1.4-2.3h4.2L15.5 7"/></svg>',
+ x:'<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/></svg>',
+ chk:'<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7"/></svg>',
+ lt:'<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 5.5L8 12l6.5 6.5"/></svg>',
+ rt:'<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 5.5L16 12l-6.5 6.5"/></svg>',
+ heart:'<svg viewBox="0 0 24 24"><path d="M12 20.2s-7.1-4.6-9.1-9.1C1.5 8 3.7 4.6 6.9 4.6c2 0 3.5 1 5.1 3 1.6-2 3.1-3 5.1-3 3.2 0 5.4 3.4 4 6.5-2 4.5-9.1 9.1-9.1 9.1Z"/></svg>',
+ srch:'<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg>',
+ plus:'<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>'
+};
+function hearts(r,cls,act){let h=`<span class="hearts ${cls||''}">`;for(let i=1;i<=5;i++)h+=`<span ${act?`data-a="${act}" data-v="${i}"`:''} style="display:inline-flex">${I.heart.replace('<svg','<svg class="'+(i<=r?'on':'')+'"')}</span>`;return h+'</span>'}
+function phEl(m,cls){ if(m.photo) return `<div class="ph ${cls||''}" style="background-image:url(${m.photo})"></div>`;
+ return `<div class="mono-ph ${cls||''}"><b>${esc((m.name||'?').slice(0,1))}</b>${m.no?`<i>No.${pad(m.no)}</i>`:''}</div>`}
+
+/* ═══════════ 상태 ═══════════ */
+let S=null;
+let ui={tab:'home',_last:'',week:0,shopWeek:0,shopInit:false,sort:'best',cat:'',q:'',pendingSlot:null};
+let F={};   // 등록 폼 임시
+let G={};   // 게임 임시
+let V={};   // 투표 임시
+let CONF=null;
+
+function seed(){
+ const y=new Date(); y.setDate(y.getDate()-1);
+ return { ver:1, seq:2, plan:{}, extra:{}, checked:{}, today:null,
+  menus:[{ id:uid(), no:1, name:'화덕브레드 샌드위치', cat:'빵·브런치', rating:5, cookCount:1,
+   lastCookedAt:iso(y), createdAt:new Date().toISOString(), photo:'',
+   memo:'빵이 핵심! 어느 브랜드 화덕브레드였는지 기억나면 재료의 브랜드 칸에 적어두기.',
+   ingredients:[
+    {name:'화덕브레드',amount:'1개',brand:'',photo:''},
+    {name:'그릭요거트',amount:'2큰술',brand:'',photo:''},
+    {name:'무화과잼',amount:'2큰술',brand:'',photo:''},
+    {name:'방울토마토',amount:'5~6알',brand:'',photo:''},
+    {name:'루꼴라',amount:'한 줌',brand:'',photo:''},
+    {name:'잠봉',amount:'2~3장',brand:'',photo:''},
+    {name:'부라타치즈',amount:'1개',brand:'',photo:''},
+    {name:'아몬드',amount:'한 줌 (부숴서)',brand:'',photo:''}],
+   steps:['화덕브레드를 가로로 갈라 주세요.','한쪽엔 그릭요거트, 다른 한쪽엔 무화과잼을 발라요.','루꼴라 → 방울토마토 → 잠봉 → 부라타치즈 순서로 올려요.','아몬드를 잘게 부숴 솔솔 뿌리면 완성!'],
+  }]};
+}
+
+/* 저장: IndexedDB 우선, 실패 시 localStorage */
+let idbOK=true;
+function idb(){return new Promise((res,rej)=>{const r=indexedDB.open('ourtable',1);
+ r.onupgradeneeded=()=>r.result.createObjectStore('kv');
+ r.onsuccess=()=>res(r.result); r.onerror=()=>rej(r.error)})}
+async function dbSet(v){const d=await idb();return new Promise((res,rej)=>{const t=d.transaction('kv','readwrite');
+ t.objectStore('kv').put(v,'S'); t.oncomplete=res; t.onerror=()=>rej(t.error)})}
+async function dbGet(){const d=await idb();return new Promise((res,rej)=>{const t=d.transaction('kv','readonly');
+ const q=t.objectStore('kv').get('S'); q.onsuccess=()=>res(q.result); q.onerror=()=>rej(q.error)})}
+let saveT=null;
+function save(){clearTimeout(saveT);saveT=setTimeout(flush,250)}
+async function flush(){ try{ if(idbOK){await dbSet(JSON.parse(JSON.stringify(S)));return} }catch(e){idbOK=false}
+ try{localStorage.setItem('ourtable',JSON.stringify(S))}catch(e){} }
+document.addEventListener('visibilitychange',()=>{if(document.hidden)flush()});
+
+function menu(id){return S.menus.find(m=>m.id===id)}
+function bestSorted(){return [...S.menus].sort((a,b)=>(b.rating-a.rating)||(b.cookCount-a.cookCount)||b.createdAt.localeCompare(a.createdAt))}
+
+/* ═══════════ 렌더 ═══════════ */
+function go(t){ if(t==='shop'&&!ui.shopInit){ui.shopInit=true;
+  const has=w=>weekDays(weekOf(w)).some(d=>{const p=S.plan[iso(d)];return p&&(p.b||p.l||p.d)});
+  ui.shopWeek = has(0)?0 : (has(1)?1:0); }
+ ui.tab=t; render() }
+
+function render(){
+ $$('.tb').forEach(b=>b.classList.toggle('act',b.dataset.t===ui.tab));
+ $('#scr').innerHTML=({home:vHome,menus:vMenus,plan:vPlan,shop:vShop})[ui.tab]();
+ if(ui._last!==ui.tab){window.scrollTo(0,0);ui._last=ui.tab}
+}
+
+/* ── 홈 ── */
+function vHome(){
+ const t=new Date(), ti=todayISO();
+ const dateLn=`${t.getMonth()+1}.${t.getDate()} ${WDE[t.getDay()]} — TONIGHT`;
+ const td=(S.today&&S.today.date===ti)?S.today:null;
+ const pick=td?(td.delivery?{name:'배달 찬스',no:0,photo:''}:menu(td.menu)):null;
+ let hero;
+ if(pick){
+  hero=`<section class="hero"><div class="date">${dateLn}</div>
+   <div class="hero-menu">${phEl(pick)}
+    <div><div class="eyebrow">오늘의 ${MEAL[td.meal]||'저녁'}</div>
+     <div class="nm">${esc(pick.name)}</div>
+     <div class="mt">${td.delivery?'오늘은 요리 쉬는 날':`No.${pad(pick.no)} · ${pick.cookCount}번 해먹음`}</div></div></div>
+   <div class="acts">${td.delivery?'':`<button class="btn pri" data-a="cook" data-id="${pick.id}">오늘 해먹었어요</button>`}
+    <button class="btn gho" data-a="openDraw">다시 정하기</button></div></section>`;
+ }else{
+  hero=`<section class="hero"><div class="date">${dateLn}</div>
+   <h1>오늘 뭐,<br>먹지?</h1>
+   <div class="sub">우리집 메뉴판 ${S.menus.length}가지 중에서 골라줄게요.</div>
+   <div class="acts"><button class="btn pri" data-a="openDraw">뽑기</button>
+    <button class="btn gho" data-a="openLadder">사다리</button>
+    <button class="btn gho" data-a="openVote">가족 투표</button></div></section>`;
+ }
+ const days=weekDays(weekOf(0)).map(d=>{const k=iso(d),p=S.plan[k]||{};const dm=p.d?menu(p.d):null;
+  return `<button class="dcol ${k===ti?'today':''}" data-a="go" data-t="plan">
+   <span class="dl">${WDE[d.getDay()][0]}</span>
+   <span class="dn ${dm?'':'none'}">${dm?esc(dm.name):'·'}</span></button>`}).join('');
+ return hero+
+  `<section class="sec"><div class="sec-h"><div><div class="eyebrow">This Week</div><h2>이번 주 저녁</h2></div></div>
+    <div class="strip">${days}</div></section>`;
+}
+
+/* ── 메뉴판 ── */
+function vMenus(){
+ let list=bestSorted();
+ if(ui.sort==='new')list=[...S.menus].sort((a,b)=>b.createdAt.localeCompare(a.createdAt));
+ if(ui.sort==='often')list=[...S.menus].sort((a,b)=>(b.cookCount-a.cookCount)||(b.rating-a.rating));
+ if(ui.cat)list=list.filter(m=>m.cat===ui.cat);
+ if(ui.q)list=list.filter(m=>m.name.toLowerCase().includes(ui.q.toLowerCase()));
+ const top3=bestSorted().slice(0,3);
+ const rail=S.menus.length?`<div class="eyebrow" style="margin-bottom:9px">Best of Home</div>
+  <div class="rail" style="margin-bottom:14px">${top3.map((m,i)=>`<button class="rcard" data-a="detail" data-id="${m.id}">
+   ${phEl(m)}<span class="rk ${i===0?'r1':''}">${i===0?'BEST':pad(i+1)}</span>
+   <div class="b"><div class="nm">${esc(m.name)}</div>
+   <div style="margin-top:5px">${hearts(m.rating)}</div></div></button>`).join('')}</div>`:'';
+ const rows=list.map(m=>`<div class="lrow">
+   <button class="lmain" data-a="detail" data-id="${m.id}">${phEl(m)}
+    <span class="lb"><span class="lnm">${esc(m.name)}</span>
+     <span class="lmt">${hearts(m.rating)}<span class="cooked">×${m.cookCount}</span><span class="cooked">No.${pad(m.no)}</span></span></span></button>
+   <button class="ladd" data-a="toPlan" data-id="${m.id}" aria-label="식단표에 넣기">${I.plus}</button></div>`).join('');
+ const sorts=[['best','베스트순'],['new','최근 등록'],['often','자주 해먹은']];
+ return `<section class="sec"><div class="sec-h"><div><div class="eyebrow">House Menu</div><h2>우리집 메뉴판</h2></div>
+   <span class="cnt">${list.length} / ${S.menus.length}</span></div>
+  ${rail}
+  <div class="tools">
+   <div class="search">${I.srch}<input id="q" placeholder="SEARCH" value="${esc(ui.q)}" autocomplete="off"></div>
+   <div class="chips">${sorts.map(([k,v])=>`<button class="chip ${ui.sort===k?'on':''}" data-a="sort" data-s="${k}">${v}</button>`).join('')}</div>
+   <div class="chips"><button class="chip ${ui.cat===''?'on':''}" data-a="cat" data-c="">전체</button>
+    ${CATS.map(c=>`<button class="chip ${ui.cat===c?'on':''}" data-a="cat" data-c="${c}">${c}</button>`).join('')}</div>
+  </div>
+  ${rows||`<div class="empty"><b>아직 여기엔 없어요</b><p>아래 + 버튼으로 첫 메뉴를 올려보세요.<br>이름만 적어도 충분해요.</p></div>`}
+ </section>`;
+}
+
+/* ── 식단표 ── */
+function wknav(off,act){const mon=weekOf(off),sun=new Date(mon);sun.setDate(sun.getDate()+6);
+ return `<div class="wknav"><button class="icobtn" data-a="${act}" data-d="-1" aria-label="이전 주">${I.lt}</button>
+  <button class="wtit" data-a="${act}" data-d="0"><b>${relW(off)}</b><div>${mdot(iso(mon))} – ${mdot(iso(sun))}</div></button>
+  <button class="icobtn" data-a="${act}" data-d="1" aria-label="다음 주">${I.rt}</button></div>`}
+function vPlan(){
+ const ti=todayISO();
+ const rows=weekDays(weekOf(ui.week)).map(d=>{const k=iso(d),p=S.plan[k]||{};
+  const slots=MEALS.map(([mk,ml])=>{const m=p[mk]?menu(p[mk]):null;
+   return m?`<button class="slot fill" data-a="slot" data-date="${k}" data-m="${mk}">
+     <span class="ml">${ml}</span><span class="snm">${esc(m.name)}</span>
+     <span class="sx" data-a="slotX" data-date="${k}" data-m="${mk}" role="button" aria-label="비우기">${I.x}</span></button>`
+    :`<button class="slot" data-a="slot" data-date="${k}" data-m="${mk}">
+     <span class="ml">${ml}</span><span class="snm">메뉴 정하기</span><span class="sx" style="color:var(--line)">${I.plus}</span></button>`}).join('');
+  return `<div class="day ${k===ti?'today':''}"><div class="dt"><div class="w">${WDE[d.getDay()]}</div><div class="n">${d.getDate()}</div></div>
+   <div class="slots">${slots}</div></div>`}).join('');
+ return `<section class="sec"><div class="sec-h"><div><div class="eyebrow">Weekly Plan</div><h2>주간 식단표</h2></div></div>
+  ${wknav(ui.week,'wk')}<div class="paper">${rows}</div>
+  <div class="ghint">칸을 누르면 메뉴판에서 골라 넣을 수 있어요</div></section>`;
+}
+
+/* ── 장보기 ── */
+function shopData(){
+ const wk=iso(weekOf(ui.shopWeek)); const map=new Map();
+ weekDays(weekOf(ui.shopWeek)).forEach(d=>{const p=S.plan[iso(d)]||{};
+  MEALS.forEach(([mk])=>{const m=p[mk]?menu(p[mk]):null; if(!m)return;
+   (m.ingredients||[]).forEach(g=>{const key=g.name.trim(); if(!key)return;
+    const e=map.get(key)||{name:key,brand:'',photo:'',uses:[]};
+    if(!e.brand&&g.brand)e.brand=g.brand; if(!e.photo&&g.photo)e.photo=g.photo;
+    if(!e.uses.some(u=>u.m===m.name&&u.a===g.amount))e.uses.push({m:m.name,a:g.amount});
+    map.set(key,e)})})});
+ const extras=(S.extra[wk]||[]);
+ return {wk,items:[...map.values()],extras};
+}
+function vShop(){
+ const {wk,items,extras}=shopData();
+ const ck=k=>!!S.checked[wk+'|'+k];
+ const total=items.length+extras.length;
+ const done=items.filter(i=>ck(i.name)).length+extras.filter(x=>ck('x'+x.id)).length;
+ const rows=items.map(it=>{const c=ck(it.name);
+  return `<button class="sitem ${c?'done':''}" data-a="chk" data-k="${esc(it.name)}">
+   <span class="cbox">${I.chk}</span>
+   <span class="sb"><span class="snm2">${esc(it.name)}${it.brand?`<span class="brand">${esc(it.brand)}</span>`:''}</span>
+    <span class="src">${it.uses.map(u=>`${esc(u.a||'적당량')} · ${esc(u.m)}`).join('<br>')}</span></span>
+   ${it.photo?`<span class="thumb" style="background-image:url(${it.photo})"></span>`:''}</button>`}).join('');
+ const xrows=extras.map(x=>{const c=ck('x'+x.id);
+  return `<button class="sitem ${c?'done':''}" data-a="chk" data-k="x${x.id}">
+   <span class="cbox">${I.chk}</span>
+   <span class="sb"><span class="snm2">${esc(x.name)}</span>${x.amount?`<span class="src">${esc(x.amount)}</span>`:''}</span>
+   <span class="sx" data-a="xdel" data-id="${x.id}" role="button" aria-label="삭제" style="color:var(--sub);width:26px;height:26px;display:grid;place-items:center">${I.x}</span></button>`}).join('');
+ const body = total?`<div class="prog"><div class="pt"><b>${done===total?'장보기 완료!':'장바구니'}</b>
+    <span id="pgt">${done} / ${total}</span></div><div class="pbar"><i id="pgb" style="width:${total?Math.round(done/total*100):0}%"></i></div></div>
+   <div class="paper">${rows}${xrows}</div>`
+  :`<div class="empty"><b>이번 주 장 볼 게 아직 없어요</b><p>식단표에 메뉴를 채우면<br>필요한 재료가 여기 자동으로 모여요.</p>
+    <button class="btn gho" style="margin-top:14px" data-a="go" data-t="plan">식단표 채우러 가기</button></div>`;
+ return `<section class="sec"><div class="sec-h"><div><div class="eyebrow">Grocery List</div><h2>장보기 리스트</h2></div></div>
+  ${wknav(ui.shopWeek,'swk')}${body}
+  <div class="xadd"><input id="xn" placeholder="직접 추가 · 예) 화덕브레드" autocomplete="off"><input id="xa" class="amt" placeholder="양" autocomplete="off">
+   <button class="btn pri" style="height:42px;padding:0 14px" data-a="xadd">추가</button></div></section>`;
+}
+
+/* ═══════════ 시트 ═══════════ */
+let SHEETS=[],seq=0;
+function sheet(html){const id='sh'+(++seq);const w=document.createElement('div');w.className='sw';w.id=id;
+ w.innerHTML=`<div class="sb" data-a="shClose"></div><div class="sp"><div class="grab"></div>${html}</div>`;
+ document.body.appendChild(w);requestAnimationFrame(()=>requestAnimationFrame(()=>w.classList.add('on')));
+ SHEETS.push(id);document.body.classList.add('lock');return id}
+function shClose(){const id=SHEETS.pop();const w=id&&document.getElementById(id);if(!w)return;
+ w.classList.remove('on');w.classList.add('closing');setTimeout(()=>w.remove(),280);
+ if(!SHEETS.length)document.body.classList.remove('lock')}
+function shCloseAll(){while(SHEETS.length)shClose()}
+
+/* ── 상세 ── */
+function openDetail(id){const m=menu(id);if(!m)return;
+ const ings=(m.ingredients||[]).map(g=>`<div class="ing">
+   ${g.photo?`<span class="thumb" style="background-image:url(${g.photo})"></span>`:''}
+   <span class="leader"><span class="inm">${esc(g.name)}${g.brand?` <span class="brand">${esc(g.brand)}</span>`:''}</span>
+   <span class="dots"></span><span class="amt">${esc(g.amount||'')}</span></span></div>`).join('');
+ const steps=(m.steps||[]).map(s=>`<li><span>${esc(s)}</span></li>`).join('');
+ sheet(`<div class="dhero">${phEl(m)}<span class="no">RECIPE No.${pad(m.no)}</span></div>
+  <div class="dtit"><h3>${esc(m.name)}</h3>
+   <div>${hearts(m.rating,'big tap','rate').replace('<span class="hearts','<span data-id="'+m.id+'" class="hearts')}</div>
+   <div class="dmeta">${m.cat?esc(m.cat)+' · ':''}${m.cookCount}번 해먹음${m.lastCookedAt?' · 마지막 '+mdot(m.lastCookedAt):''}</div></div>
+  ${ings?`<div class="sec"><div class="eyebrow">재료</div><div style="margin-top:8px">${ings}</div></div>`:''}
+  ${steps?`<div class="sec"><div class="eyebrow">만드는 법</div><ol class="steps" style="margin-top:12px">${steps}</ol></div>`:''}
+  ${m.memo?`<div class="sec"><div class="eyebrow">우리집 메모</div><div class="note" style="margin-top:10px">${esc(m.memo)}</div></div>`:''}
+  <div class="dacts">
+   <button class="btn pri blk" data-a="toPlan" data-id="${m.id}">식단표에 넣기</button>
+   <button class="btn gho blk" data-a="cook" data-id="${m.id}">오늘 해먹었어요 +1</button>
+   <div class="tbtns"><button class="tbtn" data-a="edit" data-id="${m.id}">수정하기</button>
+    <button class="tbtn warn" data-a="delMenu" data-id="${m.id}">메뉴판에서 빼기</button></div></div>`)}
+
+/* ── 등록/수정 폼 ── */
+function ingRowHTML(v={}){return `<div class="irow" data-photo="${esc(v.photo||'')}">
+ <div class="ir1"><input class="in i-n" placeholder="재료명" value="${esc(v.name||'')}"><input class="in i-a" placeholder="양 · 2큰술" value="${esc(v.amount||'')}"></div>
+ <div class="ir2"><input class="in i-b" placeholder="브랜드 (선택)" value="${esc(v.brand||'')}">
+  <button type="button" class="pbtn ${v.photo?'has':''}" data-a="ingPhoto" aria-label="재료 사진" ${v.photo?`style="background-image:url(${v.photo})"`:''}>${I.cam}</button>
+  <button type="button" class="xbtn" data-a="rowDel" aria-label="재료 삭제">${I.x}</button></div></div>`}
+function stepRowHTML(v){return `<div class="srow"><b>${pad($$('#stepRows .srow').length+1)}</b>
+ <textarea class="in step" rows="2" placeholder="예) 빵을 가로로 갈라 주세요">${esc(v||'')}</textarea>
+ <button type="button" class="xbtn" data-a="rowDel" aria-label="단계 삭제">${I.x}</button></div>`}
+function renum(){$$('#stepRows .srow b').forEach((b,i)=>b.textContent=pad(i+1))}
+
+function openForm(id){const m=id?menu(id):null;
+ F={editId:id||null,photo:m?m.photo:'',rating:m?m.rating:0,cat:m?m.cat:''};
+ const ings=(m&&m.ingredients.length?m.ingredients:[{}]).map(ingRowHTML).join('');
+ sheet(`<div class="sec-h" style="margin-top:4px"><div><div class="eyebrow">${m?'Recipe Edit':'New Recipe'}</div>
+   <h2>${m?'메뉴 고치기':'새 메뉴 올리기'}</h2></div><span class="cnt">No.${pad(m?m.no:S.seq)}</span></div>
+  <div class="fld"><button type="button" id="f-photo" class="fphoto ${F.photo?'has':''}" data-a="fphoto"
+    ${F.photo?`style="background-image:url(${F.photo})"`:''}>${I.cam}<span>완성 사진 (선택)</span></button></div>
+  <div class="fld"><label>이름 — 이것만 적어도 돼요</label><input id="f-name" class="in" placeholder="예) 화덕브레드 샌드위치" value="${esc(m?m.name:'')}"></div>
+  <div class="fld"><label>얼마나 맛있었나요</label><div id="f-hearts">${hearts(F.rating,'big tap','frate')}</div></div>
+  <div class="fld"><label>종류 (선택)</label><div class="fcats">${CATS.map(c=>`<button type="button" class="chip ${F.cat===c?'on':''}" data-a="fcat" data-c="${c}">${c}</button>`).join('')}</div></div>
+  <div class="fld"><label>재료 (선택)</label><div id="ingRows">${ings}</div>
+   <button type="button" class="addrow" data-a="ingAdd">${I.plus} 재료 추가</button></div>
+  <div class="fld"><label>만드는 법 (선택)</label><div id="stepRows"></div>
+   <button type="button" class="addrow" data-a="stepAdd">${I.plus} 단계 추가</button></div>
+  <div class="fld"><label>우리집 메모 (선택)</label><textarea id="f-memo" class="in" placeholder="예) 아이가 제일 좋아함. 다음엔 잼 조금만.">${esc(m?m.memo:'')}</textarea></div>
+  <div class="dacts"><button class="btn pri blk" data-a="saveMenu">${m?'고친 대로 저장':'메뉴판에 올리기'}</button></div>`);
+ const sr=$('#stepRows'); (m&&m.steps.length?m.steps:['']).forEach(s=>sr.insertAdjacentHTML('beforeend',stepRowHTML(s)));
+}
+function saveMenu(){
+ const name=$('#f-name').value.trim(); if(!name){toast('이름은 적어줘야 해요');$('#f-name').focus();return}
+ const ings=$$('#ingRows .irow').map(r=>({name:r.querySelector('.i-n').value.trim(),amount:r.querySelector('.i-a').value.trim(),
+   brand:r.querySelector('.i-b').value.trim(),photo:r.dataset.photo||''})).filter(g=>g.name);
+ const steps=$$('#stepRows .step').map(t=>t.value.trim()).filter(Boolean);
+ const memo=$('#f-memo').value.trim();
+ let m;
+ if(F.editId){m=menu(F.editId);Object.assign(m,{name,ingredients:ings,steps,memo,photo:F.photo,rating:F.rating,cat:F.cat})}
+ else{m={id:uid(),no:S.seq++,name,cat:F.cat,rating:F.rating,cookCount:0,lastCookedAt:'',createdAt:new Date().toISOString(),
+   photo:F.photo,memo,ingredients:ings,steps}; S.menus.push(m)}
+ save();
+ const ps=ui.pendingSlot; ui.pendingSlot=null;
+ shCloseAll();
+ if(ps){(S.plan[ps.date]=S.plan[ps.date]||{})[ps.m]=m.id;save();go('plan');
+   toast(`${mdot(ps.date)} ${MEAL[ps.m]}에 넣었어요`)}
+ else if(F.editId){render();openDetail(m.id);toast('고쳐뒀어요')}
+ else{go('menus');toast(m.rating===5?'베스트 메뉴 등록!':'메뉴판에 올렸어요')}
+}
+
+/* ── 식단표에 넣기 (날짜 고르기) ── */
+function openChooser(id){const m=menu(id);if(!m)return;
+ const days=[];for(let i=0;i<14;i++){const d=new Date();d.setDate(d.getDate()+i);days.push(d)}
+ const rows=days.map(d=>{const k=iso(d),p=S.plan[k]||{};
+  const cells=MEALS.map(([mk,ml])=>{const cur=p[mk]?menu(p[mk]):null;
+   return `<button class="slot ${cur?'fill':''}" style="flex:1" data-a="slotPut" data-id="${id}" data-date="${k}" data-m="${mk}">
+    <span class="ml">${ml}</span><span class="snm">${cur?esc(cur.name):'비어있음'}</span></button>`}).join('');
+  return `<div class="day"><div class="dt"><div class="w">${WDE[d.getDay()]}</div><div class="n">${d.getDate()}</div></div>
+   <div class="slots" style="flex-direction:row;gap:5px">${cells}</div></div>`}).join('');
+ sheet(`<div class="sec-h" style="margin-top:4px"><div><div class="eyebrow">Add to Plan</div>
+  <h2>언제 먹을까요?</h2></div><span class="cnt">${esc(m.name)}</span></div><div class="paper">${rows}</div>`)}
+
+/* ── 픽커 (빈 슬롯 → 메뉴 고르기) ── */
+function openPicker(date,mk){ui.pendingSlot={date,m:mk};
+ const list=bestSorted();
+ const rows=list.map(m=>`<button class="prow" data-a="pick" data-id="${m.id}">${phEl(m)}
+  <span class="pb"><span class="pnm">${esc(m.name)}</span><span style="margin-top:2px;display:block">${hearts(m.rating)}</span></span>
+  <span class="cooked">×${m.cookCount}</span></button>`).join('');
+ sheet(`<div class="sec-h" style="margin-top:4px"><div><div class="eyebrow">${mdot(date)} · ${MEAL[mk]}</div>
+   <h2>뭘 먹을까요?</h2></div></div>
+  <div id="pkList">${rows||'<div class="empty"><b>메뉴판이 비어 있어요</b></div>'}</div>
+  <div class="dacts"><button class="btn gho blk" data-a="pickNew">${I.plus} 새 메뉴 만들어서 넣기</button></div>`)}
+
+/* ── 설정 ── */
+function openSettings(){
+ const kb=Math.max(1,Math.round(JSON.stringify(S).length/1024));
+ sheet(`<div class="sec-h" style="margin-top:4px"><div><div class="eyebrow">Our Table</div><h2>보관함 관리</h2></div>
+   <span class="cnt">v0.1</span></div>
+  <div class="paper" style="padding:14px"><div class="mut" style="font-family:var(--mono);letter-spacing:.04em">
+   메뉴 ${S.menus.length}가지 · 데이터 약 ${kb}KB<br>이 브라우저 안에만 저장돼요. 가끔 백업해 두세요.</div></div>
+  <div class="dacts">
+   <button class="btn pri blk" data-a="exp">백업 파일 내려받기</button>
+   <button class="btn gho blk" data-a="impBtn">백업 파일 불러오기</button>
+   <input type="file" id="impF" accept="application/json,.json" hidden>
+   <button class="btn gho blk" data-a="fam">가족 구성원 관리 (${S.family.length}명)</button>
+   <div class="tbtns"><button class="tbtn warn" data-a="wipe">전부 지우고 처음부터</button></div></div>
+  <hr class="hr"><div class="mut">휴대폰 홈 화면에 붙여두려면 — 브라우저 공유 메뉴에서 <b>‘홈 화면에 추가’</b>를 눌러주세요. 앱처럼 열려요.</div>`)}
+
+async function exportJson(){
+ const data=JSON.stringify(S,null,2), fn=`ourtable-backup-${todayISO()}.json`;
+ if(window.claude&&window.claude.downloads){
+  try{await window.claude.downloads.save({filename:fn,data});toast('백업 파일을 저장했어요')}
+  catch(e){if(e&&e.code==='declined')return; if(e&&e.code==='rate_limited'){toast('잠시 뒤 다시 눌러주세요')}else fallbackDl(fn,data)}
+ }else fallbackDl(fn,data);
+}
+function fallbackDl(fn,data){try{const u=URL.createObjectURL(new Blob([data],{type:'application/json'}));
+ const a=document.createElement('a');a.href=u;a.download=fn;a.click();setTimeout(()=>URL.revokeObjectURL(u),4000);
+ toast('백업 파일을 내려받았어요')}catch(e){toast('저장이 막혀 있어요')}}
+function importJson(f){if(!f)return;const rd=new FileReader();
+ rd.onload=()=>{try{const o=JSON.parse(rd.result);
+   if(!o||!Array.isArray(o.menus))throw 0;
+   S=Object.assign(seed(),o);
+   S.seq=Math.max(S.seq||2,S.menus.length+1,...S.menus.map(m=>(m.no||0)+1));
+   save(); shCloseAll(); render(); toast('불러왔어요 — 그대로 이어서 쓰면 돼요')}
+  catch(e){toast('이 파일은 우리집 식탁 백업이 아니에요')}};
+ rd.readAsText(f)}
+
+/* ── 확인 ── */
+function openConfirm(msg,yes,fn){CONF=fn;
+ sheet(`<div style="text-align:center;padding:10px 6px 2px"><b style="font-size:16px;letter-spacing:-.02em">${msg}</b></div>
+  <div class="dacts"><button class="btn pri blk" style="background:var(--heart)" data-a="confYes">${yes}</button>
+   <button class="btn gho blk" data-a="shClose">아니요</button></div>`)}
+
+/* ═══════════ 게임 ═══════════ */
+function gameHead(t,e){return `<div class="sec-h" style="margin-top:4px"><div><div class="eyebrow">${e}</div><h2>${t}</h2></div></div>
+ <div class="mchips">${MEALS.map(([k,v])=>`<button class="chip ${G.meal===k?'on':''}" data-a="gmeal" data-m="${k}">${v}</button>`).join('')}</div>`}
+
+function openDraw(){ if(!S.menus.length){toast('먼저 메뉴를 하나 올려주세요');return}
+ G={meal:'d',mode:'draw',done:false};
+ sheet(`<div class="game">${gameHead('카드 뽑기','Random Pick')}
+  <div class="gcard spin" id="gcard"><div id="gph">${phEl(S.menus[0])}</div>
+   <div class="gnm" id="gnm">…</div><div class="stamp">결 정</div></div>
+  <div class="gacts" id="gacts" style="visibility:hidden">
+   <button class="btn gho" data-a="drawAgain">한 번 더</button>
+   <button class="btn pri" id="gdecide" data-a="decide">이걸로 결정</button></div>
+  ${S.menus.length<2?'<div class="ghint">메뉴가 늘어날수록 뽑기가 재밌어져요</div>':''}</div>`);
+ spinDraw()}
+function spinDraw(){G.done=false;const card=$('#gcard');card.classList.remove('done');card.classList.add('spin');
+ $('#gacts').style.visibility='hidden';
+ let dt=65,el=0;
+ (function tick(){if(!$('#gcard'))return;const m=S.menus[Math.floor(Math.random()*S.menus.length)];G.pickId=m.id;
+  $('#gph').innerHTML=phEl(m);$('#gnm').textContent=m.name;
+  el+=dt;dt*=1.14;
+  if(dt<300&&el<2600)setTimeout(tick,dt);
+  else{G.done=true;card.classList.remove('spin');card.classList.add('done');
+   $('#gacts').style.visibility='visible';$('#gdecide').dataset.id=G.pickId}})()}
+
+function openLadder(){ if(S.menus.length<3){toast(`사다리는 메뉴 3가지부터! 지금 ${S.menus.length}가지`);return}
+ G={meal:'d',mode:'ladder'};
+ const pool=[...S.menus].sort(()=>Math.random()-.5);
+ G.cands=pool.slice(0,Math.min(4,pool.length));
+ const K=G.cands.length,W=320;
+ G.xs=Array.from({length:K},(_,i)=>Math.round(K===2?100+i*120:32+i*((W-64)/(K-1))));
+ const top=58,bot=292,L=7;
+ G.ys=Array.from({length:L},(_,i)=>Math.round(top+(i+1)*(bot-top)/(L+1)));
+ G.top=top;G.bot=bot;
+ G.rungs=[];
+ G.ys.forEach(y=>{const cols=[...Array(K-1).keys()].sort(()=>Math.random()-.5);const placed=[];
+  cols.forEach(c=>{if(Math.random()<.58&&!placed.some(p=>Math.abs(p-c)<=1)){placed.push(c);G.rungs.push({y,c})}});
+  if(!placed.length&&Math.random()<.7){const c=Math.floor(Math.random()*(K-1));G.rungs.push({y,c})}});
+ const rails=G.xs.map(x=>`<line class="rail" x1="${x}" y1="${top}" x2="${x}" y2="${bot}"/>`).join('');
+ const rungs=G.rungs.map(r=>`<line class="rung" x1="${G.xs[r.c]}" y1="${r.y}" x2="${G.xs[r.c+1]}" y2="${r.y}"/>`).join('');
+ const starts=G.xs.map((x,i)=>`<g class="snode" id="sn${i}" data-a="lgo" data-i="${i}" style="cursor:pointer">
+   <circle cx="${x}" cy="34" r="15"/><text x="${x}" y="39" text-anchor="middle">${i+1}</text></g>`).join('');
+ const cands=G.cands.map((m,i)=>`<text class="cand" id="cd${i}" x="${G.xs[i]}" y="316" text-anchor="middle">${esc(m.name.length>6?m.name.slice(0,6)+'…':m.name)}</text>`).join('');
+ sheet(`<div class="game">${gameHead('사다리 타기','Ladder Game')}
+  <div class="ghint" id="lhint">번호를 하나 골라서 눌러보세요</div>
+  <svg class="lsvg" viewBox="0 0 320 332" id="lsvg">${rails}${rungs}<path class="trail" id="ltrail" d=""/>${starts}${cands}</svg>
+  <div class="gacts" id="gacts" style="visibility:hidden">
+   <button class="btn gho" data-a="ladderAgain">한 번 더</button>
+   <button class="btn pri" id="gdecide" data-a="decide">이걸로 결정</button></div></div>`)}
+function ladderGo(i){ if(G.ran)return; G.ran=true;
+ $('#sn'+i).classList.add('hot');
+ let rail=i;const pts=[[G.xs[rail],34]];
+ G.ys.forEach(y=>{pts.push([G.xs[rail],y]);
+  const r=G.rungs.find(r=>r.y===y&&(r.c===rail||r.c===rail-1));
+  if(r){rail=(r.c===rail)?rail+1:rail-1;pts.push([G.xs[rail],y])}});
+ pts.push([G.xs[rail],G.bot]);
+ G.pickId=G.cands[rail].id;
+ const p=$('#ltrail');p.setAttribute('d','M'+pts.map(q=>q.join(' ')).join(' L '));
+ const len=p.getTotalLength();
+ p.style.strokeDasharray=len;p.style.strokeDashoffset=len;p.style.transition='none';
+ requestAnimationFrame(()=>{p.style.transition='stroke-dashoffset 1.5s cubic-bezier(.55,.06,.35,1)';p.style.strokeDashoffset='0'});
+ setTimeout(()=>{const cd=$('#cd'+rail);if(!cd)return;cd.classList.add('win');
+  $('#lhint').textContent=`오늘의 ${MEAL[G.meal]}은 — ${G.cands[rail].name}!`;
+  $('#gacts').style.visibility='visible';$('#gdecide').dataset.id=G.pickId},1550)}
+
+function decide(id){const m=menu(id||G.pickId);if(!m)return;
+ const k=todayISO();(S.plan[k]=S.plan[k]||{})[G.meal]=m.id;
+ S.today={date:k,menu:m.id,meal:G.meal};save();shCloseAll();go('home');
+ toast(`오늘 ${MEAL[G.meal]}은 ${m.name}! 식단표에도 넣어뒀어요`)}
+
+/* ═══════════ 가족 투표 ═══════════ */
+const DELIV={name:'배달 찬스',no:0,photo:''};
+function vnm(k){return k==='DELIV'?'배달 찬스':(menu(k)?menu(k).name:'?')}
+function openVote(){
+ if(S.menus.length<2){toast('메뉴가 2가지는 있어야 투표할 수 있어요');return}
+ if(S.family.length<2){openFamily(true);return}
+ V={meal:'d',sel:new Set(bestSorted().slice(0,3).map(m=>m.id)),deliv:false};
+ const rows=bestSorted().map(m=>`<button class="vopt ${V.sel.has(m.id)?'on':''}" data-a="vsel" data-id="${m.id}">
+   ${phEl(m)}<span class="vnm">${esc(m.name)}</span>${hearts(m.rating)}</button>`).join('');
+ sheet(`<div id="vbody"><div class="sec-h" style="margin-top:4px"><div><div class="eyebrow">Family Vote</div><h2>오늘 뭐 먹을래, 투표!</h2></div>
+   <span class="cnt">후보 2~4개</span></div>
+  <div class="mchips">${MEALS.map(([k,v])=>`<button class="chip ${k==='d'?'on':''}" data-a="vmeal" data-m="${k}">${v}</button>`).join('')}</div>
+  <button class="vopt" id="vdeliv" data-a="vdeliv">${phEl(DELIV)}<span class="vnm">배달 찬스</span><span class="cooked">치트키</span></button>
+  ${rows}
+  <div class="dacts"><button class="btn pri blk" data-a="vstart">투표 시작 — ${S.family.length}명</button></div></div>`)}
+function vTurn(){$('#vbody').innerHTML=`<div class="vturn"><div class="vt1">Vote ${V.turn+1} / ${S.family.length}</div>
+  <div class="vt2">${esc(S.family[V.turn].name)} 차례</div>
+  <div class="vt3">폰을 건네받았으면 아래를 눌러주세요.<br>서로 화면은 보지 않기!</div></div>
+  <div class="dacts"><button class="btn pri blk" data-a="vballot">투표용지 받기</button></div>`}
+function vBallot(){$('#vbody').innerHTML=`<div class="vturn" style="padding:12px 0 8px"><div class="vt1">Secret Ballot</div>
+  <div class="vt2" style="font-size:19px">${esc(S.family[V.turn].name)} — 오늘 ${MEAL[V.meal]}, 뭐가 좋아요?</div></div>
+  <div style="margin-top:10px">${V.cands.map(k=>{const m=k==='DELIV'?DELIV:menu(k);
+   return `<button class="vopt" data-a="vcast" data-k="${k}">${phEl(m)}<span class="vnm">${esc(m.name)}</span></button>`}).join('')}</div>`}
+function tallyV(){const cnt={};V.cands.forEach(k=>cnt[k]=0);V.votes.forEach(k=>cnt[k]++);
+ const mx=Math.max(...Object.values(cnt));return{cnt,winners:V.cands.filter(k=>cnt[k]===mx)}}
+function vResult(forced){const {cnt,winners}=tallyV();
+ const win=forced||(winners.length===1?winners[0]:null);
+ const bars=[...V.cands].sort((a,b)=>cnt[b]-cnt[a]).map(k=>`<div class="vbar ${win===k?'win':''}">
+  <span class="vn">${esc(vnm(k))}</span><span class="vtrack"><span class="vfill" style="width:${Math.round(cnt[k]/S.family.length*100)}%"></span></span>
+  <span class="vc">${cnt[k]}</span></div>`).join('');
+ $('#vbody').innerHTML=`<div class="vturn" style="padding:12px 0 14px"><div class="vt1">Result</div>
+  <div class="vt2">${win?esc(vnm(win)):'동점!'}</div>${win?'':'<div class="vt3">운명에 맡겨볼까요?</div>'}</div>
+  ${bars}
+  <div class="dacts">${win?`<button class="btn pri blk" data-a="vdecide" data-k="${win}">이걸로 결정</button>
+   <button class="btn gho blk" data-a="vre">다시 투표</button>`
+  :`<button class="btn pri blk" data-a="vtie">동점 — 운명의 뽑기</button>`}</div>`}
+function vDecide(k){const meal=V.meal,d=todayISO();
+ if(k==='DELIV'){S.today={date:d,meal,delivery:true};save();shCloseAll();go('home');toast(`오늘 ${MEAL[meal]}은 배달 찬스!`)}
+ else{G.meal=meal;decide(k)}}
+
+/* ── 가족 구성원 ── */
+function famRows(){return S.family.map(f=>`<div class="fam"><b>${esc(f.name)}</b>
+ <button class="xbtn" data-a="famDel" data-id="${f.id}" aria-label="빼기">${I.x}</button></div>`).join('')
+ ||'<div class="mut" style="padding:8px 2px">아직 아무도 없어요 — 이름을 추가해주세요.</div>'}
+function openFamily(toVote){
+ sheet(`<div class="sec-h" style="margin-top:4px"><div><div class="eyebrow">Family</div><h2>우리 식구들</h2></div>
+   <span class="cnt" id="famCnt">${S.family.length}명</span></div>
+  <div class="paper" style="padding:6px 14px" id="famList">${famRows()}</div>
+  <div class="xadd"><input id="famN" placeholder="이름 · 예) 엄마" autocomplete="off">
+   <button class="btn pri" style="height:42px;padding:0 14px" data-a="famAdd">추가</button></div>
+  ${toVote?`<div class="dacts"><button class="btn pri blk" data-a="famDone">저장하고 투표 시작</button></div>
+   <div class="ghint">투표는 2명부터 할 수 있어요</div>`:''}`)}
+
+/* ═══════════ 사진 ═══════════ */
+function grabPhoto(cb){const inp=document.createElement('input');inp.type='file';inp.accept='image/*';
+ inp.onchange=()=>{const f=inp.files[0];if(!f)return;const rd=new FileReader();
+  rd.onload=()=>{const img=new Image();
+   img.onload=()=>{const mx=900,sc=Math.min(1,mx/Math.max(img.width,img.height));
+    const cv=document.createElement('canvas');cv.width=Math.round(img.width*sc);cv.height=Math.round(img.height*sc);
+    cv.getContext('2d').drawImage(img,0,0,cv.width,cv.height);
+    cb(cv.toDataURL('image/jpeg',.82))};
+   img.src=rd.result};
+  rd.readAsDataURL(f)};
+ inp.click()}
+
+/* ═══════════ 액션 ═══════════ */
+function toast(msg){const t=$('#toast');t.textContent=msg;t.classList.add('on');
+ clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('on'),2300)}
+
+const ACT={
+ go:d=>go(d.t),
+ settings:openSettings, shClose:shClose,
+ newMenu:()=>{ui.pendingSlot=null;openForm()},
+ detail:d=>openDetail(d.id),
+ sort:d=>{ui.sort=d.s;render()},
+ cat:d=>{ui.cat=d.c;render()},
+ wk:d=>{ui.week=d.d==='0'?0:ui.week+Number(d.d);render()},
+ swk:d=>{ui.shopWeek=d.d==='0'?0:ui.shopWeek+Number(d.d);render()},
+ slot:d=>{const p=S.plan[d.date]||{};if(p[d.m])openDetail(p[d.m]);else openPicker(d.date,d.m)},
+ slotX:(d,el,e)=>{const p=S.plan[d.date];if(p){delete p[d.m];
+   if(S.today&&S.today.date===d.date&&S.today.meal===d.m)S.today=null;
+   save();render()}},
+ pick:d=>{const ps=ui.pendingSlot;if(!ps)return;ui.pendingSlot=null;
+  (S.plan[ps.date]=S.plan[ps.date]||{})[ps.m]=d.id;
+  if(ps.date===todayISO())S.today={date:ps.date,menu:d.id,meal:ps.m};
+  save();shClose();render();toast(`${mdot(ps.date)} ${MEAL[ps.m]} — ${menu(d.id).name}`)},
+ pickNew:()=>openForm(),
+ slotPut:d=>{(S.plan[d.date]=S.plan[d.date]||{})[d.m]=d.id;
+  if(d.date===todayISO())S.today={date:d.date,menu:d.id,meal:d.m};
+  save();shClose();render();toast(`${mdot(d.date)} ${MEAL[d.m]}에 넣었어요`)},
+ toPlan:d=>openChooser(d.id),
+ cook:d=>{const m=menu(d.id);if(!m)return;m.cookCount++;m.lastCookedAt=todayISO();save();render();
+  toast(`${m.cookCount}번째 기록! 맛있게 드세요`)},
+ rate:(d,el)=>{const wrap=el.closest('.hearts');const id=wrap&&wrap.dataset.id;const m=id&&menu(id);if(!m)return;
+  m.rating=Number(d.v);save();
+  wrap.querySelectorAll('svg').forEach((s,i)=>s.classList.toggle('on',i<m.rating));render()},
+ edit:d=>openForm(d.id),
+ delMenu:d=>{const m=menu(d.id);openConfirm(`‘${esc(m.name)}’ 를 메뉴판에서 뺄까요?`,'네, 뺄게요',()=>{
+   S.menus=S.menus.filter(x=>x.id!==d.id);
+   Object.values(S.plan).forEach(p=>MEALS.forEach(([k])=>{if(p[k]===d.id)delete p[k]}));
+   if(S.today&&S.today.menu===d.id)S.today=null;
+   save();shCloseAll();render();toast('뺐어요')})},
+ confYes:()=>{const f=CONF;CONF=null;shClose();f&&f()},
+ chk:d=>{const wk=iso(weekOf(ui.shopWeek));const key=wk+'|'+d.k;
+  S.checked[key]=!S.checked[key];if(!S.checked[key])delete S.checked[key];save();render()},
+ xadd:()=>{const n=$('#xn').value.trim();if(!n){$('#xn').focus();return}
+  const wk=iso(weekOf(ui.shopWeek));(S.extra[wk]=S.extra[wk]||[]).push({id:uid().slice(0,8),name:n,amount:$('#xa').value.trim()});
+  save();render();toast('추가했어요')},
+ xdel:(d)=>{const wk=iso(weekOf(ui.shopWeek));S.extra[wk]=(S.extra[wk]||[]).filter(x=>x.id!==d.id);
+  delete S.checked[wk+'|x'+d.id];save();render()},
+ fphoto:()=>grabPhoto(u=>{F.photo=u;const b=$('#f-photo');b.classList.add('has');b.style.backgroundImage=`url(${u})`}),
+ frate:(d,el)=>{F.rating=Number(d.v);
+  $('#f-hearts').querySelectorAll('svg').forEach((s,i)=>s.classList.toggle('on',i<F.rating))},
+ fcat:(d,el)=>{F.cat=(F.cat===d.c)?'':d.c;
+  $$('.fcats .chip').forEach(c=>c.classList.toggle('on',c.dataset.c===F.cat))},
+ ingAdd:()=>$('#ingRows').insertAdjacentHTML('beforeend',ingRowHTML()),
+ stepAdd:()=>{$('#stepRows').insertAdjacentHTML('beforeend',stepRowHTML());renum()},
+ rowDel:(d,el)=>{const r=el.closest('.irow,.srow');r&&r.remove();renum()},
+ ingPhoto:(d,el)=>{const row=el.closest('.irow');grabPhoto(u=>{row.dataset.photo=u;
+  el.classList.add('has');el.style.backgroundImage=`url(${u})`})},
+ saveMenu:saveMenu,
+ exp:exportJson,
+ impBtn:()=>$('#impF').click(),
+ wipe:()=>openConfirm('정말 전부 지울까요? 되돌릴 수 없어요.','네, 처음부터 할게요',()=>{
+  S=seed();save();shCloseAll();ui={...ui,week:0,shopWeek:0,shopInit:false,cat:'',q:''};render();toast('새 보관함을 꺼냈어요')}),
+ openDraw:openDraw, openLadder:openLadder,
+ gmeal:(d)=>{G.meal=d.m;$$('.mchips .chip').forEach(c=>c.classList.toggle('on',c.dataset.m===d.m))},
+ drawAgain:spinDraw,
+ ladderAgain:()=>{shClose();openLadder()},
+ lgo:d=>ladderGo(Number(d.i)),
+ decide:d=>decide(d.id),
+ openVote:openVote,
+ vsel:(d,el)=>{if(V.sel.has(d.id)){V.sel.delete(d.id);el.classList.remove('on')}
+  else if(V.sel.size>=4){toast('후보는 4개까지만!')}else{V.sel.add(d.id);el.classList.add('on')}},
+ vdeliv:(d,el)=>{V.deliv=!V.deliv;el.classList.toggle('on',V.deliv)},
+ vmeal:(d,el)=>{V.meal=d.m;el.parentElement.querySelectorAll('.chip').forEach(c=>c.classList.toggle('on',c.dataset.m===d.m))},
+ vstart:()=>{V.cands=[...V.sel,...(V.deliv?['DELIV']:[])];
+  if(V.cands.length<2){toast('후보를 2개 이상 골라주세요');return}V.votes=[];V.turn=0;vTurn()},
+ vballot:vBallot,
+ vcast:d=>{V.votes.push(d.k);V.turn++;V.turn<S.family.length?vTurn():vResult()},
+ vtie:()=>{const{winners}=tallyV();vResult(winners[Math.floor(Math.random()*winners.length)])},
+ vre:()=>{shClose();openVote()},
+ vdecide:d=>vDecide(d.k),
+ fam:()=>openFamily(false),
+ famAdd:()=>{const i=$('#famN'),n=i.value.trim();if(!n){i.focus();return}
+  S.family.push({id:uid().slice(0,8),name:n});save();
+  $('#famList').innerHTML=famRows();const c=$('#famCnt');if(c)c.textContent=S.family.length+'명';i.value='';i.focus()},
+ famDel:d=>{S.family=S.family.filter(f=>f.id!==d.id);save();
+  $('#famList').innerHTML=famRows();const c=$('#famCnt');if(c)c.textContent=S.family.length+'명'},
+ famDone:()=>{if(S.family.length<2){toast('2명은 있어야 투표할 수 있어요');return}shClose();openVote()}
+};
+document.addEventListener('click',e=>{const el=e.target.closest('[data-a]');if(!el)return;
+ const a=ACT[el.dataset.a];if(a){e.preventDefault();a(el.dataset,el,e)}});
+document.addEventListener('input',e=>{
+ if(e.target.id==='q'){ui.q=e.target.value;
+  clearTimeout(ui._qt);ui._qt=setTimeout(()=>{const v=$('#q');const pos=v.selectionStart;render();
+   const n=$('#q');if(n){n.focus();n.setSelectionRange(pos,pos)}},350)}});
+document.addEventListener('change',e=>{if(e.target.id==='impF')importJson(e.target.files[0])});
+
+/* ═══════════ 시작 ═══════════ */
+(async function init(){
+ try{S=await dbGet()}catch(e){idbOK=false}
+ if(!S){try{const ls=localStorage.getItem('ourtable');if(ls)S=JSON.parse(ls)}catch(e){}}
+ if(!S){S=seed();flush()}
+ if(!S.extra)S.extra={}; if(!S.checked)S.checked={}; if(!S.seq)S.seq=S.menus.length+1; if(!S.family)S.family=[];
+ render();
+})();
+</script>
