@@ -454,7 +454,7 @@ async function dbGet(){const d=await idb();return new Promise((res,rej)=>{const 
  const q=t.objectStore('kv').get('S'); q.onsuccess=()=>res(q.result); q.onerror=()=>rej(q.error)})}
 let saveT=null;
 function save(){clearTimeout(saveT);saveT=setTimeout(flush,250)}
-async function flush(){ try{ if(idbOK){await dbSet(JSON.parse(JSON.stringify(S)));return} }catch(e){idbOK=false}
+async function flush(){ try{ if(idbOK){await dbSet(S);return} }catch(e){idbOK=false}
  try{localStorage.setItem('ourtable',JSON.stringify(S))}catch(e){} }
 document.addEventListener('visibilitychange',()=>{if(document.hidden)flush()});
 
@@ -513,7 +513,7 @@ function vMenus(){
  if(ui.cat)list=list.filter(m=>m.cat===ui.cat);
  if(ui.q)list=list.filter(m=>m.name.toLowerCase().includes(ui.q.toLowerCase()));
  const top3=bestSorted().slice(0,3);
- const rail=S.menus.length?`<div class="eyebrow" style="margin-bottom:9px">Best of Home</div>
+ const rail=(S.menus.length&&!ui.q&&!ui.cat)?`<div class="eyebrow" style="margin-bottom:9px">Best of Home</div>
   <div class="rail" style="margin-bottom:14px">${top3.map((m,i)=>`<button class="rcard" data-a="detail" data-id="${m.id}">
    ${phEl(m)}<span class="rk ${i===0?'r1':''}">${i===0?'BEST':pad(i+1)}</span>
    <div class="b"><div class="nm">${esc(m.name)}</div>
@@ -603,11 +603,15 @@ let SHEETS=[],seq=0;
 function sheet(html){const id='sh'+(++seq);const w=document.createElement('div');w.className='sw';w.id=id;
  w.innerHTML=`<div class="sb" data-a="shClose"></div><div class="sp"><div class="grab"></div>${html}</div>`;
  document.body.appendChild(w);requestAnimationFrame(()=>requestAnimationFrame(()=>w.classList.add('on')));
- SHEETS.push(id);document.body.classList.add('lock');return id}
+ SHEETS.push(id);document.body.classList.add('lock');
+ history.pushState({sheet:SHEETS.length},'');return id}
 function shClose(){const id=SHEETS.pop();const w=id&&document.getElementById(id);if(!w)return;
  w.classList.remove('on');w.classList.add('closing');setTimeout(()=>w.remove(),280);
  if(!SHEETS.length)document.body.classList.remove('lock')}
 function shCloseAll(){while(SHEETS.length)shClose()}
+/* 모바일 뒤로가기 = 시트 닫기 */
+window.addEventListener('popstate',e=>{const d=(e.state&&e.state.sheet)||0;
+ while(SHEETS.length>d)shClose()});
 
 /* ── 상세 ── */
 function openDetail(id){const m=menu(id);if(!m)return;
@@ -668,6 +672,7 @@ function saveMenu(){
  if(F.editId){m=menu(F.editId);Object.assign(m,{name,ingredients:ings,steps,memo,photo:F.photo,rating:F.rating,cat:F.cat})}
  else{m={id:uid(),no:S.seq++,name,cat:F.cat,rating:F.rating,cookCount:0,lastCookedAt:'',createdAt:new Date().toISOString(),
    photo:F.photo,memo,ingredients:ings,steps}; S.menus.push(m)}
+ m.updatedAt=new Date().toISOString();   // 동기화 대비
  save();
  const ps=ui.pendingSlot; ui.pendingSlot=null;
  shCloseAll();
@@ -866,6 +871,7 @@ function openFamily(toVote){
 function grabPhoto(cb){const inp=document.createElement('input');inp.type='file';inp.accept='image/*';
  inp.onchange=()=>{const f=inp.files[0];if(!f)return;const rd=new FileReader();
   rd.onload=()=>{const img=new Image();
+   img.onerror=()=>toast('사진을 읽지 못했어요 — 다른 사진으로 해주세요');
    img.onload=()=>{const mx=900,sc=Math.min(1,mx/Math.max(img.width,img.height));
     const cv=document.createElement('canvas');cv.width=Math.round(img.width*sc);cv.height=Math.round(img.height*sc);
     cv.getContext('2d').drawImage(img,0,0,cv.width,cv.height);
@@ -900,10 +906,10 @@ const ACT={
   if(d.date===todayISO())S.today={date:d.date,menu:d.id,meal:d.m};
   save();shClose();render();toast(`${mdot(d.date)} ${MEAL[d.m]}에 넣었어요`)},
  toPlan:d=>openChooser(d.id),
- cook:d=>{const m=menu(d.id);if(!m)return;m.cookCount++;m.lastCookedAt=todayISO();save();render();
+ cook:d=>{const m=menu(d.id);if(!m)return;m.cookCount++;m.lastCookedAt=todayISO();m.updatedAt=new Date().toISOString();save();render();
   toast(`${m.cookCount}번째 기록! 맛있게 드세요`)},
  rate:(d,el)=>{const wrap=el.closest('.hearts');const id=wrap&&wrap.dataset.id;const m=id&&menu(id);if(!m)return;
-  m.rating=Number(d.v);save();
+  m.rating=Number(d.v);m.updatedAt=new Date().toISOString();save();
   wrap.querySelectorAll('svg').forEach((s,i)=>s.classList.toggle('on',i<m.rating));render()},
  edit:d=>openForm(d.id),
  delMenu:d=>{const m=menu(d.id);openConfirm(`‘${esc(m.name)}’ 를 메뉴판에서 뺄까요?`,'네, 뺄게요',()=>{
