@@ -176,6 +176,30 @@ const sleep=ms=>new Promise(r=>setTimeout(r,ms));
  ok(!!byText('#scr .empty b','조건에 맞는'),'검색 무결과 전용 문구');
  type('#q',''); await sleep(550);
 
+ console.log('\n[13단계] 메모 붙여넣기 등록 (규칙 파서)');
+ const parsed=g(`parseRecipes("된장찌개\\n재료: 두부 반 모, 애호박 1/2개, 된장 2큰술(해찬들)\\n1. 물 끓이기\\n2. 된장 풀기\\n메모: 멸치육수면 더 좋음")`);
+ ok(parsed.length===1&&parsed[0].name==='된장찌개','파서: 이름 추출');
+ ok(parsed[0].ingredients.length===3&&parsed[0].ingredients[0].name==='두부'&&parsed[0].ingredients[0].amount.includes('반'),'파서: 재료·양 분리');
+ ok(parsed[0].ingredients[2].brand==='해찬들','파서: 괄호 → 브랜드');
+ ok(parsed[0].steps.length===2,'파서: 단계 2개');
+ ok(parsed[0].memo.includes('멸치'),'파서: 메모 분류');
+ click('.fab'); await sleep(80);
+ click(byText('.sw button','메모 붙여넣기')); await sleep(80);
+ q('#pz').value='간장계란밥\n재료: 계란 2알, 간장 1큰술';
+ click(byText('.sw button','분석해서 채우기')); await sleep(200);
+ ok(q('#f-name').value==='간장계란밥','단일 → 폼 자동 채움');
+ ok(qa('#ingRows .irow').length===2,'재료 2줄 채워짐');
+ click(byText('.sw button','메뉴판에 올리기')); await sleep(450);
+ ok(!!byText('.lrow .lnm','간장계란밥'),'붙여넣기 등록 완료');
+ const cnt=g('S.menus.length');
+ click('.fab'); await sleep(80);
+ click(byText('.sw button','메모 붙여넣기')); await sleep(80);
+ q('#pz').value='제육볶음\n돼지고기 300g, 고추장 2큰술\n\n콩나물국\n콩나물 한 줌';
+ click(byText('.sw button','분석해서 채우기')); await sleep(200);
+ ok(!!byText('.sw h2','2개'),'빈 줄 구분 → 여러 메뉴 감지');
+ click(byText('.sw button','전부 메뉴판에 올리기')); await sleep(450);
+ ok(g('S.menus.length')===cnt+2,'벌크 2개 등록');
+
  console.log('\n────────────────────');
  console.log(`결과: ${pass} PASS / ${fail} FAIL`);
  if(fails.length){console.log('실패 목록:');fails.forEach(f=>console.log(' -',f))}

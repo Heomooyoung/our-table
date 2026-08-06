@@ -428,6 +428,7 @@ let ui={tab:'home',_last:'',week:0,shopWeek:0,shopInit:false,sort:'best',cat:'',
 let F={};   // 등록 폼 임시
 let G={};   // 게임 임시
 let V={};   // 투표 임시
+let PARSED=null; // 붙여넣기 파싱 결과
 let CONF=null;
 
 function seed(){
@@ -676,7 +677,8 @@ function openForm(id){const m=id?menu(id):null;
  F={editId:id||null,photo:m?m.photo:'',rating:m?m.rating:0,cat:m?m.cat:'',dupOk:false};
  const ings=(m&&m.ingredients.length?m.ingredients:[{}]).map(ingRowHTML).join('');
  sheet(`<div class="sec-h" style="margin-top:4px"><div><div class="eyebrow">${m?'Recipe Edit':'New Recipe'}</div>
-   <h2>${m?'메뉴 고치기':'새 메뉴 올리기'}</h2></div><span class="cnt">No.${pad(m?m.no:S.seq)}</span></div>
+   <h2>${m?'메뉴 고치기':'새 메뉴 올리기'}</h2></div><span class="cnt">No.${pad((m&&m.no)?m.no:S.seq)}</span></div>
+  ${m?'':`<button type="button" class="addrow" style="margin-top:14px" data-a="pz">메모 붙여넣기로 한 번에 채우기</button>`}
   <div class="fld"><button type="button" id="f-photo" class="fphoto ${F.photo?'has':''}" data-a="fphoto"
     ${F.photo?`style="background-image:url(${F.photo})"`:''}>${I.cam}<span>완성 사진 (선택)</span></button></div>
   <div class="fld"><label>이름 — 이것만 적어도 돼요</label><input id="f-name" class="in" placeholder="예) 화덕브레드 샌드위치" value="${esc(m?m.name:'')}"></div>
@@ -713,6 +715,61 @@ function saveMenu(){
  else if(F.editId){render();openDetail(m.id);toast('고쳐뒀어요')}
  else{go('menus');toast(m.rating===5?'베스트 메뉴 등록!':'메뉴판에 올렸어요')}
 }
+
+/* ── 메모 붙여넣기 등록 (규칙 기반 파서, LLM 불사용) ── */
+const QTY_RE=/(약\s*)?((\d+[\d\/.~\-]*)|반(의\s*반)?|한|두|세|네|다섯|여섯|일곱|여덟|아홉|열)\s*(g|kg|ml|L|l|cc|개|큰\s*술|작은\s*술|스푼|숟갈|티스푼|컵|알|장|줌|모|포기|봉지?|팩|단|마리|조각|쪽|인분|근|공기|줄|톨|꼬집|방울|T|t)(?=\W|$)/;
+function splitIngredient(s){
+ s=s.replace(/^[-*·•]\s*/,'').trim();
+ let brand='';
+ const b=s.match(/\(([^)]+)\)\s*$/);
+ if(b){brand=b[1].trim();s=s.slice(0,b.index).trim()}
+ const m=s.match(QTY_RE);
+ if(m&&m.index>0)return {name:s.slice(0,m.index).replace(/[:,]\s*$/,'').trim(),amount:s.slice(m.index).trim(),brand,photo:''};
+ return {name:s,amount:'',brand,photo:''}}
+function parseRecipes(text){
+ const blocks=String(text||'').replace(/\r/g,'').split(/\n\s*\n+/).map(b=>b.trim()).filter(Boolean);
+ const out=[];
+ for(const block of blocks){
+  const lines=block.split('\n').map(l=>l.trim()).filter(Boolean);
+  if(!lines.length)continue;
+  const r={name:'',ingredients:[],steps:[],memo:''};
+  let mode='';
+  lines.forEach((ln,i)=>{
+   if(i===0){r.name=ln.replace(/^[#\-*·•\s]+/,'').trim();return}
+   if(/^(재료|준비물)\s*[:：]?/.test(ln)){mode='ing';
+    const rest=ln.replace(/^(재료|준비물)\s*[:：]?\s*/,'');
+    if(rest)rest.split(/[,，]/).forEach(p=>{p=p.trim();if(p)r.ingredients.push(splitIngredient(p))});
+    return}
+   if(/^(만드는\s*법|만들기|조리법|순서|레시피)\s*[:：]?$/.test(ln)){mode='step';return}
+   if(/^(메모|팁|tip)\s*[:：]?/i.test(ln)){mode='memo';
+    const rest=ln.replace(/^(메모|팁|tip)\s*[:：]?\s*/i,'');
+    if(rest)r.memo+=(r.memo?'\n':'')+rest;return}
+   const stepM=ln.match(/^\d+\s*[.)]\s*(.+)$/)||ln.match(/^[①②③④⑤⑥⑦⑧⑨⑩]\s*(.+)$/);
+   if(stepM){mode='step';r.steps.push(stepM[1].trim());return}
+   if(mode==='step'){r.steps.push(ln.replace(/^[-*·•]\s*/,''));return}
+   if(mode==='memo'){r.memo+=(r.memo?'\n':'')+ln;return}
+   if(QTY_RE.test(ln)||(/[,，]/.test(ln)&&ln.length<60)){mode='ing';
+    ln.split(/[,，]/).forEach(p=>{p=p.trim();if(p)r.ingredients.push(splitIngredient(p))});return}
+   if(mode==='ing'&&ln.length<=20){r.ingredients.push(splitIngredient(ln));return}
+   r.memo+=(r.memo?'\n':'')+ln});
+  if(r.name)out.push(r)}
+ return out}
+function openPaste(){sheet(`<div id="pzbody"><div class="sec-h" style="margin-top:4px"><div><div class="eyebrow">Paste</div><h2>메모 붙여넣기</h2></div></div>
+ <div class="mut" style="margin-bottom:10px">메모장에 적어둔 걸 그대로 붙여넣으면 이름·재료(양)·만드는 법을 알아서 나눠요. 재료 뒤 괄호는 브랜드로 들어가고, 빈 줄로 구분하면 여러 메뉴도 한 번에 올라가요.</div>
+ <textarea id="pz" class="in" style="min-height:190px" placeholder="김치찜&#10;재료: 돼지고기 300g, 묵은지 반 포기&#10;1. 냄비에 김치를 깔고&#10;2. 고기 올려 푹 끓이기"></textarea>
+ <div class="dacts"><button class="btn pri blk" data-a="pzGo">분석해서 채우기</button></div></div>`)}
+function fillForm(r){
+ $('#f-name').value=r.name;
+ const IR=$('#ingRows');IR.innerHTML='';
+ (r.ingredients.length?r.ingredients:[{}]).forEach(g=>IR.insertAdjacentHTML('beforeend',ingRowHTML(g)));
+ const SR=$('#stepRows');SR.innerHTML='';
+ (r.steps.length?r.steps:['']).forEach(s=>SR.insertAdjacentHTML('beforeend',stepRowHTML(s)));renum();
+ if(r.memo)$('#f-memo').value=r.memo}
+function bulkAdd(rs){rs.forEach(r=>{const m={id:uid(),no:S.seq++,name:r.name,cat:'',rating:0,cookCount:0,
+  lastCookedAt:'',createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),photo:'',
+  memo:r.memo||'',ingredients:r.ingredients||[],steps:r.steps||[]};
+ S.menus.push(m);if(typeof syncOn!=='undefined'&&syncOn)pushMenu(m)});
+ save();shCloseAll();go('menus');toast(`${rs.length}개 메뉴를 올렸어요 — 하나씩 열어 다듬어보세요`)}
 
 /* ── 식단표에 넣기 (날짜 고르기) ── */
 function openChooser(id){const m=menu(id);if(!m)return;
@@ -1212,7 +1269,15 @@ const ACT={
  vstartRemote:vstartRemote,
  vlCast:d=>vlCast(d.k),
  vlFinish:vlFinish,
- vlShare:vlShare
+ vlShare:vlShare,
+ pz:()=>openPaste(),
+ pzGo:()=>{const rs=parseRecipes($('#pz').value);
+  if(!rs.length){toast('붙여넣은 내용이 없어요');return}
+  if(rs.length===1){shClose();fillForm(rs[0]);toast('채웠어요 — 확인하고 올려주세요')}
+  else{PARSED=rs;$('#pzbody').innerHTML=`<div class="sec-h" style="margin-top:4px"><div><div class="eyebrow">Paste</div><h2>${rs.length}개 메뉴를 찾았어요</h2></div></div>
+   <div class="paper" style="padding:6px 14px">${rs.map(r=>`<div class="fam"><b>${esc(r.name)}</b><span class="mut">재료 ${r.ingredients.length} · 단계 ${r.steps.length}</span></div>`).join('')}</div>
+   <div class="dacts"><button class="btn pri blk" data-a="pzAll">전부 메뉴판에 올리기</button></div>`}},
+ pzAll:()=>{if(PARSED)bulkAdd(PARSED);PARSED=null}
 };
 document.addEventListener('click',e=>{const el=e.target.closest('[data-a]');if(!el)return;
  const a=ACT[el.dataset.a];if(a){e.preventDefault();a(el.dataset,el,e)}});
