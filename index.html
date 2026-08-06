@@ -501,7 +501,9 @@ function vHome(){
      <div class="nm">${esc(pick.name)}</div>
      <div class="mt">${td.delivery?'오늘은 요리 쉬는 날':`No.${pad(pick.no)} · ${pick.cookCount}번 해먹음`}</div></div></div>
    <div class="acts">${td.delivery?'':`<button class="btn pri" data-a="cook" data-id="${pick.id}">오늘 해먹었어요</button>`}
-    <button class="btn gho" data-a="retoday">다시 정하기</button></div></section>`;
+    <button class="btn gho" data-a="retoday">다시 정하기</button></div>
+   <div class="tbtns" style="margin-top:10px"><button class="tbtn" data-a="openLadder">사다리 한 판</button>
+    <button class="tbtn" data-a="openVote">가족 투표</button></div></section>`;
  }else{
   hero=`<section class="hero"><div class="date">${dateLn}</div>
    <h1>오늘 뭐,<br>먹지?</h1>
@@ -548,7 +550,9 @@ function vMenus(){
    <div class="chips"><button class="chip ${ui.cat===''?'on':''}" data-a="cat" data-c="">전체</button>
     ${CATS.map(c=>`<button class="chip ${ui.cat===c?'on':''}" data-a="cat" data-c="${c}">${c}</button>`).join('')}</div>
   </div>
-  ${rows||`<div class="empty"><b>아직 여기엔 없어요</b><p>아래 + 버튼으로 첫 메뉴를 올려보세요.<br>이름만 적어도 충분해요.</p></div>`}
+  ${rows||((ui.q||ui.cat)
+   ?`<div class="empty"><b>조건에 맞는 메뉴가 없어요</b><p>검색어나 필터를 바꿔보세요.</p></div>`
+   :`<div class="empty"><b>아직 여기엔 없어요</b><p>아래 + 버튼으로 첫 메뉴를 올려보세요.<br>이름만 적어도 충분해요.</p></div>`)}
  </section>`;
 }
 
@@ -593,17 +597,21 @@ function vShop(){
  const ck=k=>!!S.checked[wk+'|'+k];
  const total=items.length+extras.length;
  const done=items.filter(i=>ck(i.name)).length+extras.filter(x=>ck('x'+x.id)).length;
- const rows=items.map(it=>{const c=ck(it.name);
-  return `<button class="sitem ${c?'done':''}" data-a="chk" data-k="${esc(it.name)}">
+ const rowArr=items.map(it=>{const c=ck(it.name);
+  return {c,h:`<button class="sitem ${c?'done':''}" data-a="chk" data-k="${esc(it.name)}">
    <span class="cbox">${I.chk}</span>
    <span class="sb"><span class="snm2">${esc(it.name)}${it.brand?`<span class="brand">${esc(it.brand)}</span>`:''}</span>
     <span class="src">${it.uses.map(u=>`${esc(u.a||'적당량')} · ${esc(u.m)}`).join('<br>')}</span></span>
-   ${it.photo?`<span class="thumb" style="background-image:url(${it.photo})"></span>`:''}</button>`}).join('');
- const xrows=extras.map(x=>{const c=ck('x'+x.id);
-  return `<button class="sitem ${c?'done':''}" data-a="chk" data-k="x${x.id}">
+   ${it.photo?`<span class="thumb" style="background-image:url(${it.photo})"></span>`:''}</button>`}});
+ const xArr=extras.map(x=>{const c=ck('x'+x.id);
+  return {c,h:`<button class="sitem ${c?'done':''}" data-a="chk" data-k="x${x.id}">
    <span class="cbox">${I.chk}</span>
    <span class="sb"><span class="snm2">${esc(x.name)}</span>${x.amount?`<span class="src">${esc(x.amount)}</span>`:''}</span>
-   <span class="sx" data-a="xdel" data-id="${x.id}" role="button" aria-label="삭제" style="color:var(--sub);width:26px;height:26px;display:grid;place-items:center">${I.x}</span></button>`}).join('');
+   <span class="sx" data-a="xdel" data-id="${x.id}" role="button" aria-label="삭제" style="color:var(--sub);width:26px;height:26px;display:grid;place-items:center">${I.x}</span></button>`}});
+ // 안 산 것 먼저, 산 것은 전부 아래로
+ const rows=[...rowArr.filter(r=>!r.c),...xArr.filter(r=>!r.c),
+   ...rowArr.filter(r=>r.c),...xArr.filter(r=>r.c)].map(r=>r.h).join('');
+ const xrows='';
  const body = total?`<div class="prog"><div class="pt"><b>${done===total?'장보기 완료!':'장바구니'}</b>
     <span id="pgt">${done} / ${total}</span></div><div class="pbar"><i id="pgb" style="width:${total?Math.round(done/total*100):0}%"></i></div></div>
    <div class="paper">${rows}${xrows}</div>`
@@ -622,14 +630,16 @@ function sheet(html){const id='sh'+(++seq);const w=document.createElement('div')
  w.innerHTML=`<div class="sb" data-a="shClose"></div><div class="sp"><div class="grab"></div>${html}</div>`;
  document.body.appendChild(w);requestAnimationFrame(()=>requestAnimationFrame(()=>w.classList.add('on')));
  SHEETS.push(id);document.body.classList.add('lock');
- history.pushState({sheet:SHEETS.length},'');return id}
+ if(history.state&&history.state.sheet)history.replaceState({sheet:1},'');
+ else history.pushState({sheet:1},'');
+ return id}
 function shClose(){const id=SHEETS.pop();const w=id&&document.getElementById(id);if(!w)return;
  w.classList.remove('on');w.classList.add('closing');setTimeout(()=>w.remove(),280);
  if(!SHEETS.length)document.body.classList.remove('lock')}
 function shCloseAll(){while(SHEETS.length)shClose()}
-/* 모바일 뒤로가기 = 시트 닫기 */
-window.addEventListener('popstate',e=>{const d=(e.state&&e.state.sheet)||0;
- while(SHEETS.length>d)shClose()});
+/* 모바일 뒤로가기 = 시트 닫기 (가드 1개 유지 방식) */
+window.addEventListener('popstate',()=>{ if(SHEETS.length){ shClose();
+  if(SHEETS.length)history.pushState({sheet:1},'') } });
 
 /* ── 상세 ── */
 function openDetail(id){const m=menu(id);if(!m)return;
@@ -706,12 +716,13 @@ function saveMenu(){
 
 /* ── 식단표에 넣기 (날짜 고르기) ── */
 function openChooser(id){const m=menu(id);if(!m)return;
+ const ti=todayISO();
  const days=[];for(let i=0;i<14;i++){const d=new Date();d.setDate(d.getDate()+i);days.push(d)}
  const rows=days.map(d=>{const k=iso(d),p=S.plan[k]||{};
   const cells=MEALS.map(([mk,ml])=>{const nm=slotName(p[mk]);
    return `<button class="slot ${nm?'fill':''}" style="flex:1" data-a="slotPut" data-id="${id}" data-date="${k}" data-m="${mk}">
     <span class="ml">${ml}</span><span class="snm">${nm?esc(nm):'비어있음'}</span></button>`}).join('');
-  return `<div class="day"><div class="dt"><div class="w">${WDE[d.getDay()]}</div><div class="n">${d.getDate()}</div></div>
+  return `<div class="day ${k===ti?'today':''}"><div class="dt"><div class="w">${k===ti?'오늘':WDE[d.getDay()]}</div><div class="n">${d.getDate()}</div></div>
    <div class="slots" style="flex-direction:row;gap:5px">${cells}</div></div>`}).join('');
  sheet(`<div class="sec-h" style="margin-top:4px"><div><div class="eyebrow">Add to Plan</div>
   <h2>언제 먹을까요?</h2></div><span class="cnt">${esc(m.name)}</span></div><div class="paper">${rows}</div>`)}
@@ -1083,7 +1094,9 @@ async function vlFinish(){try{
  toast(win==='DELIV'?`오늘 ${MEAL[v.meal]}은 배달 찬스!`:`오늘 ${MEAL[v.meal]}은 ${menu(win)?menu(win).name:'결정'}!`)}
  catch(e){toast('마감하지 못했어요')}}
 function vlShare(){if(!LIVE)return;
- shareText(`오늘 ${MEAL[LIVE.vote.meal]} 뭐 먹을지 투표해줘!`,OT_CONFIG.page+'#vote='+LIVE.id)}
+ const code=HOMEINFO&&HOMEINFO.code;   // 코드 동봉 → 가족이 링크만 열면 합류+투표까지 한 번에
+ shareText(`오늘 ${MEAL[LIVE.vote.meal]} 뭐 먹을지 투표해줘!`,
+  OT_CONFIG.page+'#'+(code?`join=${code}&`:'')+'vote='+LIVE.id)}
 
 /* ═══════════ 사진 ═══════════ */
 function grabPhoto(cb){const inp=document.createElement('input');inp.type='file';inp.accept='image/*';

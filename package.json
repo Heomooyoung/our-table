@@ -1,0 +1,6 @@
+{
+  "name": "our-table",
+  "private": true,
+  "scripts": { "test": "node tests/ux.test.js" },
+  "devDependencies": { "jsdom": "^25.0.0" }
+}
