@@ -152,6 +152,7 @@ svg{display:block}
 .fbtn.on{background:var(--acc-bg);color:var(--acc-ink)}
 .search{flex:1;min-width:0;display:flex;align-items:center;gap:9px;background:var(--card);border:1px solid var(--line);
   border-radius:15px;padding:0 14px;height:48px}
+.search input{min-width:0}
 .search input{flex:1;border:0;background:none;outline:none;font-size:16px}
 .search input::placeholder{color:var(--sub);font-family:var(--mono);font-size:12px;letter-spacing:.08em}
 .chips{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
@@ -415,8 +416,8 @@ textarea.in{height:auto;min-height:58px;padding:11px 13px;resize:vertical;line-h
 .gacts{display:flex;gap:8px;margin-top:18px}
 .gacts .btn{flex:1}
 .lsvg{width:100%;height:auto;margin-top:4px}
-.lsvg .rail{stroke:var(--line);stroke-width:3;stroke-linecap:round}
-.lsvg .rung{stroke:var(--line);stroke-width:3;stroke-linecap:round}
+.lsvg .rail{stroke:var(--sub);opacity:.5;stroke-width:3;stroke-linecap:round}
+.lsvg .rung{stroke:var(--sub);opacity:.5;stroke-width:3;stroke-linecap:round}
 .lsvg .trail{stroke:var(--acc);stroke-width:4;fill:none;stroke-linecap:round;stroke-linejoin:round}
 .lsvg .snode circle{fill:var(--card);stroke:var(--line);stroke-width:2}
 .lsvg .snode text{fill:var(--ink);font:700 13px var(--mono)}
@@ -451,6 +452,11 @@ textarea.in{height:auto;min-height:58px;padding:11px 13px;resize:vertical;line-h
 .vopt{display:flex;align-items:center;gap:11px;width:100%;text-align:left;background:var(--card);
   border:1.5px solid var(--line);border-radius:13px;padding:10px 12px;margin-bottom:8px}
 .vopt.on{border-color:var(--acc);background:var(--soft)}
+.vopt .vck{flex:none;width:24px;height:24px;border-radius:99px;border:1.5px solid var(--line);
+  display:grid;place-items:center;color:transparent}
+.vopt.on .vck{background:var(--acc-bg);border-color:var(--acc-bg);color:var(--acc-ink)}
+.vcta{position:sticky;bottom:0;margin:6px -18px 0;padding:12px 18px calc(6px + env(safe-area-inset-bottom));
+  background:linear-gradient(to top,var(--paper) 75%,transparent);display:flex;flex-direction:column;gap:8px}
 .vopt .ph,.vopt .mono-ph{width:44px;height:44px;flex:none}
 .vopt .mono-ph b{font-size:18px}
 .vopt .vnm{flex:1;min-width:0;font-size:14.5px;font-weight:700;letter-spacing:-.02em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -656,7 +662,8 @@ const UNIT_MAP={'계란':'알','메추리알':'알','두부':'모','순두부':'
  '김':'장','슬라이스 치즈':'장','또띠아':'장','만두피':'장','잠봉':'장','유부':'장',
  '식빵':'개','바게트':'개','베이글':'개','화덕브레드':'개','크루아상':'개','치아바타':'개','가래떡':'개'};
 const UNIT_RULES=[
- [/(고기|삼겹|목살|앞다리|항정|갈비|등심|안심|차돌|우삼겹|다진)/,'g'],
+ [/(고기|삼겹|목살|앞다리|항정|갈비|등심|안심|차돌|우삼겹)/,'g'],
+ [/(다진 마늘|다진마늘|마늘)/,'큰술'],
  [/(베이컨|햄|소시지|스팸|프로슈토)/,'g'],
  [/(고등어|갈치|삼치|조기|굴비|연어|가자미|코다리|장어|오징어|낙지|주꾸미|문어|꽃게|전복|생닭)/,'마리'],
  [/(새우|홍합|바지락|조개|굴|가리비|멸치|건새우|북어|황태|어묵|동태|미역|다시마)/,'g'],
@@ -866,7 +873,7 @@ function vPlan(){
 /* 조리 단위 → 구매 단위 변환 (2큰술을 사러 가는 게 아니라 1병을 산다) */
 const COOK_UNITS=['큰술','작은술','컵','줌','적당량','인분','조각','쪽'];
 const BUY_BOTTLE=/(간장|식초|맛술|미림|참기름|들기름|식용유|올리브유|포도씨유|카놀라유|액젓|피시소스|굴소스|소스|올리고당|물엿|꿀|스리라차|매실청|청주|소주|맥주|와인|우유|두유|생크림)/;
-const BUY_BAG=/(가루|깨|아몬드|호두|땅콩|캐슈넛|잣|건포도|크랜베리|나물|상추|깻잎|시금치|루꼴라|바질|로메인|샐러드|콩나물|숙주|미역|다시마|김)/;
+const BUY_BAG=/(마늘|가루|깨|아몬드|호두|땅콩|캐슈넛|잣|건포도|크랜베리|나물|상추|깻잎|시금치|루꼴라|바질|로메인|샐러드|콩나물|숙주|미역|다시마|김)/;
 function buyUnitOf(n){n=String(n||'');
  if(BUY_BOTTLE.test(n))return '병';
  if(BUY_BAG.test(n))return '봉지';
@@ -924,7 +931,7 @@ function vShop(){
    <span class="cbox">${I.chk}</span>
    <span class="sb"><span class="snm2">${esc(it.name)}${it.need?`<span class="need">${esc(it.need)}</span>`:''}</span>
     ${it.brand?`<span class="src" style="color:var(--acc)">${esc(it.brand)}</span>`:''}
-    <span class="src">${it.uses.map(u=>esc(u.m)).filter((v,i,a)=>a.indexOf(v)===i).join(' · ')}${it.need?` · ${ppl}인 기준`:''}<br>
+    <span class="src">${it.uses.map(u=>esc(u.m)).filter((v,i,a)=>a.indexOf(v)===i).join(' · ')}<br>
      ${it.url?`<span class="buy" data-a="open" data-u="${esc(it.url)}">담아둔 제품 사기</span>`
       :`<span class="buy" data-a="buy" data-s="c" data-n="${esc(it.name)}">쿠팡</span>`}<span class="buy" data-a="buy" data-s="k" data-n="${esc(it.name)}">컬리</span></span></span>
    ${it.photo?`<span class="thumb" style="background-image:url(${it.photo})"></span>`:''}</button>`}});
@@ -995,8 +1002,7 @@ function openDetail(id){const m=menu(id);if(!m)return;
    <span class="dots"></span><span class="amt">${esc(g.amount||'')}</span></span></div>`).join('');
  const steps=(m.steps||[]).map(s=>`<li><span>${esc(s)}</span></li>`).join('');
  sheet(`<div class="dhero">${phEl(m)}<span class="no">No.${pad(m.no)}</span>
-   <button class="fbtn-r l" data-a="shClose" aria-label="닫기">${I.lt}</button>
-   <button class="fbtn-r r" data-a="cook" data-id="${m.id}" aria-label="오늘 해먹었어요">${I.heart.replace('<svg','<svg width="20" height="20" fill="currentColor"')}</button></div>
+   <button class="fbtn-r l" data-a="shClose" aria-label="닫기">${I.lt}</button></div>
   <div class="dtit"><h3>${esc(m.name)}</h3>
    <div>${hearts(m.rating,'big tap','rate').replace('<span class="hearts','<span data-id="'+m.id+'" class="hearts')}</div>
    <div class="dmeta">${m.cat?esc(m.cat)+' · ':''}${m.cookCount}번 해먹음${m.lastCookedAt?' · 마지막 '+mdot(m.lastCookedAt):''}</div></div>
@@ -1398,13 +1404,13 @@ function openVote(){
  if(!syncOn&&S.family.length<2){openFamily(true);return}
  V={meal:'d',sel:new Set(bestSorted().slice(0,3).map(m=>m.id)),deliv:false};
  const rows=bestSorted().map(m=>`<button class="vopt ${V.sel.has(m.id)?'on':''}" data-a="vsel" data-id="${m.id}">
-   ${phEl(m)}<span class="vnm">${esc(m.name)}</span>${hearts(m.rating)}</button>`).join('');
+   ${phEl(m)}<span class="vnm">${esc(m.name)}</span><span class="vck">${I.chk}</span></button>`).join('');
  sheet(`<div id="vbody"><div class="sec-h" style="margin-top:4px"><div><div class="eyebrow">Family Vote</div><h2>오늘 뭐 먹을래, 투표!</h2></div>
    <span class="cnt">후보 2~4개</span></div>
   <div class="mchips">${MEALS.map(([k,v])=>`<button class="chip ${k==='d'?'on':''}" data-a="vmeal" data-m="${k}">${v}</button>`).join('')}</div>
-  <button class="vopt" id="vdeliv" data-a="vdeliv">${phEl(DELIV)}<span class="vnm">배달 찬스</span><span class="cooked">치트키</span></button>
+  <button class="vopt" id="vdeliv" data-a="vdeliv">${phEl(DELIV)}<span class="vnm">배달 찬스 <span class="cooked">치트키</span></span><span class="vck">${I.chk}</span></button>
   ${rows}
-  <div class="dacts">
+  <div class="vcta">
    ${syncOn?`<button class="btn pri blk" data-a="vstartRemote">가족 폰으로 투표 링크 보내기</button>`:''}
    <button class="btn ${syncOn?'gho':'pri'} blk" data-a="vstart">이 폰 하나로 돌려찍기${S.family.length>=2?` — ${S.family.length}명`:''}</button>
   </div></div>`)}
