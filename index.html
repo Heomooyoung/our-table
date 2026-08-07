@@ -258,7 +258,12 @@ svg{display:block}
 .srow.warn .sl{color:var(--heart)}
 .ok{font:700 10.5px var(--mono);color:var(--acc);border:1px solid var(--acc);border-radius:99px;padding:2px 8px;flex:none}
 .xadd{display:flex;gap:7px;margin-top:14px}
-.xadd input{flex:1;min-width:0;background:var(--card);border:1px solid var(--line);border-radius:10px;height:42px;padding:0 12px;outline:none;font-size:16px}
+.xadd input{flex:1;min-width:0;background:var(--card);border:1px solid var(--line);border-radius:12px;height:46px;padding:0 12px;outline:none;font-size:16px}
+.ifield{flex:1;min-width:0;position:relative;display:flex}
+.ifield input{width:100%;padding-right:44px}
+.ifind{position:absolute;right:5px;top:50%;transform:translateY(-50%);width:36px;height:36px;border-radius:10px;
+  display:grid;place-items:center;color:var(--acc);background:var(--soft)}
+.ifind:active{filter:brightness(.95)}
 .xadd input:focus{border-color:var(--acc)}
 .xadd input.amt{flex:0 0 88px}
 
@@ -376,13 +381,17 @@ textarea.in{height:auto;min-height:58px;padding:11px 13px;resize:vertical;line-h
 .irow .ibody{flex:1;min-width:0;display:flex;align-items:center;gap:10px;text-align:left;background:none}
 .irow .itxt{flex:1;min-width:0}
 .irow .ibr.sub{color:var(--sub);font-weight:500}
-.irow .iqn{flex:none;width:46px;height:36px;border:1px solid var(--line);border-radius:10px 0 0 10px;
-  background:var(--paper);text-align:center;font-size:14px;font-weight:700;outline:none;border-right:0}
-.irow .iu{flex:none;width:62px;height:36px;border:1px solid var(--line);border-radius:0 10px 10px 0;
-  background:var(--paper);font-size:13px;font-weight:600;outline:none;text-align:center;
-  -webkit-appearance:none;appearance:none;padding:0 4px;color:var(--ink)}
-.irow .iqn:focus,.irow .iu:focus{border-color:var(--acc)}
-.irow .iqn::placeholder{font-weight:500;color:var(--sub)}
+.qpill{flex:none;display:flex;align-items:center;height:38px;background:var(--line2);
+  border:1px solid transparent;border-radius:11px;overflow:hidden;transition:border-color .15s}
+.qpill:focus-within{border-color:var(--acc);background:var(--card)}
+.qpill .iqn{width:44px;height:100%;border:0;background:none;text-align:right;font-size:15px;font-weight:800;
+  outline:none;padding:0 2px 0 8px;color:var(--ink);letter-spacing:-.02em}
+.qpill .iqn::placeholder{font-weight:600;color:var(--sub);opacity:.6}
+.qpill .iu{height:100%;border:0;background:none;outline:none;font-size:13.5px;font-weight:600;color:var(--sub);
+  -webkit-appearance:none;appearance:none;padding:0 20px 0 4px;max-width:78px;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23787676' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'><path d='M6 9l6 6 6-6'/></svg>");
+  background-repeat:no-repeat;background-position:right 4px center;background-size:13px}
+.qpill:focus-within .iu{color:var(--ink)}
 .irow .inm2{display:block;font-size:14.5px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .irow .iamt{font-weight:500;color:var(--sub);margin-left:7px;font-size:13px}
 .irow .ibr{display:block;font-size:11.5px;color:var(--acc);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -398,10 +407,6 @@ textarea.in{height:auto;min-height:58px;padding:11px 13px;resize:vertical;line-h
 .xbtn{flex:none;width:32px;height:36px;display:grid;place-items:center;color:var(--sub)}
 .addrow{width:100%;border:1.5px dashed var(--line);border-radius:12px;height:44px;color:var(--sub);
   font-size:13px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:6px}
-.srow{display:flex;gap:9px;align-items:flex-start;margin-bottom:8px}
-.srow b{font:700 11px var(--mono);color:var(--acc);padding-top:13px;flex:none}
-.srow textarea{flex:1}
-.srow .xbtn{margin-top:3px}
 .fcats{display:flex;gap:6px;flex-wrap:wrap}
 
 /* ── 뽑기 · 사다리 ── */
@@ -989,8 +994,10 @@ function ingRowHTML(v={}){return `<div class="irow" data-name="${esc(v.name||'')
   ${v.photo?`<span class="ithumb" style="background-image:url(${esc(v.photo)})"></span>`:'<span class="idot"></span>'}
   <span class="itxt"><span class="inm2">${esc(v.name||'')}</span>
    ${v.brand?`<span class="ibr">${esc(v.brand)}</span>`:'<span class="ibr sub">눌러서 제품 찾기</span>'}</span></button>
- <input class="iqn" inputmode="decimal" placeholder="1" value="${esc(v.qty!=null?v.qty:splitAmount(v.amount).qty)}" autocomplete="off">
- <select class="iu">${UNITS.map(u=>`<option ${((v.unit||splitAmount(v.amount).unit||unitFor(v.name))===u)?'selected':''}>${u}</option>`).join('')}</select>
+ <span class="qpill">
+  <input class="iqn" inputmode="decimal" placeholder="1" value="${esc(v.qty!=null?v.qty:splitAmount(v.amount).qty)}" autocomplete="off">
+  <select class="iu">${UNITS.map(u=>`<option ${((v.unit||splitAmount(v.amount).unit||unitFor(v.name))===u)?'selected':''}>${u}</option>`).join('')}</select>
+ </span>
  <button type="button" class="xbtn" data-a="rowDel" aria-label="빼기">${I.x}</button></div>`}
 function stepRowHTML(v){return `<div class="strow" data-t="${esc(v||'')}">
  <b></b><span class="stx">${esc(v||'')}</span>
@@ -1011,14 +1018,16 @@ function openForm(id){const m=id?menu(id):null;
   <div class="fld"><label>종류</label><div class="fcats">${CATS.map(c=>`<button type="button" class="chip ${F.cat===c?'on':''}" data-a="fcat" data-c="${c}">${c}</button>`).join('')}</div></div>
 
   <div class="fld"><label>재료</label>
-   <div class="xadd" style="margin:0 0 6px"><input id="qing" list="dlIng" placeholder="방울토마토" autocomplete="off">
+   <div class="xadd" style="margin:0 0 6px">
+    <span class="ifield"><input id="qing" list="dlIng" placeholder="방울토마토" autocomplete="off">
+     <button type="button" class="ifind" data-a="qFind" aria-label="제품 찾기" title="브랜드·제품 찾기">${I.srch}</button></span>
     <button type="button" class="btn pri" style="height:46px;padding:0 18px" data-a="qingAdd">담기</button></div>
    <div class="mut" style="margin-bottom:10px">쉼표로 여러 개, 엔터로 바로 담겨요. 담긴 재료를 누르면 판매 제품을 찾아 브랜드·사진을 채울 수 있어요.</div>
    <div id="ingRows">${ings}</div></div>
 
   <div class="fld"><label>만드는 법</label>
    <div class="xadd" style="margin:0 0 8px"><textarea id="qstep" rows="1" placeholder="빵을 가로로 갈라 주세요"></textarea>
-    <button type="button" class="btn pri" style="height:46px;padding:0 18px" data-a="stepAdd">담기</button></div>
+    <button type="button" class="btn pri" style="height:46px;padding:0 18px" data-a="stepAdd">추가</button></div>
    <div id="stepRows"></div></div>
 
   <div class="fld"><label>우리집 메모</label><textarea id="f-memo" class="in" rows="1" placeholder="아이가 제일 좋아함. 다음엔 잼 조금만.">${esc(m?m.memo:'')}</textarea></div>
@@ -1032,7 +1041,8 @@ function openForm(id){const m=id?menu(id):null;
 function saveMenu(){
  const name=$('#f-name').value.trim(); if(!name){toast('이름은 적어줘야 해요');$('#f-name').focus();return}
  const dup=S.menus.find(x=>x.name===name&&x.id!==F.editId);
- if(dup&&!F.dupOk){F.dupOk=true;toast(`'${name}' 이미 메뉴판에 있어요 — 그래도 올리려면 한 번 더 눌러주세요`);return}
+ if(dup&&!F.dupOk){openConfirm(`‘${esc(name)}’ 은 이미 메뉴판에 있어요.<br>그래도 새로 올릴까요?`,'네, 올릴게요',
+   ()=>{F.dupOk=true;saveMenu()});return}
  const ings=$$('#ingRows .irow').map(r=>{const qty=(r.querySelector('.iqn').value||'').trim(),unit=r.querySelector('.iu').value;
    return {name:(r.dataset.name||'').trim(),qty,unit,amount:(qty?qty+unit:''),
    brand:(r.dataset.brand||'').trim(),photo:r.dataset.photo||'',url:r.dataset.url||''}}).filter(g=>g.name);
