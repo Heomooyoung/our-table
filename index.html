@@ -34,7 +34,7 @@
 
 *{margin:0;padding:0;box-sizing:border-box}
 html{-webkit-text-size-adjust:100%}
-body{background:var(--paper);color:var(--ink);font:400 15px/1.6 var(--kr);
+body{background:var(--paper);color:var(--ink);font:400 15px/1.55 var(--kr);letter-spacing:-.024em;
   -webkit-font-smoothing:antialiased;min-height:100dvh}
 body.lock{overflow:hidden}
 button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;-webkit-tap-highlight-color:transparent}
@@ -49,8 +49,7 @@ svg{display:block}
 .hdr .wm{display:flex;flex-direction:column;gap:2px}
 .hdr .wm b{font-size:21px;font-weight:800;letter-spacing:-.035em}
 .hdr .wm span{font-size:12.5px;color:var(--sub);font-weight:500}
-.icobtn{width:40px;height:40px;border-radius:var(--rp);display:grid;place-items:center;color:var(--ink);
-  background:var(--card);border:1px solid var(--line)}
+.icobtn{width:34px;height:34px;border-radius:var(--rp);display:grid;place-items:center;color:var(--ink)}
 .icobtn:active{background:var(--line2)}
 .avatar{width:42px;height:42px;border-radius:var(--rp);background:var(--dark);color:var(--dark-ink);
   display:grid;place-items:center;font-size:15px;font-weight:800;letter-spacing:-.02em;flex:none}
@@ -74,14 +73,38 @@ svg{display:block}
 .hero-menu .nm{font-size:22px;font-weight:800;letter-spacing:-.03em;line-height:1.3;text-wrap:balance}
 .hero-menu .mt{font:600 11px var(--mono);color:var(--sub);margin-top:4px}
 
-/* ── 주간 스트립 ── */
-.strip{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;margin-top:2px}
-.strip .dcol{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:8px 4px;
-  display:flex;flex-direction:column;align-items:center;gap:5px;min-width:0}
-.strip .dcol.today{border-color:var(--acc);border-width:1.5px}
-.strip .dl{font:700 10px var(--mono);color:var(--sub);letter-spacing:.08em}
-.strip .dn{font-size:10.5px;color:var(--ink);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.strip .dn.none{color:var(--sub);opacity:.5;font:600 10px var(--mono)}
+/* ── 오늘의 끼니 카드 ── */
+.meals{display:flex;flex-direction:column;gap:8px;margin-top:4px}
+.meals.gap{margin-top:16px}
+.mealc{display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:var(--paper);
+  border:1px solid var(--line);border-radius:15px;padding:11px 13px;min-height:62px}
+.mealc.empty{border-style:dashed;background:none}
+.mealc .ph,.mealc .mono-ph{width:42px;height:42px;flex:none;border-radius:11px}
+.mealc .mono-ph b{font-size:17px}
+.mealc .mdel{flex:none;width:42px;height:42px;border-radius:11px;background:var(--line2);
+  display:grid;place-items:center;font-size:20px}
+.mealc .mbody{flex:1;min-width:0}
+.mealc .mlab{display:block;font:700 10px var(--mono);letter-spacing:.18em;color:var(--sub)}
+.mealc.empty .mlab{flex:none;width:34px;letter-spacing:.1em}
+.mealc .mval{display:block;font-size:16px;font-weight:800;letter-spacing:-.035em;margin-top:2px;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mealc .mval.none{flex:1;font-size:14px;font-weight:600;color:var(--sub);margin:0}
+.mealc .mgo{flex:none;width:32px;height:32px;border-radius:99px;display:grid;place-items:center;
+  color:var(--sub);background:var(--line2)}
+/* ── 주간 리스트 ── */
+.wlist{background:var(--card);border:1px solid var(--line);border-radius:18px;box-shadow:var(--sh);overflow:hidden}
+.wrow{display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:13px 16px;
+  border-bottom:1px solid var(--line2)}
+.wrow:last-child{border-bottom:0}
+.wrow.today{background:var(--soft)}
+.wrow .wd{flex:none;width:18px;font-size:13.5px;font-weight:800;color:var(--sub)}
+.wrow.today .wd{color:var(--acc)}
+.wrow .wn{flex:none;width:22px;font:700 13px var(--mono);color:var(--sub);font-variant-numeric:tabular-nums}
+.wrow .wm{flex:1;min-width:0;font-size:15px;font-weight:700;letter-spacing:-.03em;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.wrow .wm.none{color:var(--sub);font-weight:500;font-size:13.5px}
+.wrow .wt{flex:none;font:700 9.5px var(--mono);letter-spacing:.1em;color:var(--acc-ink);
+  background:var(--acc-bg);border-radius:99px;padding:3px 8px}
 
 /* ── 가로 레일 (베스트) ── */
 .rail{display:flex;gap:10px;overflow-x:auto;padding:2px 2px 8px;scroll-snap-type:x proximity;scrollbar-width:none}
@@ -152,9 +175,11 @@ svg{display:block}
 .day.today .dt .n{color:var(--acc)}
 .day.today .dt .w{color:var(--acc)}
 .slots{flex:1;display:flex;flex-direction:column;gap:6px;min-width:0}
-.slot{display:flex;align-items:center;gap:8px;border:1px dashed var(--line);border-radius:10px;
-  padding:8px 10px;min-height:38px;text-align:left;width:100%}
-.slot .ml{font:700 9px var(--mono);letter-spacing:.16em;color:var(--sub);flex:none;width:26px}
+.slot{display:flex;align-items:center;gap:7px;border:1px dashed var(--line);border-radius:11px;
+  padding:8px 9px;min-height:40px;text-align:left;width:100%;min-width:0;flex:1}
+.slot.pick{border-style:solid;border-color:var(--acc-bg);background:var(--soft)}
+.slot.pick .snm{color:var(--acc);font-weight:700}
+.slot .ml{font:700 9px var(--mono);letter-spacing:.14em;color:var(--sub);flex:none}
 .slot .snm{flex:1;min-width:0;font-size:13px;font-weight:600;letter-spacing:-.02em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--sub)}
 .slot.fill{border-style:solid;background:var(--card);border-color:var(--line)}
 .slot.fill .snm{color:var(--ink)}
@@ -175,7 +200,8 @@ svg{display:block}
 .sitem.done .cbox{background:var(--acc-bg);border-color:var(--acc-bg);color:var(--acc-ink)}
 .sitem .sb{flex:1;min-width:0}
 .sitem .snm2{font-size:14.5px;font-weight:700;letter-spacing:-.02em;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
-.sitem.done .snm2{color:var(--sub);text-decoration:line-through;text-decoration-color:var(--sub)}
+.sitem.done{opacity:.42}
+.sitem.done .snm2{text-decoration:line-through;text-decoration-color:var(--sub)}
 .sitem .src{font-size:11.5px;color:var(--sub);margin-top:2px;line-height:1.5}
 .sitem .thumb{flex:none;width:52px;height:52px;border-radius:14px;background-size:cover;background-position:center;
   border:1px solid var(--line);order:-1}
@@ -194,6 +220,21 @@ svg{display:block}
 .rk{display:inline-block;font:700 8.5px var(--mono);letter-spacing:.06em;color:#fff;background:#3B7BD9;
   border-radius:4px;padding:1px 4px;margin-left:5px;vertical-align:1px}
 .disc{font-size:10.5px;color:var(--sub);line-height:1.5;margin-top:12px}
+/* ── 설정 (그룹 리스트) ── */
+.shead{display:flex;align-items:center;justify-content:center;position:relative;padding:6px 0 18px}
+.shead b{font-size:16px;font-weight:800}
+.shead .x{position:absolute;left:0;color:var(--ink)}
+.sgrp{font-size:12px;font-weight:600;color:var(--sub);margin:22px 0 8px 2px}
+.slist{background:var(--card);border:1px solid var(--line);border-radius:16px;overflow:hidden}
+.srow{display:flex;align-items:center;gap:10px;width:100%;text-align:left;padding:15px 16px;
+  border-bottom:1px solid var(--line2);background:none}
+.slist .srow:last-child{border-bottom:0}
+.srow:active{background:var(--line2)}
+.srow .sl{flex:1;min-width:0;font-size:14.5px;font-weight:600}
+.srow .sv{font-size:13.5px;color:var(--sub);flex:none;max-width:52%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.srow .chev{flex:none;color:var(--line);display:grid;place-items:center}
+.srow.warn .sl{color:var(--heart)}
+.ok{font:700 10.5px var(--mono);color:var(--acc);border:1px solid var(--acc);border-radius:99px;padding:2px 8px;flex:none}
 .xadd{display:flex;gap:7px;margin-top:14px}
 .xadd input{flex:1;min-width:0;background:var(--card);border:1px solid var(--line);border-radius:10px;height:42px;padding:0 12px;outline:none;font-size:16px}
 .xadd input:focus{border-color:var(--acc)}
@@ -291,7 +332,16 @@ textarea.in{height:auto;min-height:58px;padding:11px 13px;resize:vertical;line-h
   align-items:center;justify-content:center;gap:8px;color:var(--sub);font-size:13px;font-weight:600;
   background-size:cover;background-position:center}
 .fphoto.has{border-style:solid;color:transparent}
-.irow{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:9px;margin-bottom:8px}
+.irow{display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--line);
+  border-radius:14px;padding:9px 10px;margin-bottom:7px}
+.irow .ithumb{flex:none;width:38px;height:38px;border-radius:10px;background-size:cover;background-position:center;border:1px solid var(--line)}
+.irow .idot{flex:none;width:6px;height:6px;border-radius:99px;background:var(--line);margin:0 16px}
+.irow .ibody{flex:1;min-width:0;display:flex;align-items:center;gap:10px;text-align:left;background:none}
+.irow .itxt{flex:1;min-width:0}
+.irow .ibr.sub{color:var(--sub);font-weight:500}
+.irow .inm2{display:block;font-size:14.5px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.irow .iamt{font-weight:500;color:var(--sub);margin-left:7px;font-size:13px}
+.irow .ibr{display:block;font-size:11.5px;color:var(--acc);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .ir1{display:flex;gap:7px}
 .ir1 .in{border:0;background:var(--line2);height:42px;font-size:16px}
 .ir1 .i-n{flex:1;min-width:0}
@@ -395,6 +445,7 @@ body.gate .tabbar,body.gate .hdr{display:none}
 .mgrid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
 .mcell{background:var(--card);border:1px solid var(--line);border-radius:9px;min-height:58px;
   padding:5px 5px;text-align:left;display:flex;flex-direction:column;gap:2px;min-width:0}
+.mcell.has{background:var(--soft);border-color:#D6E2DA}
 .mcell.today{border-color:var(--acc);border-width:1.5px}
 .mcell.dim{opacity:.32}
 .mcell .md{font:700 10.5px var(--mono);color:var(--sub)}
@@ -414,7 +465,7 @@ body.gate .tabbar,body.gate .hdr{display:none}
     <div style="display:flex;align-items:center;gap:8px">
     <span id="syncdot" title="로컬 모드"></span>
     <button class="icobtn" data-a="settings" aria-label="설정">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1 1.55V21a2 2 0 1 1-4 0v-.09a1.7 1.7 0 0 0-1-1.55 1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.7 1.7 0 0 0 .34-1.87 1.7 1.7 0 0 0-1.55-1H3a2 2 0 1 1 0-4h.09a1.7 1.7 0 0 0 1.55-1 1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.7 1.7 0 0 0 1.87.34h.09a1.7 1.7 0 0 0 1-1.55V3a2 2 0 1 1 4 0v.09a1.7 1.7 0 0 0 1 1.55 1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.7 1.7 0 0 0-.34 1.87v.09a1.7 1.7 0 0 0 1.55 1H21a2 2 0 1 1 0 4h-.09a1.7 1.7 0 0 0-1.55 1Z"/></svg>
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
     </button>
     </div>
   </header>
@@ -440,7 +491,7 @@ const pad=n=>String(n).padStart(2,'0');
 const iso=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
 const todayISO=()=>iso(new Date());
 const fromISO=s=>{const[a,b,c]=s.split('-').map(Number);return new Date(a,b-1,c)};
-const WD=['일','월','화','수','목','금','토'], WDE=['SUN','MON','TUE','WED','THU','FRI','SAT'];
+const WD=['일','월','화','수','목','금','토'], WDE=['SUN','MON','TUE','WED','THU','FRI','SAT'], WDK=WD;
 function monday(d){const x=new Date(d);x.setHours(0,0,0,0);x.setDate(x.getDate()-((x.getDay()+6)%7));return x}
 function weekOf(off){const m=monday(new Date());m.setDate(m.getDate()+off*7);return m}
 function weekDays(mon){return Array.from({length:7},(_,i)=>{const d=new Date(mon);d.setDate(d.getDate()+i);return d})}
@@ -517,6 +568,19 @@ async function flush(){ try{ if(idbOK){await dbSet(S);return} }catch(e){idbOK=fa
 document.addEventListener('visibilitychange',()=>{if(document.hidden)flush()});
 
 function menu(id){return S.menus.find(m=>m.id===id)}
+/* 지난 끼니는 자동으로 '해먹은 것'으로 집계 — 버튼 누를 필요 없음 */
+function autoCount(){const ti=todayISO();let ch=false;
+ S.counted=S.counted||{};
+ Object.entries(S.plan||{}).forEach(([dt,p])=>{ if(dt>=ti)return;
+  MEALS.forEach(([mk])=>{const v=p[mk];if(!v||v==='DELIV')return;
+   const key=dt+'|'+mk; if(S.counted[key])return;
+   const m=menu(v); if(!m)return;
+   m.cookCount=(m.cookCount||0)+1;
+   if(!m.lastCookedAt||m.lastCookedAt<dt)m.lastCookedAt=dt;
+   m.updatedAt=new Date().toISOString();
+   S.counted[key]=1; ch=true;
+   if(typeof syncOn!=='undefined'&&syncOn)pushMenu(m)})});
+ if(ch)save()}
 function slotName(v){return v==='DELIV'?'배달 찬스':(v&&menu(v)?menu(v).name:null)}
 function setPlan(date,meal,val){const p=(S.plan[date]=S.plan[date]||{});
  if(val==null)delete p[meal];else p[meal]=val;
@@ -563,40 +627,42 @@ function vGate(){return `<section class="hero" style="margin-top:46px">
  <div class="ghint" style="margin-top:14px">가족 초대 링크로 왔다면, 로그인 뒤 자동으로 이어져요.</div>`}
 
 /* ── 홈 ── */
+function mealCard(mk,ti){
+ const v=(S.plan[ti]||{})[mk];
+ const deliv=v==='DELIV', m=(!deliv&&v)?menu(v):null;
+ const label=MEAL[mk];
+ if(!v||(!deliv&&!m)) return `<button class="mealc empty" data-a="slot" data-date="${ti}" data-m="${mk}">
+   <span class="mlab">${label}</span><span class="mval none">아직 안 정했어요</span>
+   <span class="mgo">${I.plus}</span></button>`;
+ return `<button class="mealc" data-a="${deliv?'':'detail'}" ${m?`data-id="${m.id}"`:''}>
+   ${deliv?'<span class="mdel">🛵</span>':phEl(m,'msm')}
+   <span class="mbody"><span class="mlab">${label}</span>
+    <span class="mval">${esc(deliv?'배달 찬스':m.name)}</span></span>
+   <span class="mgo" data-a="slot" data-date="${ti}" data-m="${mk}" role="button" aria-label="바꾸기">
+    <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4v6h6M20 20v-6h-6"/><path d="M19.5 9A8 8 0 0 0 6 6.3L4 8M4.5 15A8 8 0 0 0 18 17.7l2-1.7"/></svg></span></button>`}
 function vHome(){
  const t=new Date(), ti=todayISO();
- const dateLn=`${t.getMonth()+1}.${t.getDate()} ${WDE[t.getDay()]} — TONIGHT`;
- const tp=S.plan[ti]||{}; let td=null;
- for(const mk of ['d','l','b']) if(tp[mk]){td={meal:mk,val:tp[mk],delivery:tp[mk]==='DELIV'};break}
- if(td&&!td.delivery&&!menu(td.val)) td=null;
- const pick=td?(td.delivery?{name:'배달 찬스',no:0,photo:''}:menu(td.val)):null;
- let hero;
- if(pick){
-  hero=`<section class="hero"><div class="date">${dateLn}</div>
-   <div class="hero-menu">${phEl(pick)}
-    <div><div class="eyebrow">오늘의 ${MEAL[td.meal]||'저녁'}</div>
-     <div class="nm">${esc(pick.name)}</div>
-     <div class="mt">${td.delivery?'오늘은 요리 쉬는 날':`No.${pad(pick.no)} · ${pick.cookCount}번 해먹음`}</div></div></div>
-   <div class="acts">${td.delivery?'':`<button class="btn pri" data-a="cook" data-id="${pick.id}">오늘 해먹었어요</button>`}
-    <button class="btn gho" data-a="retoday">다시 정하기</button></div>
-   <div class="tbtns" style="margin-top:10px"><button class="tbtn" data-a="openLadder">사다리 한 판</button>
-    <button class="tbtn" data-a="openVote">가족 투표</button></div></section>`;
- }else{
-  hero=`<section class="hero"><div class="date">${dateLn}</div>
-   <h1>오늘 뭐,<br>먹지?</h1>
-   <div class="sub">우리집 메뉴판 ${S.menus.length}가지 중에서 골라줄게요.</div>
-   <div class="acts"><button class="btn pri" data-a="openLadder">사다리 타기</button>
-    <button class="btn gho" data-a="openVote">가족 투표</button></div></section>`;
- }
- const days=weekDays(weekOf(0)).map(d=>{const k=iso(d);const nm=slotName((S.plan[k]||{}).d);
-  return `<button class="dcol ${k===ti?'today':''}" data-a="go" data-t="plan">
-   <span class="dl">${WDE[d.getDay()][0]}</span>
-   <span class="dn ${nm?'':'none'}">${nm?esc(nm):String(d.getDate())}</span></button>`}).join('');
+ const meals = S.homeMeals==='all' ? ['b','l','d'] : ['d'];
+ const anyFilled = meals.some(mk=>(S.plan[ti]||{})[mk]);
+ const hero=`<section class="hero">
+   <div class="date">${t.getMonth()+1}월 ${t.getDate()}일 ${WDK[t.getDay()]}요일</div>
+   ${anyFilled?'':`<h1>오늘 뭐,<br>먹지?</h1>
+    <div class="sub">우리집 메뉴판 ${S.menus.length}가지 중에서 골라줄게요.</div>`}
+   <div class="meals ${anyFilled?'':'gap'}">${meals.map(mk=>mealCard(mk,ti)).join('')}</div>
+   ${anyFilled?'':`<div class="acts"><button class="btn pri" style="flex:1" data-a="openLadder">사다리 타기</button>
+     <button class="btn gho" style="flex:1" data-a="openVote">가족 투표</button></div>`}
+  </section>`;
+ const days=weekDays(weekOf(0)).map(d=>{const k=iso(d),nm=slotName((S.plan[k]||{}).d);
+  return `<button class="wrow ${k===ti?'today':''}" data-a="wday" data-date="${k}">
+   <span class="wd">${WDK[d.getDay()]}</span><span class="wn">${d.getDate()}</span>
+   <span class="wm ${nm?'':'none'}">${nm?esc(nm):'비어있음'}</span>
+   ${k===ti?'<span class="wt">오늘</span>':''}</button>`}).join('');
  const connbar=(window.OT_CONFIG&&typeof sb!=='undefined'&&sb&&!syncOn)
   ?`<button class="connbar" data-a="ob">아직 우리집 계정에 연결 안 됐어요 — 가족과 같이 보려면 여기를 눌러 연결</button>`:'';
  return connbar+hero+
-  `<section class="sec"><div class="sec-h"><div><div class="eyebrow">This Week</div><h2>이번 주 저녁</h2></div></div>
-    <div class="strip">${days}</div></section>`;
+  `<section class="sec"><div class="sec-h"><div><div class="eyebrow">This Week</div><h2>이번 주 저녁</h2></div>
+    <button class="chip" data-a="go" data-t="plan">식단표</button></div>
+    <div class="wlist">${days}</div></section>`;
 }
 
 /* ── 메뉴판 ── */
@@ -650,7 +716,7 @@ function vPlanMonth(){
   if(i>=35&&d.getMonth()!==mo)break;cells.push(d)}
  const wd=['월','화','수','목','금','토','일'].map(w=>`<div class="mwd">${w}</div>`).join('');
  const cs=cells.map(d=>{const k=iso(d),nm=slotName((S.plan[k]||{}).d);
-  return `<button class="mcell ${k===ti?'today':''} ${d.getMonth()!==mo?'dim':''}" data-a="mday" data-date="${k}">
+  return `<button class="mcell ${k===ti?'today':''} ${nm?'has':''} ${d.getMonth()!==mo?'dim':''}" data-a="mday" data-date="${k}">
    <span class="md">${d.getDate()}</span>${nm?`<span class="mnm">${esc(nm)}</span>`:''}</button>`}).join('');
  return `<section class="sec"><div class="sec-h"><div><div class="eyebrow">Monthly</div><h2>한 달 식단</h2></div>
    <button class="chip on" data-a="planView">주간으로</button></div>
@@ -671,7 +737,7 @@ function vPlan(){
      <span class="sx" data-a="slotX" data-date="${k}" data-m="${mk}" role="button" aria-label="비우기">${I.x}</span></button>`
     :`<button class="slot" data-a="slot" data-date="${k}" data-m="${mk}">
      <span class="ml">${ml}</span><span class="snm">메뉴 정하기</span><span class="sx" style="color:var(--line)">${I.plus}</span></button>`}).join('');
-  return `<div class="day ${k===ti?'today':''}"><div class="dt"><div class="w">${WDE[d.getDay()]}</div><div class="n">${d.getDate()}</div></div>
+  return `<div class="day ${k===ti?'today':''}"><div class="dt"><div class="w">${WDK[d.getDay()]}</div><div class="n">${d.getDate()}</div></div>
    <div class="slots">${slots}</div></div>`}).join('');
  return `<section class="sec"><div class="sec-h"><div><div class="eyebrow">Weekly Plan</div><h2>주간 식단표</h2></div>
    <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end">
@@ -723,9 +789,9 @@ function vShop(){
    <span class="sb"><span class="snm2">${esc(x.name)}</span><span class="src">${x.amount?esc(x.amount)+'<br>':''}
      <span class="buy" data-a="buy" data-s="c" data-n="${esc(x.name)}">쿠팡</span><span class="buy" data-a="buy" data-s="k" data-n="${esc(x.name)}">컬리</span></span></span>
    <span class="sx" data-a="xdel" data-id="${x.id}" role="button" aria-label="삭제" style="color:var(--sub);width:26px;height:26px;display:grid;place-items:center">${I.x}</span></button>`}});
- // 안 산 것 먼저, 산 것은 전부 아래로
- const rows=[...rowArr.filter(r=>!r.c),...xArr.filter(r=>!r.c),
-   ...rowArr.filter(r=>r.c),...xArr.filter(r=>r.c)].map(r=>r.h).join('');
+ // 제자리 유지(자리 이동은 혼란) — 산 것은 흐리게, 필요하면 숨기기
+ const all=[...rowArr,...xArr];
+ const rows=(ui.hideDone?all.filter(r=>!r.c):all).map(r=>r.h).join('');
  const xrows='';
  const body = total?`<div class="prog"><div class="pt"><b>${done===total?'장보기 완료!':'장바구니'}</b>
     <span id="pgt">${done} / ${total}</span></div><div class="pbar"><i id="pgb" style="width:${total?Math.round(done/total*100):0}%"></i></div></div>
@@ -736,7 +802,8 @@ function vShop(){
    <button class="chip" data-a="shopShare">목록 보내기</button></div>
   ${wknav(ui.shopWeek,'swk',ui.shopSpan||1)}
   <div class="chips" style="margin-bottom:12px">${[[1,'1주'],[2,'2주'],[4,'한 달']].map(([n,l])=>
-   `<button class="chip ${(ui.shopSpan||1)===n?'on':''}" data-a="span" data-n="${n}">${l}</button>`).join('')}</div>
+   `<button class="chip ${(ui.shopSpan||1)===n?'on':''}" data-a="span" data-n="${n}">${l}</button>`).join('')}
+   ${done?`<button class="chip ${ui.hideDone?'on':''}" data-a="hideDone">산 것 ${ui.hideDone?'보이기':'숨기기'} ${done}</button>`:''}</div>
   ${body}
   <div class="xadd"><input id="xn" list="dlIngS" placeholder="직접 추가 · 예) 화덕브레드" autocomplete="off"><input id="xa" class="amt" placeholder="양" autocomplete="off">
    <button class="btn pri" style="height:42px;padding:0 14px" data-a="xadd">추가</button></div>
@@ -788,19 +855,19 @@ function openDetail(id){const m=menu(id);if(!m)return;
   ${steps?`<div class="sec"><div class="eyebrow">만드는 법</div><ol class="steps" style="margin-top:12px">${steps}</ol></div>`:''}
   ${m.memo?`<div class="sec"><div class="eyebrow">우리집 메모</div><div class="note" style="margin-top:10px">${esc(m.memo)}</div></div>`:''}
   <div class="dacts">
-   <div style="display:flex;gap:8px">
-    <button class="btn pri" style="flex:1" data-a="toPlan" data-id="${m.id}">식단표에 넣기</button>
-    <button class="btn gho" style="flex:1" data-a="cook" data-id="${m.id}">오늘 해먹었어요</button></div>
+   <button class="btn pri blk" data-a="toPlan" data-id="${m.id}">식단표에 넣기</button>
    <div class="tbtns"><button class="tbtn" data-a="edit" data-id="${m.id}">수정하기</button>
     <button class="tbtn warn" data-a="delMenu" data-id="${m.id}">메뉴판에서 빼기</button></div></div>`)}
 
 /* ── 등록/수정 폼 ── */
-function ingRowHTML(v={}){return `<div class="irow" data-photo="${esc(v.photo||'')}" data-url="${esc(v.url||'')}">
- <div class="ir1"><input class="in i-n" list="dlIng" placeholder="재료명" value="${esc(v.name||'')}"><input class="in i-a" placeholder="양 · 2큰술" value="${esc(v.amount||'')}"></div>
- <div class="ir2"><input class="in i-b" list="dlBrand" placeholder="브랜드 (선택)" value="${esc(v.brand||'')}">
-  <button type="button" class="pbtn" data-a="ingFind" aria-label="제품 찾기" title="쿠팡에서 제품 찾기">${I.srch}</button>
-  <button type="button" class="pbtn ${v.photo?'has':''}" data-a="ingPhoto" aria-label="재료 사진" ${v.photo?`style="background-image:url(${v.photo})"`:''}>${I.cam}</button>
-  <button type="button" class="xbtn" data-a="rowDel" aria-label="재료 삭제">${I.x}</button></div></div>`}
+/* 담긴 재료 = 읽기 전용 칩 행 (입력칸은 위에 하나뿐) */
+function ingRowHTML(v={}){return `<div class="irow" data-name="${esc(v.name||'')}" data-amount="${esc(v.amount||'')}"
+ data-brand="${esc(v.brand||'')}" data-photo="${esc(v.photo||'')}" data-url="${esc(v.url||'')}">
+ <button type="button" class="ibody" data-a="ingFind" title="제품 찾기">
+  ${v.photo?`<span class="ithumb" style="background-image:url(${esc(v.photo)})"></span>`:'<span class="idot"></span>'}
+  <span class="itxt"><span class="inm2">${esc(v.name||'')}${v.amount?`<span class="iamt">${esc(v.amount)}</span>`:''}</span>
+   ${v.brand?`<span class="ibr">${esc(v.brand)}</span>`:'<span class="ibr sub">눌러서 제품 찾기</span>'}</span></button>
+ <button type="button" class="xbtn" data-a="rowDel" aria-label="빼기">${I.x}</button></div>`}
 function stepRowHTML(v){return `<div class="srow"><b>${pad($$('#stepRows .srow').length+1)}</b>
  <textarea class="in step" rows="2" placeholder="예) 빵을 가로로 갈라 주세요">${esc(v||'')}</textarea>
  <button type="button" class="xbtn" data-a="rowDel" aria-label="단계 삭제">${I.x}</button></div>`}
@@ -819,11 +886,10 @@ function openForm(id){const m=id?menu(id):null;
   <div class="fld"><label>종류 (선택)</label><div class="fcats">${CATS.map(c=>`<button type="button" class="chip ${F.cat===c?'on':''}" data-a="fcat" data-c="${c}">${c}</button>`).join('')}</div></div>
   <div class="fld"><label>재료 — 쉼표로 여러 개 한 번에</label>
    <div class="xadd" style="margin:0 0 6px"><input id="qing" list="dlIng" placeholder="돼지고기 300g, 김치 반 포기" autocomplete="off">
-    <button type="button" class="btn gho" style="height:42px;padding:0 12px" data-a="qFind" title="쿠팡에서 제품 찾기">${I.srch}</button>
-    <button type="button" class="btn pri" style="height:42px;padding:0 14px" data-a="qingAdd">담기</button></div>
-   <div class="mut" style="margin-bottom:8px">돋보기를 누르면 실제 판매 제품을 찾아 브랜드·사진·구매링크까지 채워줘요.</div>
-   <div id="ingRows">${ings}</div>
-   <button type="button" class="addrow" data-a="ingAdd">${I.plus} 한 줄씩 직접 쓰기</button></div>
+    <button type="button" class="btn gho" style="height:46px;padding:0 13px" data-a="qFind" title="제품 찾기">${I.srch}</button>
+    <button type="button" class="btn pri" style="height:46px;padding:0 16px" data-a="qingAdd">담기</button></div>
+   <div class="mut" style="margin-bottom:10px">엔터로 담고, 돋보기를 누르면 실제 판매 제품을 찾아 브랜드·사진까지 채워줘요.</div>
+   <div id="ingRows">${ings}</div></div>
   <div class="fld"><label>만드는 법 (선택)</label><div id="stepRows"></div>
    <button type="button" class="addrow" data-a="stepAdd">${I.plus} 단계 추가</button></div>
   <div class="fld"><label>우리집 메모 (선택)</label><textarea id="f-memo" class="in" placeholder="예) 아이가 제일 좋아함. 다음엔 잼 조금만.">${esc(m?m.memo:'')}</textarea></div>
@@ -836,8 +902,8 @@ function saveMenu(){
  const name=$('#f-name').value.trim(); if(!name){toast('이름은 적어줘야 해요');$('#f-name').focus();return}
  const dup=S.menus.find(x=>x.name===name&&x.id!==F.editId);
  if(dup&&!F.dupOk){F.dupOk=true;toast(`'${name}' 이미 메뉴판에 있어요 — 그래도 올리려면 한 번 더 눌러주세요`);return}
- const ings=$$('#ingRows .irow').map(r=>({name:r.querySelector('.i-n').value.trim(),amount:r.querySelector('.i-a').value.trim(),
-   brand:r.querySelector('.i-b').value.trim(),photo:r.dataset.photo||'',url:r.dataset.url||''})).filter(g=>g.name);
+ const ings=$$('#ingRows .irow').map(r=>({name:(r.dataset.name||'').trim(),amount:(r.dataset.amount||'').trim(),
+   brand:(r.dataset.brand||'').trim(),photo:r.dataset.photo||'',url:r.dataset.url||''})).filter(g=>g.name);
  const steps=$$('#stepRows .step').map(t=>t.value.trim()).filter(Boolean);
  const memo=$('#f-memo').value.trim();
  let m;
@@ -912,8 +978,8 @@ function bulkAdd(rs){rs.forEach(r=>{const m={id:uid(),no:S.seq++,name:r.name,cat
 /* ── 제품 검색 (쿠팡 파트너스 중계) ── */
 let FINDROW=null;
 async function openFind(row,rawName){
- const nm=(row?(row.querySelector('.i-n').value||''):(rawName||'')).trim().split(/[,，]/)[0].trim();
- if(!nm){toast('재료명을 먼저 적어주세요');(row?row.querySelector('.i-n'):$('#qing')).focus();return}
+ const nm=(row?(row.dataset.name||''):(rawName||'')).trim().split(/[,，]/)[0].trim();
+ if(!nm){toast('재료명을 먼저 적어주세요');const q=$('#qing');if(q)q.focus();return}
  FINDROW=row;
  sheet(`<div id="fdbody"><div class="sec-h" style="margin-top:4px"><div><div class="eyebrow">Find Product</div>
    <h2>${esc(nm)}</h2></div></div>
@@ -936,34 +1002,51 @@ async function renderFind(nm){
    ${rows||'<div class="empty"><b>검색 결과가 없어요</b><p>재료명을 조금 더 일반적으로 적어보세요.</p></div>'}
    <div class="disc">쿠팡 파트너스 활동의 일환으로, 이를 통해 일정액의 수수료를 제공받을 수 있습니다.</div>`;
  }catch(e){const el=$('#fdbody');if(el)el.innerHTML=`<div class="empty"><b>지금은 찾을 수 없어요</b><p>인터넷 연결을 확인해주세요.</p></div>`}}
-function brandOf(name){const m=String(name).replace(/^\[[^\]]*\]\s*/,'').match(/^([가-힣A-Za-z0-9]+)/);return m?m[1]:''}
+/* 상품명 정리 → 브랜드/상품명 칸에 그대로 (대괄호 태그·용량 꼬리 제거) */
+function productLabel(name){
+ let s=String(name||'').replace(/^\s*\[[^\]]*\]\s*/,'').trim();
+ s=s.split(/[,，]/)[0].trim();                      // "…플레인, 1kg, 2개" → "…플레인"
+ s=s.replace(/\s*\((?:[^)]*)\)\s*$/,'').trim();
+ return s.length>28?s.slice(0,28).trim()+'…':s}
 function pickProduct(i){const p=(window.__FD||[])[i];if(!p)return;
- let row=FINDROW;
- if(!row){                       // 행 없이 검색한 경우 → 새 행 생성
+ const label=productLabel(p.name);
+ if(FINDROW){                                        // 기존 행 보강
+  FINDROW.dataset.brand=label; FINDROW.dataset.url=p.url||'';
+  if(p.image)FINDROW.dataset.photo=p.image;
+  const v={name:FINDROW.dataset.name,amount:FINDROW.dataset.amount,brand:label,photo:p.image||FINDROW.dataset.photo,url:p.url};
+  FINDROW.outerHTML=ingRowHTML(v);
+ }else{                                              // 입력칸에서 바로 검색 → 새 행
   const q=$('#qing'),raw=(q?q.value:'').trim();
-  const parsed=raw?splitIngredient(raw.split(/[,，]/)[0]):{name:brandOf(p.name)};
+  const parsed=raw?splitIngredient(raw.split(/[,，]/)[0]):{name:label};
+  parsed.brand=label; parsed.photo=p.image||''; parsed.url=p.url||'';
   $('#ingRows').insertAdjacentHTML('beforeend',ingRowHTML(parsed));
-  row=$('#ingRows .irow:last-child'); if(q)q.value='';
+  if(q){q.value='';q.focus()}
  }
- const b=row.querySelector('.i-b');
- if(!b.value)b.value=brandOf(p.name);
- row.dataset.url=p.url||'';
- if(p.image){row.dataset.photo=p.image;const pb=row.querySelector('[data-a="ingPhoto"]');
-  pb.classList.add('has');pb.style.backgroundImage=`url(${p.image})`}
  FINDROW=null;shClose();toast('제품을 담았어요 — 장보기에서 바로 살 수 있어요')}
 
 /* ── 식단표에 넣기 (날짜 고르기) ── */
+/* 식단표에 넣기 — 주 단위 + 다중 선택 후 완료 */
+let CHOOSE=null;
 function openChooser(id){const m=menu(id);if(!m)return;
- const ti=todayISO();
- const days=[];for(let i=0;i<14;i++){const d=new Date();d.setDate(d.getDate()+i);days.push(d)}
- const rows=days.map(d=>{const k=iso(d),p=S.plan[k]||{};
-  const cells=MEALS.map(([mk,ml])=>{const nm=slotName(p[mk]);
-   return `<button class="slot ${nm?'fill':''}" style="flex:1" data-a="slotPut" data-id="${id}" data-date="${k}" data-m="${mk}">
-    <span class="ml">${ml}</span><span class="snm">${nm?esc(nm):'비어있음'}</span></button>`}).join('');
-  return `<div class="day ${k===ti?'today':''}"><div class="dt"><div class="w">${k===ti?'오늘':WDE[d.getDay()]}</div><div class="n">${d.getDate()}</div></div>
+ CHOOSE={id,week:0,picks:new Set()};
+ sheet(`<div id="chbody"></div>`);renderChooser()}
+function renderChooser(){const el=$('#chbody');if(!el||!CHOOSE)return;
+ const m=menu(CHOOSE.id),ti=todayISO();
+ const mon=weekOf(CHOOSE.week),sun=new Date(mon);sun.setDate(sun.getDate()+6);
+ const rows=weekDays(mon).map(d=>{const k=iso(d),p=S.plan[k]||{};
+  const cells=MEALS.map(([mk,ml])=>{const nm=slotName(p[mk]),key=k+'|'+mk,on=CHOOSE.picks.has(key);
+   return `<button class="slot ${on?'pick':(nm?'fill':'')}" data-a="chTog" data-k="${key}">
+    <span class="ml">${ml}</span><span class="snm">${on?esc(m.name):(nm?esc(nm):'비어있음')}</span></button>`}).join('');
+  return `<div class="day ${k===ti?'today':''}"><div class="dt"><div class="w">${k===ti?'오늘':WDK[d.getDay()]}</div><div class="n">${d.getDate()}</div></div>
    <div class="slots" style="flex-direction:row;gap:5px">${cells}</div></div>`}).join('');
- sheet(`<div class="sec-h" style="margin-top:4px"><div><div class="eyebrow">Add to Plan</div>
-  <h2>언제 먹을까요?</h2></div><span class="cnt">${esc(m.name)}</span></div><div class="paper">${rows}</div>`)}
+ el.innerHTML=`<div class="sec-h" style="margin-top:4px"><div><div class="eyebrow">Add to Plan</div>
+   <h2>언제 먹을까요?</h2></div><span class="cnt">${esc(m.name)}</span></div>
+  <div class="wknav"><button class="icobtn" data-a="chWk" data-d="-1" aria-label="이전 주">${I.lt}</button>
+   <button class="wtit" data-a="chWk" data-d="0"><b>${relW(CHOOSE.week)}</b><div>${mdot(iso(mon))} – ${mdot(iso(sun))}</div></button>
+   <button class="icobtn" data-a="chWk" data-d="1" aria-label="다음 주">${I.rt}</button></div>
+  <div class="paper">${rows}</div>
+  <div class="ghint">여러 칸을 눌러 한 번에 넣을 수 있어요</div>
+  <div class="dacts"><button class="btn pri blk" data-a="chDone">${CHOOSE.picks.size?`${CHOOSE.picks.size}곳에 넣기`:'완료'}</button></div>`}
 
 /* ── 픽커 (빈 슬롯 → 메뉴 고르기) ── */
 function openPicker(date,mk){ui.pendingSlot={date,m:mk};
@@ -977,7 +1060,57 @@ function openPicker(date,mk){ui.pendingSlot={date,m:mk};
   <div class="dacts"><button class="btn gho blk" data-a="pickNew">${I.plus} 새 메뉴 만들어서 넣기</button></div>`)}
 
 /* ── 설정 ── */
+function srow(label,opts={}){const {value,action,data,badge,warn,chev=true}=opts;
+ const d=Object.entries(data||{}).map(([k,v])=>`data-${k}="${esc(v)}"`).join(' ');
+ return `<button class="srow ${warn?'warn':''}" ${action?`data-a="${action}"`:''} ${d}>
+  <span class="sl">${label}</span>${badge?`<span class="ok">${badge}</span>`:''}
+  ${value!=null?`<span class="sv">${value}</span>`:''}
+  ${chev?`<span class="chev"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 5.5L16 12l-6.5 6.5"/></svg></span>`:''}</button>`}
+function providerOf(){const ids=(AUTHUSER&&AUTHUSER.identities)||[];return ids.map(i=>i.provider)}
 function openSettings(){
+ const kb=Math.max(1,Math.round(JSON.stringify(S).length/1024));
+ const prov=providerOf(), anon=!AUTHUSER||AUTHUSER.is_anonymous;
+ const homeMealLabel=S.homeMeals==='all'?'세 끼 모두':'저녁만';
+ const spanLabel={1:'1주',2:'2주',4:'한 달'}[S.shopSpanDefault||1];
+ sheet(`<div class="shead"><button class="x icobtn" data-a="shClose" aria-label="닫기">${I.lt}</button><b>설정</b></div>
+
+  <div class="sgrp">우리집</div>
+  <div class="slist">
+   ${syncOn?srow('초대 코드',{value:HOMEINFO?HOMEINFO.code:'—',action:'shareInvite'})
+    :srow('우리집 계정 연결',{value:'가족과 공유하기',action:'ob'})}
+   ${syncOn?srow('가족',{value:MEMBERS.map(x=>esc(x.name)).join(', ')||'—',chev:false}):''}
+   ${srow('가족 명단',{value:S.family.length?S.family.length+'명':'없음',action:'fam'})}
+  </div>
+
+  ${window.OT_CONFIG?`<div class="sgrp">계정</div>
+  <div class="slist">
+   ${prov.includes('kakao')?srow('카카오',{badge:'연결됨',chev:false})
+     :srow('카카오 연결',{action:'oauth',data:{p:'kakao'}})}
+   ${prov.includes('google')?srow('Google',{badge:'연결됨',chev:false})
+     :srow('Google 연결',{action:'oauth',data:{p:'google'}})}
+  </div>`:''}
+
+  <div class="sgrp">표시</div>
+  <div class="slist">
+   ${srow('홈에 보이는 끼니',{value:homeMealLabel,action:'cycHome'})}
+   ${srow('장보기 기본 기간',{value:spanLabel,action:'cycSpan'})}
+  </div>
+
+  ${anon?`<div class="sgrp">이 폰의 데이터</div>
+  <div class="slist">
+   ${srow('백업 내려받기',{action:'exp'})}
+   ${srow('백업 불러오기',{action:'impBtn'})}
+  </div>
+  <div class="mut" style="margin-top:8px">로그인하면 가족과 자동으로 동기화돼서 백업이 필요 없어요.</div>`:''}
+  <input type="file" id="impF" accept="application/json,.json" hidden>
+
+  <div class="sgrp">정보</div>
+  <div class="slist">
+   ${srow('저장된 메뉴',{value:`${S.menus.length}가지 · ${kb}KB`,chev:false})}
+   ${srow('앱 버전',{value:'v2.1',chev:false})}
+   ${(typeof sb!=='undefined'&&sb&&AUTHUSER)?srow('로그아웃',{action:'logout',warn:true}):''}
+  </div>`)}
+function openSettingsOld(){
  const kb=Math.max(1,Math.round(JSON.stringify(S).length/1024));
  sheet(`<div class="sec-h" style="margin-top:4px"><div><div class="eyebrow">Our Table</div><h2>보관함 관리</h2></div>
    <span class="cnt">v1.0</span></div>
@@ -1255,7 +1388,7 @@ async function pullAll(){try{
  S.extra={};(ex.data||[]).forEach(r=>{(S.extra[r.week]=S.extra[r.week]||[]).push({id:r.id,name:r.name,amount:r.amount||''})});
  S.checked={};(ck.data||[]).forEach(r=>{if(r.checked)S.checked[r.week+'|'+r.item_key]=true});
  if(mb.data)MEMBERS=mb.data;
- save();render()}catch(e){}}
+ autoCount();save();updateGreeting();render()}catch(e){}}
 let RTCH=null;
 function subscribeRT(){if(RTCH||!sb)return;
  RTCH=sb.channel('home-sync');
@@ -1408,6 +1541,11 @@ const ACT={
  wk:d=>{ui.week=d.d==='0'?0:ui.week+Number(d.d);render()},
  swk:d=>{ui.shopWeek=d.d==='0'?0:ui.shopWeek+Number(d.d);render()},
  span:d=>{ui.shopSpan=Number(d.n);render()},
+ hideDone:()=>{ui.hideDone=!ui.hideDone;render()},
+ cycHome:()=>{S.homeMeals=S.homeMeals==='all'?'d':'all';save();shCloseAll();render();openSettings()},
+ cycSpan:()=>{const o=[1,2,4],i=o.indexOf(S.shopSpanDefault||1);
+  S.shopSpanDefault=o[(i+1)%3];ui.shopSpan=S.shopSpanDefault;save();shCloseAll();render();openSettings()},
+ wday:d=>{go('plan')},
  planView:()=>{ui.planView=ui.planView==='m'?'w':'m';render()},
  mnav:d=>{ui.mOff=d.d==='0'?0:(ui.mOff||0)+Number(d.d);render()},
  mday:d=>{const target=monday(fromISO(d.date));
@@ -1423,8 +1561,12 @@ const ACT={
   setPlan(ps.date,ps.m,d.id);
   shClose();render();toast(`${mdot(ps.date)} ${MEAL[ps.m]} — ${menu(d.id).name}`)},
  pickNew:()=>openForm(),
- slotPut:d=>{setPlan(d.date,d.m,d.id);
-  shClose();render();toast(`${mdot(d.date)} ${MEAL[d.m]}에 넣었어요`)},
+ chTog:d=>{if(!CHOOSE)return;CHOOSE.picks.has(d.k)?CHOOSE.picks.delete(d.k):CHOOSE.picks.add(d.k);renderChooser()},
+ chWk:d=>{if(!CHOOSE)return;CHOOSE.week=d.d==='0'?0:CHOOSE.week+Number(d.d);renderChooser()},
+ chDone:()=>{if(!CHOOSE)return;const n=CHOOSE.picks.size;
+  CHOOSE.picks.forEach(k=>{const i=k.indexOf('|');setPlan(k.slice(0,i),k.slice(i+1),CHOOSE.id)});
+  const nm=menu(CHOOSE.id)?menu(CHOOSE.id).name:'';CHOOSE=null;
+  shCloseAll();render();toast(n?`${nm} — ${n}곳에 넣었어요`:'닫았어요')},
  toPlan:d=>openChooser(d.id),
  cook:d=>{const m=menu(d.id);if(!m)return;
   if(m.lastCookedAt===todayISO()){toast('오늘은 이미 기록했어요');return}
@@ -1549,6 +1691,9 @@ document.addEventListener('change',e=>{if(e.target.id==='impF')importJson(e.targ
  if(!S){try{const ls=localStorage.getItem('ourtable');if(ls)S=JSON.parse(ls)}catch(e){}}
  if(!S){S=seed();flush()}
  if(!S.extra)S.extra={}; if(!S.checked)S.checked={}; if(!S.seq)S.seq=S.menus.length+1; if(!S.family)S.family=[];
+ if(!S.counted)S.counted={}; if(!S.homeMeals)S.homeMeals='d'; if(!S.shopSpanDefault)S.shopSpanDefault=1;
+ ui.shopSpan=S.shopSpanDefault;
+ autoCount();
  render();
  syncInit();
 })();
