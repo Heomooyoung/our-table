@@ -1,20 +1,57 @@
 {
   "name": "우리집 식탁 데모 데이터",
   "note": "홍보용 스크린샷·릴스 촬영용. 앱 코드에 포함되지 않으며 #demo 로만 임시 로드됩니다.",
-  "family": ["엄마", "아빠", "하준"],
+  "family": [
+    "엄마",
+    "아빠",
+    "하준"
+  ],
   "people": 3,
   "menus": [
     {
-      "name": "돼지고기 김치찌개", "cat": "국·찌개", "rating": 5, "cookCount": 14, "photo": "img/kimchi-jjigae.jpg",
+      "name": "돼지고기 김치찌개",
+      "cat": "국·찌개",
+      "rating": 5,
+      "cookCount": 14,
+      "photo": "img/kimchi-jjigae.jpg",
       "memo": "묵은지가 시어야 제맛. 마지막에 들기름 한 바퀴 두르면 국물이 확 부드러워져요.",
       "ingredients": [
-        {"name":"돼지고기","qty":"300","unit":"g","brand":"한돈 앞다리살"},
-        {"name":"묵은지","qty":"반","unit":"포기"},
-        {"name":"두부","qty":"1","unit":"모"},
-        {"name":"대파","qty":"1","unit":"단"},
-        {"name":"양파","qty":"1","unit":"개"},
-        {"name":"고춧가루","qty":"1","unit":"큰술"},
-        {"name":"들기름","qty":"1","unit":"큰술"}
+        {
+          "name": "돼지고기",
+          "qty": "300",
+          "unit": "g",
+          "brand": "한돈 앞다리살"
+        },
+        {
+          "name": "묵은지",
+          "qty": "반",
+          "unit": "포기"
+        },
+        {
+          "name": "두부",
+          "qty": "1",
+          "unit": "모"
+        },
+        {
+          "name": "대파",
+          "qty": "1",
+          "unit": "단"
+        },
+        {
+          "name": "양파",
+          "qty": "1",
+          "unit": "개"
+        },
+        {
+          "name": "고춧가루",
+          "qty": "1",
+          "unit": "큰술"
+        },
+        {
+          "name": "들기름",
+          "qty": "1",
+          "unit": "큰술"
+        }
       ],
       "steps": [
         "냄비에 들기름을 두르고 묵은지를 3분간 볶아요.",
@@ -24,19 +61,64 @@
       ]
     },
     {
-      "name": "매콤 제육볶음", "cat": "반찬", "rating": 5, "cookCount": 11, "photo": "img/jeyuk.jpg",
+      "name": "매콤 제육볶음",
+      "cat": "반찬",
+      "rating": 5,
+      "cookCount": 11,
+      "photo": "img/jeyuk.jpg",
       "memo": "양념에 30분 재워두면 확실히 달라요. 상추쌈 필수.",
       "ingredients": [
-        {"name":"돼지고기","qty":"600","unit":"g","brand":"한돈 앞다리살"},
-        {"name":"양파","qty":"1","unit":"개"},
-        {"name":"대파","qty":"1","unit":"단"},
-        {"name":"청양고추","qty":"2","unit":"개"},
-        {"name":"고추장","qty":"3","unit":"큰술"},
-        {"name":"고춧가루","qty":"1","unit":"큰술"},
-        {"name":"간장","qty":"2","unit":"큰술"},
-        {"name":"다진 마늘","qty":"1","unit":"큰술"},
-        {"name":"설탕","qty":"1","unit":"큰술"},
-        {"name":"참기름","qty":"1","unit":"큰술"}
+        {
+          "name": "돼지고기",
+          "qty": "600",
+          "unit": "g",
+          "brand": "한돈 앞다리살"
+        },
+        {
+          "name": "양파",
+          "qty": "1",
+          "unit": "개"
+        },
+        {
+          "name": "대파",
+          "qty": "1",
+          "unit": "단"
+        },
+        {
+          "name": "청양고추",
+          "qty": "2",
+          "unit": "개"
+        },
+        {
+          "name": "고추장",
+          "qty": "3",
+          "unit": "큰술"
+        },
+        {
+          "name": "고춧가루",
+          "qty": "1",
+          "unit": "큰술"
+        },
+        {
+          "name": "간장",
+          "qty": "2",
+          "unit": "큰술"
+        },
+        {
+          "name": "다진 마늘",
+          "qty": "1",
+          "unit": "큰술"
+        },
+        {
+          "name": "설탕",
+          "qty": "1",
+          "unit": "큰술"
+        },
+        {
+          "name": "참기름",
+          "qty": "1",
+          "unit": "큰술"
+        }
       ],
       "steps": [
         "양념 재료를 모두 섞어 고기에 버무려 30분 재워요.",
@@ -46,14 +128,38 @@
       ]
     },
     {
-      "name": "소고기 미역국", "cat": "국·찌개", "rating": 5, "cookCount": 9, "photo": "img/miyeokguk.jpg",
+      "name": "소고기 미역국",
+      "cat": "국·찌개",
+      "rating": 5,
+      "cookCount": 9,
+      "photo": "img/miyeokguk.jpg",
       "memo": "미역은 찬물에 20분이면 충분. 참기름에 볶는 시간이 국물 맛을 좌우해요.",
       "ingredients": [
-        {"name":"국거리 소고기","qty":"200","unit":"g"},
-        {"name":"미역","qty":"30","unit":"g"},
-        {"name":"국간장","qty":"2","unit":"큰술"},
-        {"name":"다진 마늘","qty":"1","unit":"큰술"},
-        {"name":"참기름","qty":"1","unit":"큰술"}
+        {
+          "name": "국거리 소고기",
+          "qty": "200",
+          "unit": "g"
+        },
+        {
+          "name": "미역",
+          "qty": "30",
+          "unit": "g"
+        },
+        {
+          "name": "국간장",
+          "qty": "2",
+          "unit": "큰술"
+        },
+        {
+          "name": "다진 마늘",
+          "qty": "1",
+          "unit": "큰술"
+        },
+        {
+          "name": "참기름",
+          "qty": "1",
+          "unit": "큰술"
+        }
       ],
       "steps": [
         "미역을 찬물에 20분 불렸다가 물기를 꼭 짜요.",
@@ -63,18 +169,58 @@
       ]
     },
     {
-      "name": "잡채", "cat": "반찬", "rating": 4, "cookCount": 6, "photo": "img/japchae.jpg",
+      "name": "잡채",
+      "cat": "반찬",
+      "rating": 4,
+      "cookCount": 6,
+      "photo": "img/japchae.jpg",
       "memo": "재료를 따로 볶아야 색이 살아요. 손 많이 가지만 그만한 값어치.",
       "ingredients": [
-        {"name":"당면","qty":"200","unit":"g"},
-        {"name":"소고기","qty":"150","unit":"g"},
-        {"name":"시금치","qty":"1","unit":"줌"},
-        {"name":"당근","qty":"1","unit":"개"},
-        {"name":"양파","qty":"1","unit":"개"},
-        {"name":"표고버섯","qty":"4","unit":"개"},
-        {"name":"간장","qty":"4","unit":"큰술"},
-        {"name":"설탕","qty":"2","unit":"큰술"},
-        {"name":"참기름","qty":"2","unit":"큰술"}
+        {
+          "name": "당면",
+          "qty": "200",
+          "unit": "g"
+        },
+        {
+          "name": "소고기",
+          "qty": "150",
+          "unit": "g"
+        },
+        {
+          "name": "시금치",
+          "qty": "1",
+          "unit": "줌"
+        },
+        {
+          "name": "당근",
+          "qty": "1",
+          "unit": "개"
+        },
+        {
+          "name": "양파",
+          "qty": "1",
+          "unit": "개"
+        },
+        {
+          "name": "표고버섯",
+          "qty": "4",
+          "unit": "개"
+        },
+        {
+          "name": "간장",
+          "qty": "4",
+          "unit": "큰술"
+        },
+        {
+          "name": "설탕",
+          "qty": "2",
+          "unit": "큰술"
+        },
+        {
+          "name": "참기름",
+          "qty": "2",
+          "unit": "큰술"
+        }
       ],
       "steps": [
         "당면을 8분 삶아 찬물에 헹구고 참기름에 버무려요.",
@@ -84,14 +230,38 @@
       ]
     },
     {
-      "name": "계란말이", "cat": "반찬", "rating": 5, "cookCount": 22, "photo": "img/gyeranmari.jpg",
+      "name": "계란말이",
+      "cat": "반찬",
+      "rating": 5,
+      "cookCount": 22,
+      "photo": "img/gyeranmari.jpg",
       "memo": "약불에서 천천히. 아이가 제일 좋아하는 반찬이라 도시락에도 자주 들어가요.",
       "ingredients": [
-        {"name":"계란","qty":"4","unit":"알"},
-        {"name":"당근","qty":"반","unit":"개"},
-        {"name":"쪽파","qty":"1","unit":"단"},
-        {"name":"소금","qty":"1","unit":"작은술"},
-        {"name":"식용유","qty":"1","unit":"큰술"}
+        {
+          "name": "계란",
+          "qty": "4",
+          "unit": "알"
+        },
+        {
+          "name": "당근",
+          "qty": "반",
+          "unit": "개"
+        },
+        {
+          "name": "쪽파",
+          "qty": "1",
+          "unit": "단"
+        },
+        {
+          "name": "소금",
+          "qty": "1",
+          "unit": "작은술"
+        },
+        {
+          "name": "식용유",
+          "qty": "1",
+          "unit": "큰술"
+        }
       ],
       "steps": [
         "계란을 풀고 잘게 썬 당근·쪽파와 소금을 섞어요.",
@@ -101,15 +271,43 @@
       ]
     },
     {
-      "name": "김치볶음밥", "cat": "밥", "rating": 4, "cookCount": 18, "photo": "img/kimchi-bokkeumbap.jpg",
+      "name": "김치볶음밥",
+      "cat": "밥",
+      "rating": 4,
+      "cookCount": 18,
+      "photo": "img/kimchi-bokkeumbap.jpg",
       "memo": "찬밥이 훨씬 맛있어요. 계란후라이는 반숙으로.",
       "ingredients": [
-        {"name":"밥","qty":"2","unit":"공기"},
-        {"name":"김치","qty":"1","unit":"컵"},
-        {"name":"스팸","qty":"반","unit":"개"},
-        {"name":"계란","qty":"2","unit":"알"},
-        {"name":"참기름","qty":"1","unit":"큰술"},
-        {"name":"김","qty":"2","unit":"장"}
+        {
+          "name": "밥",
+          "qty": "2",
+          "unit": "공기"
+        },
+        {
+          "name": "김치",
+          "qty": "1",
+          "unit": "컵"
+        },
+        {
+          "name": "스팸",
+          "qty": "반",
+          "unit": "개"
+        },
+        {
+          "name": "계란",
+          "qty": "2",
+          "unit": "알"
+        },
+        {
+          "name": "참기름",
+          "qty": "1",
+          "unit": "큰술"
+        },
+        {
+          "name": "김",
+          "qty": "2",
+          "unit": "장"
+        }
       ],
       "steps": [
         "스팸과 김치를 잘게 썰어 팬에 볶아요.",
@@ -119,15 +317,43 @@
       ]
     },
     {
-      "name": "된장찌개", "cat": "국·찌개", "rating": 4, "cookCount": 12, "photo": "img/doenjang-jjigae.jpg",
+      "name": "된장찌개",
+      "cat": "국·찌개",
+      "rating": 4,
+      "cookCount": 12,
+      "photo": "img/doenjang-jjigae.jpg",
       "memo": "멸치육수로 하면 확실히 깊어요. 애호박은 마지막에.",
       "ingredients": [
-        {"name":"된장","qty":"2","unit":"큰술"},
-        {"name":"두부","qty":"반","unit":"모"},
-        {"name":"애호박","qty":"반","unit":"개"},
-        {"name":"양파","qty":"반","unit":"개"},
-        {"name":"국물용 멸치","qty":"10","unit":"g"},
-        {"name":"청양고추","qty":"1","unit":"개"}
+        {
+          "name": "된장",
+          "qty": "2",
+          "unit": "큰술"
+        },
+        {
+          "name": "두부",
+          "qty": "반",
+          "unit": "모"
+        },
+        {
+          "name": "애호박",
+          "qty": "반",
+          "unit": "개"
+        },
+        {
+          "name": "양파",
+          "qty": "반",
+          "unit": "개"
+        },
+        {
+          "name": "국물용 멸치",
+          "qty": "10",
+          "unit": "g"
+        },
+        {
+          "name": "청양고추",
+          "qty": "1",
+          "unit": "개"
+        }
       ],
       "steps": [
         "멸치를 넣고 10분 끓여 육수를 내요.",
@@ -137,17 +363,53 @@
       ]
     },
     {
-      "name": "닭볶음탕", "cat": "국·찌개", "rating": 5, "cookCount": 5, "photo": "img/dakbokkeumtang.jpg",
+      "name": "닭볶음탕",
+      "cat": "국·찌개",
+      "rating": 5,
+      "cookCount": 5,
+      "photo": "img/dakbokkeumtang.jpg",
       "memo": "감자를 크게 썰어야 안 부서져요. 주말 저녁 메뉴로 딱.",
       "ingredients": [
-        {"name":"생닭","qty":"1","unit":"마리"},
-        {"name":"감자","qty":"3","unit":"개"},
-        {"name":"당근","qty":"1","unit":"개"},
-        {"name":"양파","qty":"1","unit":"개"},
-        {"name":"고추장","qty":"2","unit":"큰술"},
-        {"name":"고춧가루","qty":"3","unit":"큰술"},
-        {"name":"간장","qty":"4","unit":"큰술"},
-        {"name":"다진 마늘","qty":"1","unit":"큰술"}
+        {
+          "name": "생닭",
+          "qty": "1",
+          "unit": "마리"
+        },
+        {
+          "name": "감자",
+          "qty": "3",
+          "unit": "개"
+        },
+        {
+          "name": "당근",
+          "qty": "1",
+          "unit": "개"
+        },
+        {
+          "name": "양파",
+          "qty": "1",
+          "unit": "개"
+        },
+        {
+          "name": "고추장",
+          "qty": "2",
+          "unit": "큰술"
+        },
+        {
+          "name": "고춧가루",
+          "qty": "3",
+          "unit": "큰술"
+        },
+        {
+          "name": "간장",
+          "qty": "4",
+          "unit": "큰술"
+        },
+        {
+          "name": "다진 마늘",
+          "qty": "1",
+          "unit": "큰술"
+        }
       ],
       "steps": [
         "닭은 끓는 물에 3분 데쳐 찬물에 헹궈요.",
@@ -157,16 +419,48 @@
       ]
     },
     {
-      "name": "갈비찜", "cat": "국·찌개", "rating": 5, "cookCount": 3, "photo": "img/galbijjim.jpg",
+      "name": "갈비찜",
+      "cat": "국·찌개",
+      "rating": 5,
+      "cookCount": 3,
+      "photo": "img/galbijjim.jpg",
       "memo": "핏물 빼는 게 반이에요. 명절 아니어도 가끔 해먹으면 특별한 날 같아요.",
       "ingredients": [
-        {"name":"소갈비","qty":"1","unit":"kg"},
-        {"name":"무","qty":"반","unit":"개"},
-        {"name":"당근","qty":"1","unit":"개"},
-        {"name":"밤","qty":"8","unit":"개"},
-        {"name":"간장","qty":"6","unit":"큰술"},
-        {"name":"배","qty":"반","unit":"개"},
-        {"name":"다진 마늘","qty":"2","unit":"큰술"}
+        {
+          "name": "소갈비",
+          "qty": "1",
+          "unit": "kg"
+        },
+        {
+          "name": "무",
+          "qty": "반",
+          "unit": "개"
+        },
+        {
+          "name": "당근",
+          "qty": "1",
+          "unit": "개"
+        },
+        {
+          "name": "밤",
+          "qty": "8",
+          "unit": "개"
+        },
+        {
+          "name": "간장",
+          "qty": "6",
+          "unit": "큰술"
+        },
+        {
+          "name": "배",
+          "qty": "반",
+          "unit": "개"
+        },
+        {
+          "name": "다진 마늘",
+          "qty": "2",
+          "unit": "큰술"
+        }
       ],
       "steps": [
         "갈비를 찬물에 2시간 담가 핏물을 빼요.",
@@ -176,15 +470,43 @@
       ]
     },
     {
-      "name": "순두부찌개", "cat": "국·찌개", "rating": 4, "cookCount": 8, "photo": "img/sundubu.jpg",
+      "name": "순두부찌개",
+      "cat": "국·찌개",
+      "rating": 4,
+      "cookCount": 8,
+      "photo": "img/sundubu.jpg",
       "memo": "고춧가루를 기름에 먼저 볶아야 색이 예쁘게 나와요.",
       "ingredients": [
-        {"name":"순두부","qty":"1","unit":"봉지"},
-        {"name":"바지락","qty":"200","unit":"g"},
-        {"name":"고춧가루","qty":"2","unit":"큰술"},
-        {"name":"계란","qty":"1","unit":"알"},
-        {"name":"대파","qty":"반","unit":"단"},
-        {"name":"식용유","qty":"2","unit":"큰술"}
+        {
+          "name": "순두부",
+          "qty": "1",
+          "unit": "봉지"
+        },
+        {
+          "name": "바지락",
+          "qty": "200",
+          "unit": "g"
+        },
+        {
+          "name": "고춧가루",
+          "qty": "2",
+          "unit": "큰술"
+        },
+        {
+          "name": "계란",
+          "qty": "1",
+          "unit": "알"
+        },
+        {
+          "name": "대파",
+          "qty": "반",
+          "unit": "단"
+        },
+        {
+          "name": "식용유",
+          "qty": "2",
+          "unit": "큰술"
+        }
       ],
       "steps": [
         "냄비에 식용유와 고춧가루를 넣고 약불에서 볶아요.",
@@ -194,16 +516,48 @@
       ]
     },
     {
-      "name": "불고기", "cat": "반찬", "rating": 5, "cookCount": 10, "photo": "img/bulgogi.jpg",
+      "name": "불고기",
+      "cat": "반찬",
+      "rating": 5,
+      "cookCount": 10,
+      "photo": "img/bulgogi.jpg",
       "memo": "배를 갈아 넣으면 고기가 훨씬 부드러워요.",
       "ingredients": [
-        {"name":"불고기용 소고기","qty":"500","unit":"g"},
-        {"name":"양파","qty":"1","unit":"개"},
-        {"name":"당근","qty":"반","unit":"개"},
-        {"name":"간장","qty":"5","unit":"큰술"},
-        {"name":"배","qty":"반","unit":"개"},
-        {"name":"설탕","qty":"2","unit":"큰술"},
-        {"name":"참기름","qty":"1","unit":"큰술"}
+        {
+          "name": "불고기용 소고기",
+          "qty": "500",
+          "unit": "g"
+        },
+        {
+          "name": "양파",
+          "qty": "1",
+          "unit": "개"
+        },
+        {
+          "name": "당근",
+          "qty": "반",
+          "unit": "개"
+        },
+        {
+          "name": "간장",
+          "qty": "5",
+          "unit": "큰술"
+        },
+        {
+          "name": "배",
+          "qty": "반",
+          "unit": "개"
+        },
+        {
+          "name": "설탕",
+          "qty": "2",
+          "unit": "큰술"
+        },
+        {
+          "name": "참기름",
+          "qty": "1",
+          "unit": "큰술"
+        }
       ],
       "steps": [
         "배와 양파 반 개를 갈아 간장·설탕과 섞어요.",
@@ -213,14 +567,38 @@
       ]
     },
     {
-      "name": "콩나물무침", "cat": "반찬", "rating": 4, "cookCount": 16, "photo": "img/kongnamul.jpg",
+      "name": "콩나물무침",
+      "cat": "반찬",
+      "rating": 4,
+      "cookCount": 16,
+      "photo": "img/kongnamul.jpg",
       "memo": "뚜껑 열었으면 끝까지 열고 삶기. 비린내 안 나요.",
       "ingredients": [
-        {"name":"콩나물","qty":"300","unit":"g"},
-        {"name":"소금","qty":"1","unit":"작은술"},
-        {"name":"다진 마늘","qty":"1","unit":"작은술"},
-        {"name":"참기름","qty":"1","unit":"큰술"},
-        {"name":"통깨","qty":"1","unit":"작은술"}
+        {
+          "name": "콩나물",
+          "qty": "300",
+          "unit": "g"
+        },
+        {
+          "name": "소금",
+          "qty": "1",
+          "unit": "작은술"
+        },
+        {
+          "name": "다진 마늘",
+          "qty": "1",
+          "unit": "작은술"
+        },
+        {
+          "name": "참기름",
+          "qty": "1",
+          "unit": "큰술"
+        },
+        {
+          "name": "통깨",
+          "qty": "1",
+          "unit": "작은술"
+        }
       ],
       "steps": [
         "콩나물을 씻어 냄비에 넣고 물을 자작하게 부어요.",
@@ -231,16 +609,61 @@
     }
   ],
   "plan": [
-    {"offset": 0, "meal": "d", "menu": "돼지고기 김치찌개"},
-    {"offset": 0, "meal": "l", "menu": "김치볶음밥"},
-    {"offset": 1, "meal": "d", "menu": "매콤 제육볶음"},
-    {"offset": 2, "meal": "d", "menu": "된장찌개"},
-    {"offset": 3, "meal": "d", "menu": "닭볶음탕"},
-    {"offset": 4, "meal": "d", "menu": "잡채"},
-    {"offset": 5, "meal": "d", "menu": "갈비찜"},
-    {"offset": 6, "meal": "d", "menu": "순두부찌개"},
-    {"offset": -1, "meal": "d", "menu": "소고기 미역국"},
-    {"offset": -2, "meal": "d", "menu": "불고기"}
+    {
+      "wd": 0,
+      "meal": "d",
+      "menu": "소고기 미역국"
+    },
+    {
+      "wd": 1,
+      "meal": "d",
+      "menu": "매콤 제육볶음"
+    },
+    {
+      "wd": 2,
+      "meal": "d",
+      "menu": "된장찌개"
+    },
+    {
+      "wd": 2,
+      "meal": "l",
+      "menu": "김치볶음밥"
+    },
+    {
+      "wd": 3,
+      "meal": "d",
+      "menu": "닭볶음탕"
+    },
+    {
+      "wd": 4,
+      "meal": "d",
+      "menu": "불고기"
+    },
+    {
+      "wd": 5,
+      "meal": "d",
+      "menu": "돼지고기 김치찌개"
+    },
+    {
+      "wd": 5,
+      "meal": "l",
+      "menu": "계란말이"
+    },
+    {
+      "wd": 6,
+      "meal": "d",
+      "menu": "갈비찜"
+    },
+    {
+      "offset": -8,
+      "meal": "d",
+      "menu": "잡채"
+    },
+    {
+      "offset": -9,
+      "meal": "d",
+      "menu": "순두부찌개"
+    }
   ],
   "credits": "사진 출처: Wikimedia Commons (CC BY 2.0 / CC BY-SA 2.0 / CC BY-SA 3.0). 파일별 원본 정보는 demo/CREDITS.md 참고."
 }

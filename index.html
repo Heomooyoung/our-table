@@ -1898,7 +1898,10 @@ async function demoOn(){
    steps:m.steps||[]}));
   const byName={}; menus.forEach(m=>byName[m.name]=m.id);
   const plan={};
-  (j.plan||[]).forEach(p=>{const d=new Date();d.setDate(d.getDate()+p.offset);
+  const mon0=monday(new Date());
+  (j.plan||[]).forEach(p=>{let d;
+   if(p.wd!=null){d=new Date(mon0);d.setDate(d.getDate()+p.wd)}
+   else{d=new Date();d.setDate(d.getDate()+(p.offset||0))}
    const k=iso(d);(plan[k]=plan[k]||{})[p.meal]=byName[p.menu]});
   S={ver:1,seq:menus.length+1,menus,plan,extra:{},checked:{},counted:{},
      family:(j.family||[]).map((n,i)=>({id:'df'+i,name:n})),people:j.people||3,
