@@ -200,6 +200,18 @@ const sleep=ms=>new Promise(r=>setTimeout(r,ms));
  click(byText('.sw button','전부 메뉴판에 올리기')); await sleep(450);
  ok(g('S.menus.length')===cnt+2,'벌크 2개 등록');
 
+ console.log('\n[14단계] 재료 사전 · 구매 링크 · 목록 공유 · 로그인 버튼');
+ click('.fab'); await sleep(80);
+ ok(qa('.sw #dlIng option').length>250,'재료 사전 자동완성 250종 이상');
+ await closeAll();
+ click(byText('.tb','장보기')); await sleep(150);
+ ok(qa('#scr .buy').length>=2,'쿠팡·컬리 구매 링크 표시');
+ const st=g('buildShopText()');
+ ok(st.includes('장보기')&&/[⬜✅]/.test(st),'공유용 목록 텍스트 생성');
+ click('[data-a="settings"]'); await sleep(80);
+ ok(!!byText('.sw button','카카오 연결')&&!!byText('.sw button','Google 연결'),'소셜 로그인 버튼');
+ await closeAll();
+
  console.log('\n────────────────────');
  console.log(`결과: ${pass} PASS / ${fail} FAIL`);
  if(fails.length){console.log('실패 목록:');fails.forEach(f=>console.log(' -',f))}
