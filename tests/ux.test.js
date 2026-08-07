@@ -118,10 +118,14 @@ const sleep=ms=>new Promise(r=>setTimeout(r,ms));
  ok(!!byText('#scr .sitem .snm2','돼지고기'),'재료 자동 취합');
  ok(!!byText('#scr .sitem .src','한돈'),'브랜드 표시');
  ok(!!byText('#scr .need','600g'),'필요량 합산(주 2회 × 300g = 600g)');
+ ok(g('buyAmount("간장",{"큰술":4},1)')==='1병','조리 단위(큰술) → 구매 단위(병)');
+ ok(g('buyAmount("방울토마토",{"개":2.5},1)')==='3개','개수는 올림');
+ ok(g('buyAmount("돼지고기",{"g":1500},1)')==='1.5kg','1000g 이상은 kg 표기');
+ ok(g('buyAmount("아몬드",{"줌":2},1)')==='1봉지','줌 → 봉지');
  ok(!!byText('#scr .chip','인 기준'),'인원 기준 칩');
  // 인원 바꾸면 양도 바뀜
  g('(function(){ui.people=4;render()})()'); await sleep(150);
- ok(!!byText('#scr .need','1200g'),'4인 기준 → 두 배로 추천');
+ ok(!!byText('#scr .need','1.2kg'),'4인 기준 → 두 배(1.2kg)로 추천');
  ok(!!byText('#scr .chip','4인 기준'),'인원 칩 반영');
  g('(function(){ui.people=null;render()})()'); await sleep(150);
  ok(!!byText('#scr .sitem .src','김치찜'),'출처 메뉴 표기');

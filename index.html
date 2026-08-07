@@ -644,7 +644,7 @@ const ING_DICT=('돼지고기,삼겹살,대패삼겹살,목살,앞다리살,항�
 +'두부,순두부,유부,검은콩,병아리콩,렌틸콩,완두콩,청국장,'
 +'소금,굵은소금,설탕,흑설탕,후추,간장,진간장,국간장,고추장,된장,쌈장,춘장,고춧가루,참기름,들기름,식용유,올리브유,포도씨유,카놀라유,식초,사과식초,발사믹식초,맛술,미림,매실청,올리고당,물엿,꿀,굴소스,피시소스,멸치액젓,까나리액젓,새우젓,케첩,마요네즈,머스타드,허니머스타드,돈까스소스,우스터소스,스리라차,칠리소스,깨소금,통깨,들깨가루,카레가루,짜장가루,두반장,치킨스톡,다시다,연겨자,와사비,바질페스토,토마토소스,파스타 크림소스,무화과잼,딸기잼,땅콩버터,'
 +'김치,묵은지,백김치,깍두기,단무지,피클,올리브,참치,옥수수캔,토마토캔,코코넛밀크,아몬드,호두,땅콩,캐슈넛,잣,건포도,크랜베리,소주,맥주,화이트와인,레드와인,청주').split(',');
-const UNITS=['개','g','kg','ml','L','큰술','작은술','컵','알','장','줌','모','단','포기','마리','쪽','조각','팩','봉지','인분','적당량'];
+const UNITS=['개','g','kg','ml','L','큰술','작은술','컵','알','장','줌','모','단','포기','마리','쪽','조각','팩','봉지','병','인분','적당량'];
 const UNIT_MAP={'계란':'알','메추리알':'알','두부':'모','순두부':'모','대파':'단','쪽파':'단','부추':'단','미나리':'단',
  '배추':'포기','알배추':'포기','양배추':'포기','김치':'포기','묵은지':'포기','백김치':'포기',
  '우유':'ml','두유':'ml','생크림':'ml','식용유':'ml','올리브유':'ml','포도씨유':'ml','카놀라유':'ml',
@@ -858,6 +858,27 @@ function vPlan(){
 }
 
 /* ── 장보기 ── */
+/* 조리 단위 → 구매 단위 변환 (2큰술을 사러 가는 게 아니라 1병을 산다) */
+const COOK_UNITS=['큰술','작은술','컵','줌','적당량','인분','조각','쪽'];
+const BUY_BOTTLE=/(간장|식초|맛술|미림|참기름|들기름|식용유|올리브유|포도씨유|카놀라유|액젓|피시소스|굴소스|소스|올리고당|물엿|꿀|스리라차|매실청|청주|소주|맥주|와인|우유|두유|생크림)/;
+const BUY_BAG=/(가루|깨|아몬드|호두|땅콩|캐슈넛|잣|건포도|크랜베리|나물|상추|깻잎|시금치|루꼴라|바질|로메인|샐러드|콩나물|숙주|미역|다시마|김)/;
+function buyUnitOf(n){n=String(n||'');
+ if(BUY_BOTTLE.test(n))return '병';
+ if(BUY_BAG.test(n))return '봉지';
+ return '개'}
+function fmtQty(v){const r=Math.round(v*10)/10;return String(r).replace(/\.0$/,'')}
+function buyAmount(name,sums,mult){
+ const parts=[]; let cookOnly=false;
+ Object.entries(sums||{}).forEach(([u,n])=>{
+  const v=n*mult;
+  if(COOK_UNITS.includes(u)){cookOnly=true;return}
+  if(u==='g'){ parts.push(v>=1000?fmtQty(v/1000)+'kg':fmtQty(v)+'g'); return }
+  if(u==='ml'){ parts.push(v>=1000?fmtQty(v/1000)+'L':fmtQty(v)+'ml'); return }
+  if(u==='kg'||u==='L'){ parts.push(fmtQty(v)+u); return }
+  parts.push(Math.max(1,Math.ceil(v-0.001))+u);      // 개수 단위는 올림
+ });
+ if(!parts.length&&cookOnly)parts.push('1'+buyUnitOf(name));
+ return parts.join(' + ')}
 function scaleQty(q,mult){const n=parseFloat(String(q).replace(/[^\d.]/g,''));
  if(!isFinite(n)||!n)return null; const v=n*mult;
  return (Math.round(v*10)/10).toString().replace(/\.0$/,'')}
@@ -878,11 +899,7 @@ function shopData(){
     map.set(key,e)})})});
  const extras=(S.extra[wk]||[]);
  const base=Math.max(1,S.people||S.family.length||2), ppl=Math.max(1,ui.people||base), mult=ppl/base;
- const items=[...map.values()].map(e=>{
-  const parts=Object.entries(e.sums).map(([u,n])=>{const v=Math.round(n*mult*10)/10;
-   return String(v).replace(/\.0$/,'')+u});
-  return Object.assign(e,{need:parts.join(' + '),ppl,mult});
- });
+ const items=[...map.values()].map(e=>Object.assign(e,{need:buyAmount(e.name,e.sums,mult),ppl,mult}));
  return {wk,items,extras,ppl,base};
 }
 function buildShopText(){const {wk,items,extras}=shopData();
