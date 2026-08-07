@@ -151,7 +151,7 @@ const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 
  console.log('\n[11단계] 설정 · 가족 명단');
  click('[data-a="settings"]'); await sleep(80);
- ok(!!byText('.sw button','백업 파일 내려받기'),'설정 시트');
+ ok(!!byText('.sw button','백업 내려받기'),'설정 시트');
  ok(!!byText('.sw button','우리집 계정 연결하기')||!!byText('.sw .mut','로컬 모드'),'미연결 상태 표기');
  click(byText('.sw button','돌려찍기용 가족 명단')); await sleep(80);
  click(qa('.sw [data-a="famDel"]')[0]); await sleep(40);
