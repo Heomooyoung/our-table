@@ -46,6 +46,7 @@ const sleep=ms=>new Promise(r=>setTimeout(r,ms));
  ok(qa('#ingRows .irow').length===1,'빠른 입력 → 재료 행 생성');
  const ir=q('#ingRows .irow');
  ok(ir.dataset.name==='돼지고기'&&ir.dataset.amount==='300g'&&ir.dataset.brand==='한돈','이름·양·브랜드 자동 분해');
+ ok(!!ir.querySelector('.iq')&&ir.querySelector('.iq').value==='300g','행 우측 양 입력칸에 반영');
  click(byText('.sw button','메뉴판에 올리기')); await sleep(450);
  ok(g('S.menus.length')===2,'메뉴 2개로 증가');
  ok(g('ui.tab')==='menus','저장 후 메뉴판 탭 이동');
@@ -92,7 +93,8 @@ const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 
  console.log('\n[6단계] 홈 오늘 카드 · 다시 정하기');
  click(byText('.tb','홈')); await sleep(80);
- ok(!!byText('#scr .mealc .mval','김치찜'),'홈 오늘의 저녁 카드');
+ ok(!!byText('#scr .bigt','김치찜'),'홈 오늘의 저녁 — 크게 강조');
+ ok(!!q('#scr .bigacts'),'바꾸기·레시피 액션 노출');
  ok(qa('#scr .wrow').length===7,'주간 리스트 7일');
  ok(!!byText('#scr .wrow.today .wm','김치찜'),'주간 리스트에 오늘 메뉴 표시');
 
@@ -104,7 +106,7 @@ const sleep=ms=>new Promise(r=>setTimeout(r,ms));
  const gd=q('.sw #gdecide');
  ok(gd&&q('.sw #gacts').style.visibility==='visible','결과 후 결정 버튼 노출');
  if(gd)click(gd); await sleep(450);
- ok(!!q('#scr .mealc .mval'),'사다리 결정 → 오늘 카드');
+ ok(!!q('#scr .bigt'),'사다리 결정 → 오늘 카드');
  ok(!!g('S.plan[todayISO()]&&S.plan[todayISO()].d'),'식단표 오늘 저녁 기록');
 
  console.log('\n[8단계] 장보기 — 자동 취합 · 체크 · 직접 추가');
@@ -143,7 +145,7 @@ const sleep=ms=>new Promise(r=>setTimeout(r,ms));
  const decideBtn=byText('#vbody button','이걸로 결정');
  ok(!!decideBtn,'승자 결정 버튼');
  if(decideBtn){click(decideBtn); await sleep(450)}
- ok(!!q('#scr .mealc .mval'),'투표 결과 → 오늘 카드 반영');
+ ok(!!q('#scr .bigt'),'투표 결과 → 오늘 카드 반영');
 
  console.log('\n[10단계] 검색 · 정렬 · 뒤로가기');
  click(byText('.tb','메뉴판')); await sleep(80);
@@ -176,45 +178,21 @@ const sleep=ms=>new Promise(r=>setTimeout(r,ms));
  click(byText('.tb','장보기')); await sleep(150);
  const preItems=qa('#scr .sitem');
  ok(preItems.length>=2,'장보기 항목 2개 이상');
- const idx=preItems.findIndex(e=>!e.classList.contains('done'));
- const target=preItems[idx], label=target.querySelector('.snm2').textContent.trim();
- click(target); await sleep(150);
- const after=qa('#scr .sitem');
- ok(after[idx].classList.contains('done'),'체크해도 제자리 유지(흐리게)');
- ok(after[idx].querySelector('.snm2').textContent.includes(label.slice(0,2)),'순서 안 바뀜');
- const n1=after.length;
- click(byText('#scr .chip','산 것 숨기기')); await sleep(150);
+ const undone=preItems.filter(e=>!e.classList.contains('done'));
+ const label=undone[0].querySelector('.snm2').textContent.trim();
+ const n1=preItems.length;
+ click(undone[0]); await sleep(160);
+ ok(!!q('#scr .sdiv'),'산 것 구분선 표시');
+ const doneEl=qa('#scr .sitem.done');
+ ok(doneEl.length>=1&&doneEl[doneEl.length-1].querySelector('.snm2').textContent.includes(label.slice(0,2)),'체크한 항목이 산 것 섹션으로');
+ click(byText('#scr .chip','산 것 숨기기')); await sleep(160);
  ok(qa('#scr .sitem').length<n1,'산 것 숨기기 동작');
- click(byText('#scr .chip','산 것 보이기')); await sleep(150);
+ click(byText('#scr .chip','산 것 보이기')); await sleep(160);
  ok(qa('#scr .sitem').length===n1,'다시 보이기 동작');
  click(byText('.tb','메뉴판')); await sleep(120);
  type('#q','없는메뉴zzz'); await sleep(600);
  ok(!!byText('#scr .empty b','조건에 맞는'),'검색 무결과 전용 문구');
  type('#q',''); await sleep(550);
-
- console.log('\n[13단계] 메모 붙여넣기 등록 (규칙 파서)');
- const parsed=g(`parseRecipes("된장찌개\\n재료: 두부 반 모, 애호박 1/2개, 된장 2큰술(해찬들)\\n1. 물 끓이기\\n2. 된장 풀기\\n메모: 멸치육수면 더 좋음")`);
- ok(parsed.length===1&&parsed[0].name==='된장찌개','파서: 이름 추출');
- ok(parsed[0].ingredients.length===3&&parsed[0].ingredients[0].name==='두부'&&parsed[0].ingredients[0].amount.includes('반'),'파서: 재료·양 분리');
- ok(parsed[0].ingredients[2].brand==='해찬들','파서: 괄호 → 브랜드');
- ok(parsed[0].steps.length===2,'파서: 단계 2개');
- ok(parsed[0].memo.includes('멸치'),'파서: 메모 분류');
- click('.fab'); await sleep(80);
- click(byText('.sw button','메모 붙여넣기')); await sleep(80);
- q('#pz').value='간장계란밥\n재료: 계란 2알, 간장 1큰술';
- click(byText('.sw button','분석해서 채우기')); await sleep(200);
- ok(q('#f-name').value==='간장계란밥','단일 → 폼 자동 채움');
- ok(qa('#ingRows .irow').length===2,'재료 2줄 채워짐');
- click(byText('.sw button','메뉴판에 올리기')); await sleep(450);
- ok(!!byText('.lrow .lnm','간장계란밥'),'붙여넣기 등록 완료');
- const cnt=g('S.menus.length');
- click('.fab'); await sleep(80);
- click(byText('.sw button','메모 붙여넣기')); await sleep(80);
- q('#pz').value='제육볶음\n돼지고기 300g, 고추장 2큰술\n\n콩나물국\n콩나물 한 줌';
- click(byText('.sw button','분석해서 채우기')); await sleep(200);
- ok(!!byText('.sw h2','2개'),'빈 줄 구분 → 여러 메뉴 감지');
- click(byText('.sw button','전부 메뉴판에 올리기')); await sleep(450);
- ok(g('S.menus.length')===cnt+2,'벌크 2개 등록');
 
  console.log('\n[14단계] 재료 사전 · 구매 링크 · 목록 공유 · 로그인 버튼');
  click('.fab'); await sleep(80);
@@ -225,7 +203,7 @@ const sleep=ms=>new Promise(r=>setTimeout(r,ms));
  const st=g('buildShopText()');
  ok(st.includes('장보기')&&/[⬜✅]/.test(st),'공유용 목록 텍스트 생성');
  click('[data-a="settings"]'); await sleep(80);
- ok(!!byText('.sw button','카카오 연결')&&!!byText('.sw button','Google 연결'),'소셜 로그인 버튼');
+ ok(!!byText('.sw .srow','카카오'),'소셜 로그인 진입 (게스트 상태)');
  await closeAll();
 
  console.log('\n[15단계] 월간 달력 · 장보기 기간 확장');
@@ -273,6 +251,52 @@ const sleep=ms=>new Promise(r=>setTimeout(r,ms));
  ok(nr.dataset.name==='그릭요거트'&&nr.dataset.amount==='200g','입력한 이름·양 유지');
  ok(nr.dataset.url.includes('coupang'),'새 행에 구매 링크 저장');
  await closeAll();
+
+ console.log('\n[17단계] 이번 피드백 반영 검증');
+ // 한글 조합 엔터 중복 방지
+ click('.fab'); await sleep(80);
+ const qi=q('#qing'); qi.value='돼지고기';
+ const ev=new w.KeyboardEvent('keydown',{key:'Enter',bubbles:true,cancelable:true});
+ Object.defineProperty(ev,'isComposing',{value:true});
+ qi.dispatchEvent(ev);
+ qi.dispatchEvent(new w.KeyboardEvent('keydown',{key:'Enter',bubbles:true,cancelable:true}));
+ await sleep(80);
+ ok(qa('#ingRows .irow').length===1,'IME 엔터 중복 담기 방지');
+ ok(q('#ingRows .irow').dataset.name==='돼지고기','재료명 온전');
+ // 양 입력칸
+ const iq=q('#ingRows .iq'); iq.value='2큰술'; iq.dispatchEvent(new w.Event('input',{bubbles:true}));
+ await sleep(50);
+ ok(q('#ingRows .irow').dataset.amount==='2큰술','행 우측 양 입력 반영');
+ ok(qa('#dlAmt option').length>10,'단위 추천 목록');
+ // 메모 붙여넣기 제거
+ ok(!byText('.sw button','메모 붙여넣기'),'메모 붙여넣기 UI 삭제됨');
+ await closeAll();
+ // 재료 사전 가나다순
+ const names=g('ingNames()');
+ ok(names.slice(-40).every((v,i,a)=>i===0||a[i-1].localeCompare(v,'ko')<=0),'재료 사전 가나다순');
+ // 설정 선택 목록
+ click('[data-a="settings"]'); await sleep(80);
+ click(byText('.sw .srow','홈에 보이는 끼니')); await sleep(120);
+ ok(qa('.sw .srow').length>=2&&!!byText('.sw .srow','아침·점심·저녁 모두'),'끼니 선택 목록 표시');
+ click(byText('.sw .srow','아침·점심·저녁 모두')); await sleep(300);
+ ok(g('S.homeMeals')==='all','끼니 설정 반영');
+ click(byText('.sw .srow','장보기 기본 기간')); await sleep(120);
+ ok(!!byText('.sw .srow','한 달'),'기간 선택 목록 표시');
+ await closeAll();
+ // 세 끼 모드 홈
+ click(byText('.tb','홈')); await sleep(120);
+ ok(qa('#scr .mealc').length===3,'세 끼 카드 3개');
+ // 요일 탭 → 하루 시트
+ click(qa('#scr .wrow')[0]); await sleep(150);
+ ok(qa('.sw .mealc').length===3,'요일 탭 → 하루 세 끼 시트');
+ await closeAll();
+ g('(function(){S.homeMeals="d";save()})()'); render_(); await sleep(120);
+ // 바꾸기 흐름
+ const sw=q('#scr [data-a="swap"]');
+ if(sw){click(sw); await sleep(150);
+  ok(!!byText('.sw .srow','메뉴판에서 고르기')&&!!byText('.sw .srow','사다리로 다시 뽑기')&&!!byText('.sw .srow','비우기'),'바꾸기 = 고르기·사다리·투표·비우기');
+  await closeAll();}
+ else ok(false,'바꾸기 버튼 노출');
 
  console.log('\n────────────────────');
  console.log(`결과: ${pass} PASS / ${fail} FAIL`);

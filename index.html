@@ -100,9 +100,27 @@ svg{display:block}
 .wrow .wd{flex:none;width:18px;font-size:13.5px;font-weight:800;color:var(--sub)}
 .wrow.today .wd{color:var(--acc)}
 .wrow .wn{flex:none;width:22px;font:700 13px var(--mono);color:var(--sub);font-variant-numeric:tabular-nums}
-.wrow .wm{flex:1;min-width:0;font-size:15px;font-weight:700;letter-spacing:-.03em;
+.wrow .wtx{flex:1;min-width:0}
+.wrow .wm{display:block;font-size:15px;font-weight:700;letter-spacing:-.03em;
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .wrow .wm.none{color:var(--sub);font-weight:500;font-size:13.5px}
+.wrow .wsub{display:block;font-size:11.5px;color:var(--sub);margin-top:1px;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.wrow .wc{flex:none;font:700 9.5px var(--mono);color:var(--sub);background:var(--line2);border-radius:99px;padding:3px 7px}
+/* ── 오늘의 메뉴 크게 ── */
+.bigm{margin-top:14px}
+.bigph{position:relative;display:block;width:100%;height:190px;border-radius:18px;background-size:cover;
+  background-position:center;background-color:var(--line2);overflow:hidden}
+.bigph.noimg{display:grid;place-items:center}
+.bigmono{font-size:64px;font-weight:900;color:var(--sub);opacity:.5;letter-spacing:-.05em}
+.bigrk{position:absolute;top:10px;left:10px;background:var(--acc-bg);color:var(--acc-ink);
+  font:800 10px var(--mono);letter-spacing:.08em;padding:5px 10px;border-radius:99px}
+.bignth{position:absolute;bottom:10px;right:10px;background:rgba(18,17,17,.55);color:#fff;
+  font:700 10px var(--mono);letter-spacing:.04em;padding:5px 9px;border-radius:99px;backdrop-filter:blur(4px)}
+.bigt{font-size:24px;font-weight:900;letter-spacing:-.045em;margin-top:12px;text-wrap:balance}
+.bigst{margin-top:6px}
+.bigacts{display:flex;gap:8px;margin-top:14px}
+.mdel2{display:grid;place-items:center;font-size:52px}
 .wrow .wt{flex:none;font:700 9.5px var(--mono);letter-spacing:.1em;color:var(--acc-ink);
   background:var(--acc-bg);border-radius:99px;padding:3px 8px}
 
@@ -200,11 +218,13 @@ svg{display:block}
 .sitem.done .cbox{background:var(--acc-bg);border-color:var(--acc-bg);color:var(--acc-ink)}
 .sitem .sb{flex:1;min-width:0}
 .sitem .snm2{font-size:14.5px;font-weight:700;letter-spacing:-.02em;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.sdiv{font:700 10.5px var(--mono);letter-spacing:.14em;color:var(--sub);padding:14px 2px 8px;
+  border-top:1px solid var(--line);margin-top:6px}
 .sitem.done{opacity:.42}
 .sitem.done .snm2{text-decoration:line-through;text-decoration-color:var(--sub)}
 .sitem .src{font-size:11.5px;color:var(--sub);margin-top:2px;line-height:1.5}
 .sitem .thumb{flex:none;width:52px;height:52px;border-radius:14px;background-size:cover;background-position:center;
-  border:1px solid var(--line);order:-1}
+  border:1px solid var(--line)}
 .brand{display:inline-block;font:600 9.5px var(--mono);letter-spacing:.06em;color:var(--acc);
   border:1px solid var(--acc);border-radius:5px;padding:1px 5px;opacity:.85}
 .buy{font:600 10.5px var(--mono);color:var(--acc);letter-spacing:.02em;
@@ -339,6 +359,10 @@ textarea.in{height:auto;min-height:58px;padding:11px 13px;resize:vertical;line-h
 .irow .ibody{flex:1;min-width:0;display:flex;align-items:center;gap:10px;text-align:left;background:none}
 .irow .itxt{flex:1;min-width:0}
 .irow .ibr.sub{color:var(--sub);font-weight:500}
+.irow .iq{flex:none;width:74px;height:36px;border:1px solid var(--line);border-radius:10px;
+  background:var(--paper);text-align:center;font-size:14px;font-weight:600;outline:none}
+.irow .iq:focus{border-color:var(--acc)}
+.irow .iq::placeholder{font-weight:500;color:var(--sub);font-size:13px}
 .irow .inm2{display:block;font-size:14.5px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .irow .iamt{font-weight:500;color:var(--sub);margin-left:7px;font-size:13px}
 .irow .ibr{display:block;font-size:11.5px;color:var(--acc);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -595,8 +619,13 @@ const ING_DICT=('돼지고기,삼겹살,대패삼겹살,목살,앞다리살,항�
 +'두부,순두부,유부,검은콩,병아리콩,렌틸콩,완두콩,청국장,'
 +'소금,굵은소금,설탕,흑설탕,후추,간장,진간장,국간장,고추장,된장,쌈장,춘장,고춧가루,참기름,들기름,식용유,올리브유,포도씨유,카놀라유,식초,사과식초,발사믹식초,맛술,미림,매실청,올리고당,물엿,꿀,굴소스,피시소스,멸치액젓,까나리액젓,새우젓,케첩,마요네즈,머스타드,허니머스타드,돈까스소스,우스터소스,스리라차,칠리소스,깨소금,통깨,들깨가루,카레가루,짜장가루,두반장,치킨스톡,다시다,연겨자,와사비,바질페스토,토마토소스,파스타 크림소스,무화과잼,딸기잼,땅콩버터,'
 +'김치,묵은지,백김치,깍두기,단무지,피클,올리브,참치,옥수수캔,토마토캔,코코넛밀크,아몬드,호두,땅콩,캐슈넛,잣,건포도,크랜베리,소주,맥주,화이트와인,레드와인,청주').split(',');
-function ingNames(){const s=new Set();S.menus.forEach(m=>(m.ingredients||[]).forEach(g=>{if(g.name)s.add(g.name)}));
- ING_DICT.forEach(n=>s.add(n));return[...s]}
+const ING_SORTED=[...ING_DICT].sort((a,b)=>a.localeCompare(b,'ko'));
+const AMTS=['1개','2개','반 개','1쪽','2쪽','1장','2장','1알','5알','한 줌','1컵','1/2컵','1큰술','2큰술','1작은술',
+ '100g','200g','300g','500g','1kg','100ml','200ml','1팩','1봉지','1단','1마리','1모','반 모','1포기','반 포기','적당량'];
+function ingNames(){const used=[];const seen=new Set();
+ S.menus.forEach(m=>(m.ingredients||[]).forEach(g=>{if(g.name&&!seen.has(g.name)){seen.add(g.name);used.push(g.name)}}));
+ used.sort((a,b)=>a.localeCompare(b,'ko'));
+ return[...used,...ING_SORTED.filter(n=>!seen.has(n))]}
 function brandNames(){const s=new Set();S.menus.forEach(m=>(m.ingredients||[]).forEach(g=>{if(g.brand)s.add(g.brand)}));return[...s]}
 function bestSorted(){return [...S.menus].sort((a,b)=>(b.rating-a.rating)||(b.cookCount-a.cookCount)||b.createdAt.localeCompare(a.createdAt))}
 
@@ -627,6 +656,8 @@ function vGate(){return `<section class="hero" style="margin-top:46px">
  <div class="ghint" style="margin-top:14px">가족 초대 링크로 왔다면, 로그인 뒤 자동으로 이어져요.</div>`}
 
 /* ── 홈 ── */
+const I_SWAP='<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4v6h6M20 20v-6h-6"/><path d="M19.5 9A8 8 0 0 0 6 6.3L4 8M4.5 15A8 8 0 0 0 18 17.7l2-1.7"/></svg>';
+function rankOf(id){const i=bestSorted().findIndex(m=>m.id===id);return i>=0&&i<3?i+1:0}
 function mealCard(mk,ti){
  const v=(S.plan[ti]||{})[mk];
  const deliv=v==='DELIV', m=(!deliv&&v)?menu(v):null;
@@ -638,24 +669,48 @@ function mealCard(mk,ti){
    ${deliv?'<span class="mdel">🛵</span>':phEl(m,'msm')}
    <span class="mbody"><span class="mlab">${label}</span>
     <span class="mval">${esc(deliv?'배달 찬스':m.name)}</span></span>
-   <span class="mgo" data-a="slot" data-date="${ti}" data-m="${mk}" role="button" aria-label="바꾸기">
-    <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4v6h6M20 20v-6h-6"/><path d="M19.5 9A8 8 0 0 0 6 6.3L4 8M4.5 15A8 8 0 0 0 18 17.7l2-1.7"/></svg></span></button>`}
+   <span class="mgo" data-a="swap" data-date="${ti}" data-m="${mk}" role="button" aria-label="바꾸기">${I_SWAP}</span></button>`}
+/* 오늘의 메뉴 — 크게, 순위·횟수 재미요소 포함 */
+function todayBig(mk,ti){
+ const v=(S.plan[ti]||{})[mk], deliv=v==='DELIV', m=(!deliv&&v)?menu(v):null;
+ if(deliv)return `<div class="bigm"><div class="bigph mdel2">🛵</div>
+   <div class="bigt">배달 찬스</div><div class="bigs">오늘은 요리 쉬는 날</div>
+   <div class="bigacts"><button class="btn gho" style="flex:1" data-a="swap" data-date="${ti}" data-m="${mk}">${I_SWAP} 바꾸기</button></div></div>`;
+ if(!m)return '';
+ const rk=rankOf(m.id), nth=(m.cookCount||0)+1;
+ return `<div class="bigm">
+  <button class="bigph ${m.photo?'':'noimg'}" data-a="detail" data-id="${m.id}"
+   ${m.photo?`style="background-image:url(${esc(m.photo)})"`:''}>
+   ${m.photo?'':`<span class="bigmono">${esc(m.name.slice(0,1))}</span>`}
+   ${rk?`<span class="bigrk">우리집 ${rk}위</span>`:''}
+   <span class="bignth">${nth}번째로 먹어요</span></button>
+  <div class="bigt">${esc(m.name)}</div>
+  <div class="bigst">${hearts(m.rating,'tap','rate').replace('<span class="hearts','<span data-id="'+m.id+'" class="hearts')}</div>
+  <div class="bigacts">
+   <button class="btn gho" style="flex:1" data-a="swap" data-date="${ti}" data-m="${mk}">${I_SWAP} 바꾸기</button>
+   <button class="btn dk" style="flex:1" data-a="detail" data-id="${m.id}">레시피 보기</button></div></div>`}
 function vHome(){
  const t=new Date(), ti=todayISO();
- const meals = S.homeMeals==='all' ? ['b','l','d'] : ['d'];
+ const allMode = S.homeMeals==='all';
+ const meals = allMode ? ['b','l','d'] : ['d'];
  const anyFilled = meals.some(mk=>(S.plan[ti]||{})[mk]);
+ const solo = !allMode && anyFilled;   // 저녁만 + 정해짐 → 크게
  const hero=`<section class="hero">
-   <div class="date">${t.getMonth()+1}월 ${t.getDate()}일 ${WDK[t.getDay()]}요일</div>
+   <div class="date">${t.getMonth()+1}월 ${t.getDate()}일 ${WDK[t.getDay()]}요일 ${anyFilled?'· 오늘의 '+MEAL[meals.find(mk=>(S.plan[ti]||{})[mk])]:''}</div>
    ${anyFilled?'':`<h1>오늘 뭐, 먹지?</h1>`}
-   <div class="meals ${anyFilled?'':'gap'}">${meals.map(mk=>mealCard(mk,ti)).join('')}</div>
+   ${solo?todayBig('d',ti)
+    :`<div class="meals ${anyFilled?'':'gap'}">${meals.map(mk=>mealCard(mk,ti)).join('')}</div>`}
    ${anyFilled?'':`<div class="acts"><button class="btn pri" style="flex:1" data-a="openLadder">사다리 타기</button>
      <button class="btn gho" style="flex:1" data-a="openVote">가족 투표</button></div>`}
   </section>`;
- const days=weekDays(weekOf(0)).map(d=>{const k=iso(d),nm=slotName((S.plan[k]||{}).d);
+ const days=weekDays(weekOf(0)).map(d=>{const k=iso(d),p=S.plan[k]||{},nm=slotName(p.d);
+  const sub=allMode?['b','l'].map(mk=>slotName(p[mk])).filter(Boolean).join(' · '):'';
+  const n=MEALS.filter(([mk])=>p[mk]).length;
   return `<button class="wrow ${k===ti?'today':''}" data-a="wday" data-date="${k}">
    <span class="wd">${WDK[d.getDay()]}</span><span class="wn">${d.getDate()}</span>
-   <span class="wm ${nm?'':'none'}">${nm?esc(nm):'비어있음'}</span>
-   ${k===ti?'<span class="wt">오늘</span>':''}</button>`}).join('');
+   <span class="wtx"><span class="wm ${nm?'':'none'}">${nm?esc(nm):'비어있음'}</span>
+    ${sub?`<span class="wsub">${esc(sub)}</span>`:''}</span>
+   ${k===ti?'<span class="wt">오늘</span>':(n>1?`<span class="wc">${n}끼</span>`:'')}</button>`}).join('');
  const connbar=(window.OT_CONFIG&&typeof sb!=='undefined'&&sb&&!syncOn)
   ?`<button class="connbar" data-a="ob">아직 우리집 계정에 연결 안 됐어요 — 가족과 같이 보려면 여기를 눌러 연결</button>`:'';
  return connbar+hero+
@@ -788,11 +843,13 @@ function vShop(){
    <span class="sb"><span class="snm2">${esc(x.name)}</span><span class="src">${x.amount?esc(x.amount)+'<br>':''}
      <span class="buy" data-a="buy" data-s="c" data-n="${esc(x.name)}">쿠팡</span><span class="buy" data-a="buy" data-s="k" data-n="${esc(x.name)}">컬리</span></span></span>
    <span class="sx" data-a="xdel" data-id="${x.id}" role="button" aria-label="삭제" style="color:var(--sub);width:26px;height:26px;display:grid;place-items:center">${I.x}</span></button>`}});
- // 제자리 유지(자리 이동은 혼란) — 산 것은 흐리게, 필요하면 숨기기
+ // 살 것은 위, 산 것은 구분선 아래로 묶어서 (자리 이동 없이 섹션만 분리)
  const all=[...rowArr,...xArr];
- const rows=(ui.hideDone?all.filter(r=>!r.c):all).map(r=>r.h).join('');
+ const todo=all.filter(r=>!r.c), bought=all.filter(r=>r.c);
+ const rows=todo.map(r=>r.h).join('')
+  + (bought.length&&!ui.hideDone?`<div class="sdiv">산 것 ${bought.length}개</div>`+bought.map(r=>r.h).join(''):'');
  const xrows='';
- const body = total?`<div class="prog"><div class="pt"><b>${done===total?'장보기 완료!':'장바구니'}</b>
+ const body = total?`<div class="prog"><div class="pt"><b>${done===total?'장보기 완료!':`살 것 ${total-done}개 남았어요`}</b>
     <span id="pgt">${done} / ${total}</span></div><div class="pbar"><i id="pgb" style="width:${total?Math.round(done/total*100):0}%"></i></div></div>
    <div class="paper">${rows}${xrows}</div>`
   :`<div class="empty"><b>이번 주 장 볼 게 아직 없어요</b><p>식단표에 메뉴를 채우면<br>필요한 재료가 여기 자동으로 모여요.</p>
@@ -802,7 +859,7 @@ function vShop(){
   ${wknav(ui.shopWeek,'swk',ui.shopSpan||1)}
   <div class="chips" style="margin-bottom:12px">${[[1,'1주'],[2,'2주'],[4,'한 달']].map(([n,l])=>
    `<button class="chip ${(ui.shopSpan||1)===n?'on':''}" data-a="span" data-n="${n}">${l}</button>`).join('')}
-   ${done?`<button class="chip ${ui.hideDone?'on':''}" data-a="hideDone">산 것 ${ui.hideDone?'보이기':'숨기기'} ${done}</button>`:''}</div>
+   ${done?`<button class="chip ${ui.hideDone?'on':''}" data-a="hideDone">산 것 ${ui.hideDone?'보이기':'숨기기'}</button>`:''}</div>
   ${body}
   <div class="xadd"><input id="xn" list="dlIngS" placeholder="직접 추가 · 예) 화덕브레드" autocomplete="off"><input id="xa" class="amt" placeholder="양" autocomplete="off">
    <button class="btn pri" style="height:42px;padding:0 14px" data-a="xadd">추가</button></div>
@@ -864,8 +921,9 @@ function ingRowHTML(v={}){return `<div class="irow" data-name="${esc(v.name||'')
  data-brand="${esc(v.brand||'')}" data-photo="${esc(v.photo||'')}" data-url="${esc(v.url||'')}">
  <button type="button" class="ibody" data-a="ingFind" title="제품 찾기">
   ${v.photo?`<span class="ithumb" style="background-image:url(${esc(v.photo)})"></span>`:'<span class="idot"></span>'}
-  <span class="itxt"><span class="inm2">${esc(v.name||'')}${v.amount?`<span class="iamt">${esc(v.amount)}</span>`:''}</span>
+  <span class="itxt"><span class="inm2">${esc(v.name||'')}</span>
    ${v.brand?`<span class="ibr">${esc(v.brand)}</span>`:'<span class="ibr sub">눌러서 제품 찾기</span>'}</span></button>
+ <input class="iq" list="dlAmt" placeholder="양" value="${esc(v.amount||'')}" autocomplete="off">
  <button type="button" class="xbtn" data-a="rowDel" aria-label="빼기">${I.x}</button></div>`}
 function stepRowHTML(v){return `<div class="srow"><b>${pad($$('#stepRows .srow').length+1)}</b>
  <textarea class="in step" rows="2" placeholder="예) 빵을 가로로 갈라 주세요">${esc(v||'')}</textarea>
@@ -877,7 +935,6 @@ function openForm(id){const m=id?menu(id):null;
  const ings=(m?(m.ingredients.length?m.ingredients:[{}]):[]).map(ingRowHTML).join('');
  sheet(`<div class="sec-h" style="margin-top:4px"><div><div class="eyebrow">${m?'Recipe Edit':'New Recipe'}</div>
    <h2>${m?'메뉴 고치기':'새 메뉴 올리기'}</h2></div><span class="cnt">No.${pad((m&&m.no)?m.no:S.seq)}</span></div>
-  ${m?'':`<div style="display:flex;justify-content:flex-end;margin-top:8px"><button type="button" class="buy" style="margin:0" data-a="pz">메모 붙여넣기로 채우기</button></div>`}
   <div class="fld" style="margin-top:10px"><label>이름 — 이것만 적어도 돼요</label><input id="f-name" class="in" placeholder="예) 화덕브레드 샌드위치" value="${esc(m?m.name:'')}"></div>
   <div class="fld"><label>얼마나 맛있었나요</label><div id="f-hearts">${hearts(F.rating,'big tap','frate')}</div></div>
   <div class="fld"><button type="button" id="f-photo" class="fphoto ${F.photo?'has':''}" data-a="fphoto"
@@ -894,6 +951,7 @@ function openForm(id){const m=id?menu(id):null;
   <div class="fld"><label>우리집 메모 (선택)</label><textarea id="f-memo" class="in" placeholder="예) 아이가 제일 좋아함. 다음엔 잼 조금만.">${esc(m?m.memo:'')}</textarea></div>
   <datalist id="dlIng">${ingNames().map(n=>`<option value="${esc(n)}">`).join('')}</datalist>
   <datalist id="dlBrand">${brandNames().map(n=>`<option value="${esc(n)}">`).join('')}</datalist>
+  <datalist id="dlAmt">${AMTS.map(n=>`<option value="${esc(n)}">`).join('')}</datalist>
   <div class="dacts"><button class="btn pri blk" data-a="saveMenu">${m?'고친 대로 저장':'메뉴판에 올리기'}</button></div>`);
  const sr=$('#stepRows'); (m&&m.steps.length?m.steps:['']).forEach(s=>sr.insertAdjacentHTML('beforeend',stepRowHTML(s)));
 }
@@ -1083,16 +1141,14 @@ function openSettings(){
 
   ${window.OT_CONFIG?`<div class="sgrp">계정</div>
   <div class="slist">
-   ${prov.includes('kakao')?srow('카카오',{badge:'연결됨',chev:false})
-     :srow('카카오 연결',{action:'oauth',data:{p:'kakao'}})}
-   ${prov.includes('google')?srow('Google',{badge:'연결됨',chev:false})
-     :srow('Google 연결',{action:'oauth',data:{p:'google'}})}
+   ${!anon?srow('로그인 계정',{value:prov.includes('kakao')?'카카오':(prov.includes('google')?'Google':'연결됨'),chev:false})
+     :srow('카카오로 로그인',{value:'폰을 바꿔도 이어져요',action:'oauth',data:{p:'kakao'}})}
   </div>`:''}
 
   <div class="sgrp">표시</div>
   <div class="slist">
-   ${srow('홈에 보이는 끼니',{value:homeMealLabel,action:'cycHome'})}
-   ${srow('장보기 기본 기간',{value:spanLabel,action:'cycSpan'})}
+   ${srow('홈에 보이는 끼니',{value:homeMealLabel,action:'pickHome'})}
+   ${srow('장보기 기본 기간',{value:spanLabel,action:'pickSpan'})}
   </div>
 
   ${anon?`<div class="sgrp">이 폰의 데이터</div>
@@ -1155,6 +1211,20 @@ function importJson(f){if(!f)return;const rd=new FileReader();
    else toast('불러왔어요 — 그대로 이어서 쓰면 돼요')}
   catch(e){toast('이 파일은 우리집 식탁 백업이 아니에요')}};
  rd.readAsText(f)}
+
+/* ── 선택 목록 시트 ── */
+function openPick(title,opts,cur,act){
+ sheet(`<div class="shead"><button class="x icobtn" data-a="shClose" aria-label="닫기">${I.lt}</button><b>${esc(title)}</b></div>
+  <div class="slist">${opts.map(([v,l])=>`<button class="srow" data-a="${act}" data-v="${esc(v)}">
+   <span class="sl">${esc(l)}</span>${String(cur)===String(v)?`<span class="chev" style="color:var(--acc)">${I.chk}</span>`:'<span class="chev"></span>'}</button>`).join('')}</div>`)}
+
+/* ── 하루 끼니 보기 (주간 리스트에서 요일 탭) ── */
+function openDay(date){
+ const d=fromISO(date),p=S.plan[date]||{};
+ sheet(`<div class="shead"><button class="x icobtn" data-a="shClose" aria-label="닫기">${I.lt}</button>
+   <b>${d.getMonth()+1}월 ${d.getDate()}일 ${WDK[d.getDay()]}요일</b></div>
+  <div class="meals">${MEALS.map(([mk])=>mealCard(mk,date)).join('')}</div>
+  <div class="ghint" style="margin-top:14px">칸을 누르면 메뉴를 고르거나 바꿀 수 있어요</div>`)}
 
 /* ── 확인 ── */
 function openConfirm(msg,yes,fn){CONF=fn;
@@ -1541,10 +1611,11 @@ const ACT={
  swk:d=>{ui.shopWeek=d.d==='0'?0:ui.shopWeek+Number(d.d);render()},
  span:d=>{ui.shopSpan=Number(d.n);render()},
  hideDone:()=>{ui.hideDone=!ui.hideDone;render()},
- cycHome:()=>{S.homeMeals=S.homeMeals==='all'?'d':'all';save();shCloseAll();render();openSettings()},
- cycSpan:()=>{const o=[1,2,4],i=o.indexOf(S.shopSpanDefault||1);
-  S.shopSpanDefault=o[(i+1)%3];ui.shopSpan=S.shopSpanDefault;save();shCloseAll();render();openSettings()},
- wday:d=>{go('plan')},
+ pickHome:()=>openPick('홈에 보이는 끼니',[['d','저녁만'],['all','아침·점심·저녁 모두']],S.homeMeals||'d','setHome'),
+ setHome:d=>{S.homeMeals=d.v;save();shCloseAll();render();openSettings()},
+ pickSpan:()=>openPick('장보기 기본 기간',[['1','1주'],['2','2주'],['4','한 달']],String(S.shopSpanDefault||1),'setSpan'),
+ setSpan:d=>{S.shopSpanDefault=Number(d.v);ui.shopSpan=S.shopSpanDefault;save();shCloseAll();render();openSettings()},
+ wday:d=>openDay(d.date),
  planView:()=>{ui.planView=ui.planView==='m'?'w':'m';render()},
  mnav:d=>{ui.mOff=d.d==='0'?0:(ui.mOff||0)+Number(d.d);render()},
  mday:d=>{const target=monday(fromISO(d.date));
@@ -1555,6 +1626,24 @@ const ACT={
   i.value='';i.focus()},
  slot:d=>{const v=(S.plan[d.date]||{})[d.m];
   if(v&&v!=='DELIV'&&menu(v))openDetail(v);else openPicker(d.date,d.m)},
+ swap:d=>{const nm=slotName((S.plan[d.date]||{})[d.m])||'';
+  sheet(`<div class="shead"><button class="x icobtn" data-a="shClose" aria-label="닫기">${I.lt}</button>
+    <b>${MEAL[d.m]} 바꾸기</b></div>
+   <div class="mut" style="margin-bottom:12px">지금은 <b>${esc(nm)}</b> 예요.</div>
+   <div class="slist">
+    <button class="srow" data-a="swPick" data-date="${d.date}" data-m="${d.m}"><span class="sl">메뉴판에서 고르기</span><span class="chev">${I.rt}</span></button>
+    <button class="srow" data-a="swLadder" data-date="${d.date}" data-m="${d.m}"><span class="sl">사다리로 다시 뽑기</span><span class="chev">${I.rt}</span></button>
+    <button class="srow" data-a="swVote" data-date="${d.date}" data-m="${d.m}"><span class="sl">가족 투표로 정하기</span><span class="chev">${I.rt}</span></button>
+   </div>
+   <div class="slist" style="margin-top:12px">
+    <button class="srow warn" data-a="swClear" data-date="${d.date}" data-m="${d.m}"><span class="sl">비우기</span><span class="chev"></span></button>
+   </div>`)},
+ swPick:d=>{shClose();setTimeout(()=>openPicker(d.date,d.m),260)},
+ swClear:d=>{setPlan(d.date,d.m,null);shCloseAll();render();toast('비웠어요')},
+ swLadder:d=>{setPlan(d.date,d.m,null);shCloseAll();render();
+  setTimeout(()=>{G.meal=d.m;openLadder()},260)},
+ swVote:d=>{setPlan(d.date,d.m,null);shCloseAll();render();
+  setTimeout(()=>openVote(),260)},
  slotX:d=>{setPlan(d.date,d.m,null);render()},
  pick:d=>{const ps=ui.pendingSlot;if(!ps)return;ui.pendingSlot=null;
   setPlan(ps.date,ps.m,d.id);
@@ -1646,15 +1735,7 @@ const ACT={
  vlCast:d=>vlCast(d.k),
  vlFinish:vlFinish,
  vlShare:vlShare,
- pz:()=>openPaste(),
- pzGo:()=>{const rs=parseRecipes($('#pz').value);
-  if(!rs.length){toast('붙여넣은 내용이 없어요');return}
-  if(rs.length===1){shClose();fillForm(rs[0]);toast('채웠어요 — 확인하고 올려주세요')}
-  else{PARSED=rs;$('#pzbody').innerHTML=`<div class="sec-h" style="margin-top:4px"><div><div class="eyebrow">Paste</div><h2>${rs.length}개 메뉴를 찾았어요</h2></div></div>
-   <div class="paper" style="padding:6px 14px">${rs.map(r=>`<div class="fam"><b>${esc(r.name)}</b><span class="mut">재료 ${r.ingredients.length} · 단계 ${r.steps.length}</span></div>`).join('')}</div>
-   <div class="dacts"><button class="btn pri blk" data-a="pzAll">전부 메뉴판에 올리기</button></div>`}},
- pzAll:()=>{if(PARSED)bulkAdd(PARSED);PARSED=null},
- oauth:d=>oauthLogin(d.p),
+  oauth:d=>oauthLogin(d.p),
  logout:logout,
  guest:async()=>{try{const r=await sb.auth.signInAnonymously();if(r.error)throw r.error;
   AUTHUSER=r.data&&r.data.user;ui.gate=false;render();updateSyncBadge();connectAsMember(true)}
@@ -1670,11 +1751,12 @@ const ACT={
 document.addEventListener('click',e=>{const el=e.target.closest('[data-a]');if(!el)return;
  const a=ACT[el.dataset.a];if(a){e.preventDefault();a(el.dataset,el,e)}});
 document.addEventListener('input',e=>{
+ if(e.target.classList&&e.target.classList.contains('iq')){const r=e.target.closest('.irow');if(r)r.dataset.amount=e.target.value.trim()}
  if(e.target.id==='q'){ui.q=e.target.value;
   clearTimeout(ui._qt);ui._qt=setTimeout(()=>{const v=$('#q');const pos=v.selectionStart;render();
    const n=$('#q');if(n){n.focus();n.setSelectionRange(pos,pos)}},350)}});
-document.addEventListener('keydown',e=>{   // 엔터로 빠른 입력
- if(e.key!=='Enter')return;
+document.addEventListener('keydown',e=>{   // 엔터로 빠른 입력 (한글 조합 중 중복 방지)
+ if(e.key!=='Enter'||e.isComposing||e.keyCode===229)return;
  if(e.target.id==='qing'){e.preventDefault();ACT.qingAdd()}
  else if(e.target.id==='xn'||e.target.id==='xa'){e.preventDefault();ACT.xadd()}});
 document.addEventListener('change',e=>{if(e.target.id==='impF')importJson(e.target.files[0]);
