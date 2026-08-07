@@ -225,6 +225,8 @@ svg{display:block}
 .sitem .src{font-size:11.5px;color:var(--sub);margin-top:2px;line-height:1.5}
 .sitem .thumb{flex:none;width:52px;height:52px;border-radius:14px;background-size:cover;background-position:center;
   border:1px solid var(--line)}
+.need{display:inline-block;font:800 11.5px var(--mono);color:var(--acc);background:var(--soft);
+  border-radius:99px;padding:2px 8px;letter-spacing:.02em}
 .brand{display:inline-block;font:600 9.5px var(--mono);letter-spacing:.06em;color:var(--acc);
   border:1px solid var(--acc);border-radius:5px;padding:1px 5px;opacity:.85}
 .buy{font:600 10.5px var(--mono);color:var(--acc);letter-spacing:.02em;
@@ -246,7 +248,7 @@ svg{display:block}
 .shead .x{position:absolute;left:0;color:var(--ink)}
 .sgrp{font-size:12px;font-weight:600;color:var(--sub);margin:22px 0 8px 2px}
 .slist{background:var(--card);border:1px solid var(--line);border-radius:16px;overflow:hidden}
-.srow{display:flex;align-items:center;gap:10px;width:100%;text-align:left;padding:15px 16px;
+.srow{display:flex;align-items:center;gap:10px;width:100%;text-align:left;padding:0 16px;min-height:52px;
   border-bottom:1px solid var(--line2);background:none}
 .slist .srow:last-child{border-bottom:0}
 .srow:active{background:var(--line2)}
@@ -340,8 +342,23 @@ svg{display:block}
 .dacts{display:flex;flex-direction:column;gap:8px;margin-top:20px}
 
 /* ── 폼 ── */
-.fld{margin-top:16px}
-.fld>label{display:block;font:700 10px var(--mono);letter-spacing:.2em;text-transform:uppercase;color:var(--sub);margin-bottom:8px}
+.fld{margin-top:18px}
+.ftop{display:flex;gap:11px;align-items:center;margin-top:6px}
+.fthumb{flex:none;width:64px;height:64px;border-radius:16px;border:1.5px dashed var(--line);
+  display:grid;place-items:center;color:var(--sub);background-size:cover;background-position:center}
+.fthumb.has{border-style:solid;border-color:var(--line)}
+.fname{flex:1;min-width:0;height:64px;font-size:19px;font-weight:800;letter-spacing:-.035em}
+.frate{display:flex;align-items:center;gap:12px;margin-top:16px}
+.frate .frl{font-size:12.5px;font-weight:600;color:var(--sub)}
+.strow{display:flex;align-items:flex-start;gap:11px;background:var(--card);border:1px solid var(--line);
+  border-radius:14px;padding:11px 12px;margin-bottom:7px}
+.strow b{font:700 11px var(--mono);color:var(--acc);flex:none;padding-top:2px}
+.strow .stx{flex:1;min-width:0;font-size:14px;line-height:1.5;word-break:break-word}
+#qstep{flex:1;min-width:0;background:var(--card);border:1px solid var(--line);border-radius:12px;
+  padding:12px 13px;outline:none;font-size:16px;resize:none;line-height:1.45;max-height:150px;overflow-y:auto}
+#qstep:focus{border-color:var(--acc)}
+#f-memo{resize:none;overflow-y:auto;max-height:180px}
+.fld>label{display:block;font-size:12.5px;font-weight:600;letter-spacing:-.02em;color:var(--sub);margin-bottom:8px}
 .in{width:100%;background:var(--card);border:1px solid var(--line);border-radius:11px;height:46px;
   padding:0 13px;outline:none;font-size:16px;transition:border-color .15s}
 .in:focus{border-color:var(--acc)}
@@ -359,10 +376,13 @@ textarea.in{height:auto;min-height:58px;padding:11px 13px;resize:vertical;line-h
 .irow .ibody{flex:1;min-width:0;display:flex;align-items:center;gap:10px;text-align:left;background:none}
 .irow .itxt{flex:1;min-width:0}
 .irow .ibr.sub{color:var(--sub);font-weight:500}
-.irow .iq{flex:none;width:74px;height:36px;border:1px solid var(--line);border-radius:10px;
-  background:var(--paper);text-align:center;font-size:14px;font-weight:600;outline:none}
-.irow .iq:focus{border-color:var(--acc)}
-.irow .iq::placeholder{font-weight:500;color:var(--sub);font-size:13px}
+.irow .iqn{flex:none;width:46px;height:36px;border:1px solid var(--line);border-radius:10px 0 0 10px;
+  background:var(--paper);text-align:center;font-size:14px;font-weight:700;outline:none;border-right:0}
+.irow .iu{flex:none;width:62px;height:36px;border:1px solid var(--line);border-radius:0 10px 10px 0;
+  background:var(--paper);font-size:13px;font-weight:600;outline:none;text-align:center;
+  -webkit-appearance:none;appearance:none;padding:0 4px;color:var(--ink)}
+.irow .iqn:focus,.irow .iu:focus{border-color:var(--acc)}
+.irow .iqn::placeholder{font-weight:500;color:var(--sub)}
 .irow .inm2{display:block;font-size:14.5px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .irow .iamt{font-weight:500;color:var(--sub);margin-left:7px;font-size:13px}
 .irow .ibr{display:block;font-size:11.5px;color:var(--acc);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -619,6 +639,33 @@ const ING_DICT=('돼지고기,삼겹살,대패삼겹살,목살,앞다리살,항�
 +'두부,순두부,유부,검은콩,병아리콩,렌틸콩,완두콩,청국장,'
 +'소금,굵은소금,설탕,흑설탕,후추,간장,진간장,국간장,고추장,된장,쌈장,춘장,고춧가루,참기름,들기름,식용유,올리브유,포도씨유,카놀라유,식초,사과식초,발사믹식초,맛술,미림,매실청,올리고당,물엿,꿀,굴소스,피시소스,멸치액젓,까나리액젓,새우젓,케첩,마요네즈,머스타드,허니머스타드,돈까스소스,우스터소스,스리라차,칠리소스,깨소금,통깨,들깨가루,카레가루,짜장가루,두반장,치킨스톡,다시다,연겨자,와사비,바질페스토,토마토소스,파스타 크림소스,무화과잼,딸기잼,땅콩버터,'
 +'김치,묵은지,백김치,깍두기,단무지,피클,올리브,참치,옥수수캔,토마토캔,코코넛밀크,아몬드,호두,땅콩,캐슈넛,잣,건포도,크랜베리,소주,맥주,화이트와인,레드와인,청주').split(',');
+const UNITS=['개','g','kg','ml','L','큰술','작은술','컵','알','장','줌','모','단','포기','마리','쪽','조각','팩','봉지','인분','적당량'];
+const UNIT_MAP={'계란':'알','메추리알':'알','두부':'모','순두부':'모','대파':'단','쪽파':'단','부추':'단','미나리':'단',
+ '배추':'포기','알배추':'포기','양배추':'포기','김치':'포기','묵은지':'포기','백김치':'포기',
+ '우유':'ml','두유':'ml','생크림':'ml','식용유':'ml','올리브유':'ml','포도씨유':'ml','카놀라유':'ml',
+ '쌀':'컵','현미':'컵','찹쌀':'컵','잡곡':'컵','귀리':'컵',
+ '김':'장','슬라이스 치즈':'장','또띠아':'장','만두피':'장','잠봉':'장','유부':'장',
+ '식빵':'개','바게트':'개','베이글':'개','화덕브레드':'개','크루아상':'개','치아바타':'개','가래떡':'개'};
+const UNIT_RULES=[
+ [/(고기|삼겹|목살|앞다리|항정|갈비|등심|안심|차돌|우삼겹|다진)/,'g'],
+ [/(베이컨|햄|소시지|스팸|프로슈토)/,'g'],
+ [/(고등어|갈치|삼치|조기|굴비|연어|가자미|코다리|장어|오징어|낙지|주꾸미|문어|꽃게|전복|생닭)/,'마리'],
+ [/(새우|홍합|바지락|조개|굴|가리비|멸치|건새우|북어|황태|어묵|동태|미역|다시마)/,'g'],
+ [/(아몬드|호두|땅콩|캐슈넛|잣|건포도|크랜베리)/,'줌'],
+ [/(간장|고추장|된장|쌈장|춘장|참기름|들기름|식초|맛술|미림|매실청|올리고당|물엿|꿀|굴소스|피시소스|액젓|새우젓|케첩|마요네즈|머스타드|소스|페스토|잼|버터|요거트|연유)/,'큰술'],
+ [/(소금|설탕|후추|고춧가루|깨|다시다|스톡|겨자|와사비|가루)/,'작은술'],
+ [/(상추|깻잎|시금치|청경채|쑥갓|루꼴라|바질|로메인|샐러드|콩나물|숙주|나물|고사리|파래|매생이|열무)/,'줌'],
+ [/(면|파스타|소면|중면|우동|라면|당면|국수|떡)/,'g'],
+ [/(치즈|버섯)/,'개'],
+ [/(닭다리|닭봉|닭날개|닭가슴살|닭안심)/,'g'],
+];
+function unitFor(n){n=String(n||'').trim(); if(UNIT_MAP[n])return UNIT_MAP[n];
+ for(const [re,u] of UNIT_RULES) if(re.test(n)) return u;
+ return '개'}
+function splitAmount(a){const t=String(a||'').trim(); if(!t)return{qty:'',unit:''};
+ const m=t.match(/^([\d]+(?:[./~-][\d]+)?|반|한|두|세|네|다섯)\s*(.*)$/);
+ if(m)return{qty:m[1],unit:(m[2]||'').trim()};
+ return{qty:'',unit:t}}
 const ING_SORTED=[...ING_DICT].sort((a,b)=>a.localeCompare(b,'ko'));
 const AMTS=['1개','2개','반 개','1쪽','2쪽','1장','2장','1알','5알','한 줌','1컵','1/2컵','1큰술','2큰술','1작은술',
  '100g','200g','300g','500g','1kg','100ml','200ml','1팩','1봉지','1단','1마리','1모','반 모','1포기','반 포기','적당량'];
@@ -802,6 +849,9 @@ function vPlan(){
 }
 
 /* ── 장보기 ── */
+function scaleQty(q,mult){const n=parseFloat(String(q).replace(/[^\d.]/g,''));
+ if(!isFinite(n)||!n)return null; const v=n*mult;
+ return (Math.round(v*10)/10).toString().replace(/\.0$/,'')}
 function shopData(){
  const wk=iso(weekOf(ui.shopWeek)); const map=new Map();
  const span=ui.shopSpan||1, mon=weekOf(ui.shopWeek), days=[];
@@ -809,13 +859,22 @@ function shopData(){
  days.forEach(d=>{const p=S.plan[iso(d)]||{};
   MEALS.forEach(([mk])=>{const m=p[mk]?menu(p[mk]):null; if(!m)return;
    (m.ingredients||[]).forEach(g=>{const key=g.name.trim(); if(!key)return;
-    const e=map.get(key)||{name:key,brand:'',photo:'',url:'',uses:[]};
+    const e=map.get(key)||{name:key,brand:'',photo:'',url:'',uses:[],sums:{}};
     if(!e.brand&&g.brand)e.brand=g.brand; if(!e.photo&&g.photo)e.photo=g.photo;
     if(!e.url&&g.url)e.url=g.url;
-    if(!e.uses.some(u=>u.m===m.name&&u.a===g.amount))e.uses.push({m:m.name,a:g.amount});
+    const sp=g.qty!=null?{qty:g.qty,unit:g.unit||''}:splitAmount(g.amount);
+    const n=parseFloat(String(sp.qty).replace(/[^\d.]/g,''));
+    if(isFinite(n)&&n&&sp.unit)e.sums[sp.unit]=(e.sums[sp.unit]||0)+n;
+    e.uses.push({m:m.name,a:g.amount});
     map.set(key,e)})})});
  const extras=(S.extra[wk]||[]);
- return {wk,items:[...map.values()],extras};
+ const base=Math.max(1,S.people||S.family.length||2), ppl=Math.max(1,ui.people||base), mult=ppl/base;
+ const items=[...map.values()].map(e=>{
+  const parts=Object.entries(e.sums).map(([u,n])=>{const v=Math.round(n*mult*10)/10;
+   return String(v).replace(/\.0$/,'')+u});
+  return Object.assign(e,{need:parts.join(' + '),ppl,mult});
+ });
+ return {wk,items,extras,ppl,base};
 }
 function buildShopText(){const {wk,items,extras}=shopData();
  const ck=k=>!!S.checked[wk+'|'+k];
@@ -825,15 +884,16 @@ function buildShopText(){const {wk,items,extras}=shopData();
  extras.forEach(x=>L.push(`${ck('x'+x.id)?'✅':'⬜'} ${x.name}${x.amount?' '+x.amount:''}`));
  return L.join('\n')}
 function vShop(){
- const {wk,items,extras}=shopData();
+ const {wk,items,extras,ppl,base}=shopData();
  const ck=k=>!!S.checked[wk+'|'+k];
  const total=items.length+extras.length;
  const done=items.filter(i=>ck(i.name)).length+extras.filter(x=>ck('x'+x.id)).length;
  const rowArr=items.map(it=>{const c=ck(it.name);
   return {c,h:`<button class="sitem ${c?'done':''}" data-a="chk" data-k="${esc(it.name)}">
    <span class="cbox">${I.chk}</span>
-   <span class="sb"><span class="snm2">${esc(it.name)}${it.brand?`<span class="brand">${esc(it.brand)}</span>`:''}</span>
-    <span class="src">${it.uses.map(u=>`${esc(u.a||'적당량')} · ${esc(u.m)}`).join('<br>')}<br>
+   <span class="sb"><span class="snm2">${esc(it.name)}${it.need?`<span class="need">${esc(it.need)}</span>`:''}</span>
+    ${it.brand?`<span class="src" style="color:var(--acc)">${esc(it.brand)}</span>`:''}
+    <span class="src">${it.uses.map(u=>esc(u.m)).filter((v,i,a)=>a.indexOf(v)===i).join(' · ')}${it.need?` · ${ppl}인 기준`:''}<br>
      ${it.url?`<span class="buy" data-a="open" data-u="${esc(it.url)}">담아둔 제품 사기</span>`
       :`<span class="buy" data-a="buy" data-s="c" data-n="${esc(it.name)}">쿠팡</span>`}<span class="buy" data-a="buy" data-s="k" data-n="${esc(it.name)}">컬리</span></span></span>
    ${it.photo?`<span class="thumb" style="background-image:url(${it.photo})"></span>`:''}</button>`}});
@@ -847,7 +907,7 @@ function vShop(){
  const all=[...rowArr,...xArr];
  const todo=all.filter(r=>!r.c), bought=all.filter(r=>r.c);
  const rows=todo.map(r=>r.h).join('')
-  + (bought.length&&!ui.hideDone?`<div class="sdiv">산 것 ${bought.length}개</div>`+bought.map(r=>r.h).join(''):'');
+  + (bought.length&&!ui.hideDone?`<div class="sdiv">구매 리스트 ${bought.length}개</div>`+bought.map(r=>r.h).join(''):'');
  const xrows='';
  const body = total?`<div class="prog"><div class="pt"><b>${done===total?'장보기 완료!':`살 것 ${total-done}개 남았어요`}</b>
     <span id="pgt">${done} / ${total}</span></div><div class="pbar"><i id="pgb" style="width:${total?Math.round(done/total*100):0}%"></i></div></div>
@@ -857,9 +917,11 @@ function vShop(){
  return `<section class="sec"><div class="sec-h"><div><div class="eyebrow">Grocery List</div><h2>장보기 리스트</h2></div>
    <button class="chip" data-a="shopShare">목록 보내기</button></div>
   ${wknav(ui.shopWeek,'swk',ui.shopSpan||1)}
-  <div class="chips" style="margin-bottom:12px">${[[1,'1주'],[2,'2주'],[4,'한 달']].map(([n,l])=>
+  <div class="chips" style="margin-bottom:12px">
+   <button class="chip on" data-a="pickPeople">${ppl}인 기준</button>
+   ${[[1,'1주'],[2,'2주'],[4,'한 달']].map(([n,l])=>
    `<button class="chip ${(ui.shopSpan||1)===n?'on':''}" data-a="span" data-n="${n}">${l}</button>`).join('')}
-   ${done?`<button class="chip ${ui.hideDone?'on':''}" data-a="hideDone">산 것 ${ui.hideDone?'보이기':'숨기기'}</button>`:''}</div>
+   ${done?`<button class="chip ${ui.hideDone?'on':''}" data-a="hideDone">구매 완료 ${ui.hideDone?'보이기':'숨기기'}</button>`:''}</div>
   ${body}
   <div class="xadd"><input id="xn" list="dlIngS" placeholder="직접 추가 · 예) 화덕브레드" autocomplete="off"><input id="xa" class="amt" placeholder="양" autocomplete="off">
    <button class="btn pri" style="height:42px;padding:0 14px" data-a="xadd">추가</button></div>
@@ -923,45 +985,54 @@ function ingRowHTML(v={}){return `<div class="irow" data-name="${esc(v.name||'')
   ${v.photo?`<span class="ithumb" style="background-image:url(${esc(v.photo)})"></span>`:'<span class="idot"></span>'}
   <span class="itxt"><span class="inm2">${esc(v.name||'')}</span>
    ${v.brand?`<span class="ibr">${esc(v.brand)}</span>`:'<span class="ibr sub">눌러서 제품 찾기</span>'}</span></button>
- <input class="iq" list="dlAmt" placeholder="양" value="${esc(v.amount||'')}" autocomplete="off">
+ <input class="iqn" inputmode="decimal" placeholder="1" value="${esc(v.qty!=null?v.qty:splitAmount(v.amount).qty)}" autocomplete="off">
+ <select class="iu">${UNITS.map(u=>`<option ${((v.unit||splitAmount(v.amount).unit||unitFor(v.name))===u)?'selected':''}>${u}</option>`).join('')}</select>
  <button type="button" class="xbtn" data-a="rowDel" aria-label="빼기">${I.x}</button></div>`}
-function stepRowHTML(v){return `<div class="srow"><b>${pad($$('#stepRows .srow').length+1)}</b>
- <textarea class="in step" rows="2" placeholder="예) 빵을 가로로 갈라 주세요">${esc(v||'')}</textarea>
+function stepRowHTML(v){return `<div class="strow" data-t="${esc(v||'')}">
+ <b></b><span class="stx">${esc(v||'')}</span>
  <button type="button" class="xbtn" data-a="rowDel" aria-label="단계 삭제">${I.x}</button></div>`}
-function renum(){$$('#stepRows .srow b').forEach((b,i)=>b.textContent=pad(i+1))}
+function renum(){$$('#stepRows .strow b').forEach((b,i)=>b.textContent=pad(i+1))}
 
 function openForm(id){const m=id?menu(id):null;
  F={editId:id||null,photo:m?m.photo:'',rating:m?m.rating:0,cat:m?m.cat:'',dupOk:false};
  const ings=(m?(m.ingredients.length?m.ingredients:[{}]):[]).map(ingRowHTML).join('');
  sheet(`<div class="sec-h" style="margin-top:4px"><div><div class="eyebrow">${m?'Recipe Edit':'New Recipe'}</div>
-   <h2>${m?'메뉴 고치기':'새 메뉴 올리기'}</h2></div><span class="cnt">No.${pad((m&&m.no)?m.no:S.seq)}</span></div>
-  <div class="fld" style="margin-top:10px"><label>이름 — 이것만 적어도 돼요</label><input id="f-name" class="in" placeholder="예) 화덕브레드 샌드위치" value="${esc(m?m.name:'')}"></div>
-  <div class="fld"><label>얼마나 맛있었나요</label><div id="f-hearts">${hearts(F.rating,'big tap','frate')}</div></div>
-  <div class="fld"><button type="button" id="f-photo" class="fphoto ${F.photo?'has':''}" data-a="fphoto"
-    ${F.photo?`style="background-image:url(${F.photo})"`:''}>${I.cam}<span>완성 사진 (선택)</span></button></div>
-  <div class="fld"><label>종류 (선택)</label><div class="fcats">${CATS.map(c=>`<button type="button" class="chip ${F.cat===c?'on':''}" data-a="fcat" data-c="${c}">${c}</button>`).join('')}</div></div>
-  <div class="fld"><label>재료 — 쉼표로 여러 개 한 번에</label>
-   <div class="xadd" style="margin:0 0 6px"><input id="qing" list="dlIng" placeholder="돼지고기 300g, 김치 반 포기" autocomplete="off">
-    <button type="button" class="btn gho" style="height:46px;padding:0 13px" data-a="qFind" title="제품 찾기">${I.srch}</button>
-    <button type="button" class="btn pri" style="height:46px;padding:0 16px" data-a="qingAdd">담기</button></div>
-   <div class="mut" style="margin-bottom:10px">엔터로 담고, 돋보기를 누르면 실제 판매 제품을 찾아 브랜드·사진까지 채워줘요.</div>
+   <h2>${m?'메뉴 고치기':'새 메뉴 올리기'}</h2></div></div>
+  <div class="ftop">
+   <button type="button" id="f-photo" class="fthumb ${F.photo?'has':''}" data-a="fphoto"
+    ${F.photo?`style="background-image:url(${F.photo})"`:''} aria-label="사진">${F.photo?'':I.cam}</button>
+   <input id="f-name" class="in fname" placeholder="메뉴 이름" value="${esc(m?m.name:'')}">
+  </div>
+  <div class="frate"><span class="frl">맛있었나요</span><div id="f-hearts">${hearts(F.rating,'big tap','frate')}</div></div>
+  <div class="fld"><label>종류</label><div class="fcats">${CATS.map(c=>`<button type="button" class="chip ${F.cat===c?'on':''}" data-a="fcat" data-c="${c}">${c}</button>`).join('')}</div></div>
+
+  <div class="fld"><label>재료</label>
+   <div class="xadd" style="margin:0 0 6px"><input id="qing" list="dlIng" placeholder="방울토마토" autocomplete="off">
+    <button type="button" class="btn pri" style="height:46px;padding:0 18px" data-a="qingAdd">담기</button></div>
+   <div class="mut" style="margin-bottom:10px">쉼표로 여러 개, 엔터로 바로 담겨요. 담긴 재료를 누르면 판매 제품을 찾아 브랜드·사진을 채울 수 있어요.</div>
    <div id="ingRows">${ings}</div></div>
-  <div class="fld"><label>만드는 법 (선택)</label><div id="stepRows"></div>
-   <button type="button" class="addrow" data-a="stepAdd">${I.plus} 단계 추가</button></div>
-  <div class="fld"><label>우리집 메모 (선택)</label><textarea id="f-memo" class="in" placeholder="예) 아이가 제일 좋아함. 다음엔 잼 조금만.">${esc(m?m.memo:'')}</textarea></div>
+
+  <div class="fld"><label>만드는 법</label>
+   <div class="xadd" style="margin:0 0 8px"><textarea id="qstep" rows="1" placeholder="빵을 가로로 갈라 주세요"></textarea>
+    <button type="button" class="btn pri" style="height:46px;padding:0 18px" data-a="stepAdd">담기</button></div>
+   <div id="stepRows"></div></div>
+
+  <div class="fld"><label>우리집 메모</label><textarea id="f-memo" class="in" rows="1" placeholder="아이가 제일 좋아함. 다음엔 잼 조금만.">${esc(m?m.memo:'')}</textarea></div>
   <datalist id="dlIng">${ingNames().map(n=>`<option value="${esc(n)}">`).join('')}</datalist>
   <datalist id="dlBrand">${brandNames().map(n=>`<option value="${esc(n)}">`).join('')}</datalist>
   <datalist id="dlAmt">${AMTS.map(n=>`<option value="${esc(n)}">`).join('')}</datalist>
   <div class="dacts"><button class="btn pri blk" data-a="saveMenu">${m?'고친 대로 저장':'메뉴판에 올리기'}</button></div>`);
- const sr=$('#stepRows'); (m&&m.steps.length?m.steps:['']).forEach(s=>sr.insertAdjacentHTML('beforeend',stepRowHTML(s)));
+ const sr=$('#stepRows'); ((m&&m.steps)||[]).forEach(s=>sr.insertAdjacentHTML('beforeend',stepRowHTML(s))); renum();
+ autoGrow($('#qstep')); autoGrow($('#f-memo'));
 }
 function saveMenu(){
  const name=$('#f-name').value.trim(); if(!name){toast('이름은 적어줘야 해요');$('#f-name').focus();return}
  const dup=S.menus.find(x=>x.name===name&&x.id!==F.editId);
  if(dup&&!F.dupOk){F.dupOk=true;toast(`'${name}' 이미 메뉴판에 있어요 — 그래도 올리려면 한 번 더 눌러주세요`);return}
- const ings=$$('#ingRows .irow').map(r=>({name:(r.dataset.name||'').trim(),amount:(r.dataset.amount||'').trim(),
-   brand:(r.dataset.brand||'').trim(),photo:r.dataset.photo||'',url:r.dataset.url||''})).filter(g=>g.name);
- const steps=$$('#stepRows .step').map(t=>t.value.trim()).filter(Boolean);
+ const ings=$$('#ingRows .irow').map(r=>{const qty=(r.querySelector('.iqn').value||'').trim(),unit=r.querySelector('.iu').value;
+   return {name:(r.dataset.name||'').trim(),qty,unit,amount:(qty?qty+unit:''),
+   brand:(r.dataset.brand||'').trim(),photo:r.dataset.photo||'',url:r.dataset.url||''}}).filter(g=>g.name);
+ const steps=$$('#stepRows .strow').map(r=>(r.dataset.t||'').trim()).filter(Boolean);
  const memo=$('#f-memo').value.trim();
  let m;
  if(F.editId){m=menu(F.editId);Object.assign(m,{name,ingredients:ings,steps,memo,photo:F.photo,rating:F.rating,cat:F.cat})}
@@ -1596,6 +1667,7 @@ function openUrl(u){if(!u)return;
  try{const a=document.createElement('a');a.href=u;a.target='_blank';a.rel='noopener';
   document.body.appendChild(a);a.click();a.remove();return}catch(e){}
  try{navigator.clipboard.writeText(u);toast('링크를 복사했어요 — 브라우저에 붙여넣어 주세요')}catch(e){}}
+function autoGrow(t){if(!t)return;t.style.height='auto';t.style.height=Math.min(t.scrollHeight,180)+'px'}
 function toast(msg){const t=$('#toast');t.textContent=msg;t.classList.add('on');
  clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('on'),2300)}
 
@@ -1611,6 +1683,9 @@ const ACT={
  swk:d=>{ui.shopWeek=d.d==='0'?0:ui.shopWeek+Number(d.d);render()},
  span:d=>{ui.shopSpan=Number(d.n);render()},
  hideDone:()=>{ui.hideDone=!ui.hideDone;render()},
+ pickPeople:()=>{const base=Math.max(1,S.people||S.family.length||2);
+  openPick('몇 명이 먹나요?',[1,2,3,4,5,6,7,8].map(n=>[String(n),n+'인'+(n===base?' (우리집)':'')]),String(ui.people||base),'setPeople')},
+ setPeople:d=>{ui.people=Number(d.v);shCloseAll();render()},
  pickHome:()=>openPick('홈에 보이는 끼니',[['d','저녁만'],['all','아침·점심·저녁 모두']],S.homeMeals||'d','setHome'),
  setHome:d=>{S.homeMeals=d.v;save();shCloseAll();render();openSettings()},
  pickSpan:()=>openPick('장보기 기본 기간',[['1','1주'],['2','2주'],['4','한 달']],String(S.shopSpanDefault||1),'setSpan'),
@@ -1680,13 +1755,14 @@ const ACT={
  xdel:(d)=>{const wk=iso(weekOf(ui.shopWeek));S.extra[wk]=(S.extra[wk]||[]).filter(x=>x.id!==d.id);
   delete S.checked[wk+'|x'+d.id];save();
   if(syncOn){pushExtra(wk,{id:d.id},true);pushChecked(wk,'x'+d.id,false)}render()},
- fphoto:()=>grabPhoto(u=>{F.photo=u;const b=$('#f-photo');b.classList.add('has');b.style.backgroundImage=`url(${u})`}),
+ fphoto:()=>grabPhoto(u=>{F.photo=u;const b=$('#f-photo');b.classList.add('has');b.innerHTML='';b.style.backgroundImage=`url(${u})`}),
  frate:(d,el)=>{F.rating=Number(d.v);
   $('#f-hearts').querySelectorAll('svg').forEach((s,i)=>s.classList.toggle('on',i<F.rating))},
  fcat:(d,el)=>{F.cat=(F.cat===d.c)?'':d.c;
   $$('.fcats .chip').forEach(c=>c.classList.toggle('on',c.dataset.c===F.cat))},
  ingAdd:()=>$('#ingRows').insertAdjacentHTML('beforeend',ingRowHTML()),
- stepAdd:()=>{$('#stepRows').insertAdjacentHTML('beforeend',stepRowHTML());renum()},
+ stepAdd:()=>{const t=$('#qstep');const v=(t.value||'').trim();if(!v){t.focus();return}
+  $('#stepRows').insertAdjacentHTML('beforeend',stepRowHTML(v));renum();t.value='';autoGrow(t);t.focus()},
  rowDel:(d,el)=>{const r=el.closest('.irow,.srow');r&&r.remove();renum()},
  ingPhoto:(d,el)=>{const row=el.closest('.irow');grabPhoto(u=>{row.dataset.photo=u;
   el.classList.add('has');el.style.backgroundImage=`url(${u})`})},
@@ -1751,13 +1827,14 @@ const ACT={
 document.addEventListener('click',e=>{const el=e.target.closest('[data-a]');if(!el)return;
  const a=ACT[el.dataset.a];if(a){e.preventDefault();a(el.dataset,el,e)}});
 document.addEventListener('input',e=>{
- if(e.target.classList&&e.target.classList.contains('iq')){const r=e.target.closest('.irow');if(r)r.dataset.amount=e.target.value.trim()}
+ if(e.target.tagName==='TEXTAREA'&&(e.target.id==='qstep'||e.target.id==='f-memo'))autoGrow(e.target);
  if(e.target.id==='q'){ui.q=e.target.value;
   clearTimeout(ui._qt);ui._qt=setTimeout(()=>{const v=$('#q');const pos=v.selectionStart;render();
    const n=$('#q');if(n){n.focus();n.setSelectionRange(pos,pos)}},350)}});
 document.addEventListener('keydown',e=>{   // 엔터로 빠른 입력 (한글 조합 중 중복 방지)
  if(e.key!=='Enter'||e.isComposing||e.keyCode===229)return;
  if(e.target.id==='qing'){e.preventDefault();ACT.qingAdd()}
+ else if(e.target.id==='qstep'&&!e.shiftKey){e.preventDefault();ACT.stepAdd()}
  else if(e.target.id==='xn'||e.target.id==='xa'){e.preventDefault();ACT.xadd()}});
 document.addEventListener('change',e=>{if(e.target.id==='impF')importJson(e.target.files[0]);
  if(e.target.classList&&e.target.classList.contains('i-n')){   // 재료명 고르면 브랜드 자동 채움
