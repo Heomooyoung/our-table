@@ -334,6 +334,7 @@ textarea.in{height:auto;min-height:58px;padding:11px 13px;resize:vertical;line-h
 .fam{display:flex;align-items:center;gap:9px;padding:8px 2px;border-bottom:1px solid var(--line2)}
 .fam:last-child{border-bottom:0}
 .fam b{flex:1;font-size:14.5px;font-weight:700}
+body.gate .tabbar,body.gate .hdr{display:none}
 #syncdot{width:9px;height:9px;border-radius:99px;background:var(--line);display:inline-block;margin-right:3px}
 #syncdot.on{background:#43A968}
 .obcode{font:800 30px var(--mono);letter-spacing:.3em;text-align:center;color:var(--acc);
@@ -494,10 +495,24 @@ function go(t){ if(t==='shop'&&!ui.shopInit){ui.shopInit=true;
  ui.tab=t; render() }
 
 function render(){
+ document.body.classList.toggle('gate',!!ui.gate);
+ if(ui.gate){$('#scr').innerHTML=vGate();return}
  $$('.tb').forEach(b=>b.classList.toggle('act',b.dataset.t===ui.tab));
  $('#scr').innerHTML=({home:vHome,menus:vMenus,plan:vPlan,shop:vShop})[ui.tab]();
  if(ui._last!==ui.tab){window.scrollTo(0,0);ui._last=ui.tab}
 }
+
+/* ── 로그인 게이트 (최초 접속) ── */
+function vGate(){return `<section class="hero" style="margin-top:46px">
+ <div class="date">FAMILY RECIPE BOX</div>
+ <h1 style="font-size:38px">우리집 식탁</h1>
+ <div class="sub">우리 가족의 맛있는 기록.<br>메뉴판 · 주간 식단 · 장보기 · 오늘 뭐 먹지 투표까지.</div>
+ <div class="dacts" style="margin-top:24px">
+  <button class="btn pri blk" data-a="oauth" data-p="kakao" style="background:#FEE500;color:#191919">카카오로 시작하기</button>
+  <button class="btn gho blk" data-a="oauth" data-p="google">Google로 시작하기</button>
+  <div class="tbtns"><button class="tbtn" data-a="guest">로그인 없이 이 폰에서만 써보기</button></div>
+ </div></section>
+ <div class="ghint" style="margin-top:14px">가족 초대 링크로 왔다면, 로그인 뒤 자동으로 이어져요.</div>`}
 
 /* ── 홈 ── */
 function vHome(){
@@ -972,29 +987,33 @@ function openFamily(toVote){
    <div class="ghint">투표는 2명부터 할 수 있어요</div>`:''}`)}
 
 /* ═══════════ 서버 동기화 (Supabase) ═══════════ */
-let sb=null,HOME=null,ME=null,HOMEINFO=null,MEMBERS=[],syncOn=false,pendingHash=null,LIVE=null;
+let sb=null,HOME=null,ME=null,HOMEINFO=null,MEMBERS=[],syncOn=false,pendingHash=null,LIVE=null,AUTHUSER=null;
 function updateSyncBadge(){const d=$('#syncdot');if(!d)return;
  d.classList.toggle('on',syncOn);d.title=syncOn?'우리집 계정 연결됨':'로컬 모드';
  if(S)render()}
 function parseHash(){const h=location.hash;if(!h)return;
  let m=h.match(/vote=([\w-]+)/);if(m)pendingHash={vote:m[1]};
  m=h.match(/join=([A-Za-z0-9]+)/);if(m)pendingHash=Object.assign(pendingHash||{},{join:m[1]});
+ if(pendingHash)try{sessionStorage.setItem('otPending',JSON.stringify(pendingHash))}catch(e){}  // 로그인 리다이렉트에도 살아남게
  history.replaceState(history.state,'',location.pathname+location.search)}
+function restorePending(){if(!pendingHash)try{const p=sessionStorage.getItem('otPending');if(p)pendingHash=JSON.parse(p)}catch(e){}}
+function consumePending(){pendingHash=null;try{sessionStorage.removeItem('otPending')}catch(e){}}
 async function syncInit(){
  if(!window.OT_CONFIG)return;
  try{const mod=await import('https://esm.sh/@supabase/supabase-js@2');
   sb=mod.createClient(OT_CONFIG.url,OT_CONFIG.anon)}catch(e){return} // 아티팩트/오프라인 → 로컬 모드
  try{
+  parseHash();restorePending();
   let {data:{session}}=await sb.auth.getSession();
-  if(!session){const r=await sb.auth.signInAnonymously();session=r.data&&r.data.session}
-  if(!session)return;
-  parseHash();
+  if(!session){ui.gate=true;render();return}   // 최초 접속 = 로그인부터
+  AUTHUSER=session.user;
   const ok=await connectAsMember(true);
-  if(!ok&&(pendingHash||!sessionStorage.getItem('obSkip')))openOnboard();
+  if(!ok&&(pendingHash||!AUTHUSER.is_anonymous||!sessionStorage.getItem('obSkip')))openOnboard();
  }catch(e){}
  updateSyncBadge()}
 async function connectAsMember(initial){
  const u=await sb.auth.getUser();const uid_=u.data&&u.data.user&&u.data.user.id;if(!uid_)return false;
+ AUTHUSER=u.data.user;
  const {data:mem,error}=await sb.from('members').select('*');
  if(error||!mem)return false;
  MEMBERS=mem;ME=mem.find(x=>x.user_id===uid_);
@@ -1006,22 +1025,22 @@ async function connectAsMember(initial){
  if(!count&&S.menus.length)await pushLocalAll();   // 서버가 비어있으면 이 폰 데이터(사진 포함) 자동 이관
  else await pullAll();
  subscribeRT();
- if(pendingHash&&pendingHash.vote){const v=pendingHash.vote;pendingHash=null;openVoteLive(v)}
+ if(pendingHash&&pendingHash.vote){const v=pendingHash.vote;consumePending();openVoteLive(v)}
  return true}
 
 /* ── 온보딩 ── */
 function openOnboard(){
  const jc=pendingHash&&pendingHash.join?pendingHash.join:'';
- sheet(`<div class="sec-h" style="margin-top:4px"><div><div class="eyebrow">Our Table</div><h2>우리집 계정 연결</h2></div></div>
-  <div class="mut" style="margin-bottom:4px">연결하면 가족이 같은 메뉴판·식단·장보기를 실시간으로 봐요. 기기마다 한 번만 하면 됩니다.</div>
-  <div class="fld"><label>내 이름</label><input id="ob-name" class="in" placeholder="예) 엄마 / 아빠 / 하몽" autocomplete="off"></div>
+ const anon=!AUTHUSER||AUTHUSER.is_anonymous;
+ const nm=(AUTHUSER&&AUTHUSER.user_metadata&&(AUTHUSER.user_metadata.full_name||AUTHUSER.user_metadata.name||AUTHUSER.user_metadata.user_name))||'';
+ sheet(`<div class="sec-h" style="margin-top:4px"><div><div class="eyebrow">Our Table</div><h2>${anon?'우리집 계정 연결':'거의 다 왔어요'}</h2></div></div>
+  <div class="mut" style="margin-bottom:4px">${anon?'연결하면 가족이 같은 메뉴판·식단·장보기를 실시간으로 봐요. 기기마다 한 번만 하면 됩니다.':'가족이 보내준 초대 코드로 합류하거나, 새로 우리집을 만들어주세요.'}</div>
+  <div class="fld"><label>내 이름</label><input id="ob-name" class="in" placeholder="예) 엄마 / 아빠 / 하몽" value="${esc(nm)}" autocomplete="off"></div>
   <div class="fld"><label>초대 코드 (가족이 보내줬다면)</label><input id="ob-code" class="in" placeholder="6자리 코드" value="${esc(jc)}" autocomplete="off" style="text-transform:uppercase;font-family:var(--mono);letter-spacing:.2em"></div>
   <div class="dacts">
    <button class="btn pri blk" data-a="obJoin">코드로 우리집 합류</button>
    <button class="btn gho blk" data-a="obCreate">새로 우리집 만들기</button>
-   <div class="tbtns"><button class="tbtn" data-a="oauth" data-p="kakao">카카오로 시작</button>
-    <button class="tbtn" data-a="oauth" data-p="google">Google로 시작</button>
-    <button class="tbtn" data-a="obSkip">나중에 — 이 폰에만</button></div></div>`)}
+   ${anon?`<div class="tbtns"><button class="tbtn" data-a="obSkip">나중에 — 이 폰에만</button></div>`:''}</div>`)}
 async function obCreate(){const n=($('#ob-name').value||'').trim();
  if(!n){toast('이름을 적어주세요');$('#ob-name').focus();return}
  try{const {data,error}=await sb.rpc('create_home',{member_name:n});if(error)throw error;
@@ -1037,7 +1056,7 @@ async function obJoin(){const n=($('#ob-name').value||'').trim(),c=($('#ob-code'
  if(!n){toast('이름을 적어주세요');return}
  if(c.length!==6){toast('초대 코드 6자리를 확인해주세요');return}
  try{const {error}=await sb.rpc('join_home',{invite_code:c,member_name:n});if(error)throw error;
-  shCloseAll();toast('우리집에 합류했어요!');connectAsMember(false)}
+  consumePending();shCloseAll();toast('우리집에 합류했어요!');connectAsMember(false)}
  catch(e){toast('코드가 맞지 않아요')}}
 function shareInvite(){const c=HOMEINFO&&HOMEINFO.code;if(!c){toast('아직 초대 코드가 없어요');return}
  shareText(`'우리집 식탁'에 합류해줘! 초대 코드: ${c}`,OT_CONFIG.page+'#join='+c)}
@@ -1316,6 +1335,9 @@ const ACT={
    <div class="dacts"><button class="btn pri blk" data-a="pzAll">전부 메뉴판에 올리기</button></div>`}},
  pzAll:()=>{if(PARSED)bulkAdd(PARSED);PARSED=null},
  oauth:d=>oauthLogin(d.p),
+ guest:async()=>{try{const r=await sb.auth.signInAnonymously();if(r.error)throw r.error;
+  AUTHUSER=r.data&&r.data.user;ui.gate=false;render();updateSyncBadge();connectAsMember(true)}
+  catch(e){toast('시작하지 못했어요 — 인터넷을 확인해주세요')}},
  buy:d=>{const u=d.s==='c'?'https://www.coupang.com/np/search?q=':'https://www.kurly.com/search?sword=';
   try{window.open(u+encodeURIComponent(d.n),'_blank')}catch(e){}},
  shopShare:()=>shareText(buildShopText())
