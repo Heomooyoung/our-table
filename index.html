@@ -852,7 +852,8 @@ function openSettings(){
    <button class="btn gho blk" data-a="impBtn">백업 파일 불러오기</button>
    <input type="file" id="impF" accept="application/json,.json" hidden>
    <button class="btn gho blk" data-a="fam">돌려찍기용 가족 명단 (${S.family.length}명)</button>
-   <div class="tbtns"><button class="tbtn warn" data-a="wipe">전부 지우고 처음부터</button></div></div>
+   <div class="tbtns">${(typeof sb!=='undefined'&&sb&&AUTHUSER)?`<button class="tbtn" data-a="logout">로그아웃</button>`:''}
+    <button class="tbtn warn" data-a="wipe">전부 지우고 처음부터</button></div></div>
   <hr class="hr"><div class="mut">휴대폰 홈 화면에 붙여두려면 — 브라우저 공유 메뉴에서 <b>‘홈 화면에 추가’</b>를 눌러주세요. 앱처럼 열려요.<br>카카오/구글 연결을 해두면 폰을 바꿔도 계정이 그대로 이어져요.</div>`)}
 
 async function exportJson(){
@@ -1060,6 +1061,17 @@ async function obJoin(){const n=($('#ob-name').value||'').trim(),c=($('#ob-code'
  catch(e){toast('코드가 맞지 않아요')}}
 function shareInvite(){const c=HOMEINFO&&HOMEINFO.code;if(!c){toast('아직 초대 코드가 없어요');return}
  shareText(`'우리집 식탁'에 합류해줘! 초대 코드: ${c}`,OT_CONFIG.page+'#join='+c)}
+function logout(){
+ const wasMember=!!HOME;
+ openConfirm(wasMember?'로그아웃할까요? 이 폰의 화면은 비우지만, 기록은 우리집 계정에 그대로 남아요.'
+  :'로그아웃할까요? 이 폰에만 있던 기록은 남겨둘게요 — 나중에 로그인하면 그대로 이어져요.',
+  '네, 로그아웃',async()=>{
+  try{await sb.auth.signOut()}catch(e){}
+  if(RTCH){try{sb.removeChannel(RTCH)}catch(e){}RTCH=null}
+  syncOn=false;HOME=null;ME=null;HOMEINFO=null;MEMBERS=[];AUTHUSER=null;
+  if(wasMember){S=seed();await flush()}
+  ui=Object.assign(ui,{gate:true,tab:'home',shopInit:false});
+  shCloseAll();render();updateSyncBadge();toast('로그아웃했어요')})}
 async function shareText(text,url){const full=url?text+'\n'+url:text;
  if(navigator.share){try{await navigator.share({text:full})}catch(e){}}
  else{try{await navigator.clipboard.writeText(full);toast('복사했어요 — 카톡에 붙여넣기')}catch(e){toast('복사가 막혀 있어요')}}}
@@ -1335,6 +1347,7 @@ const ACT={
    <div class="dacts"><button class="btn pri blk" data-a="pzAll">전부 메뉴판에 올리기</button></div>`}},
  pzAll:()=>{if(PARSED)bulkAdd(PARSED);PARSED=null},
  oauth:d=>oauthLogin(d.p),
+ logout:logout,
  guest:async()=>{try{const r=await sb.auth.signInAnonymously();if(r.error)throw r.error;
   AUTHUSER=r.data&&r.data.user;ui.gate=false;render();updateSyncBadge();connectAsMember(true)}
   catch(e){toast('시작하지 못했어요 — 인터넷을 확인해주세요')}},
