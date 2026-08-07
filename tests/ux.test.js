@@ -40,7 +40,10 @@ const sleep=ms=>new Promise(r=>setTimeout(r,ms));
  click(byText('.sw button','메뉴판에 올리기')); await sleep(60);
  ok(toast().includes('이름'),'이름 없이 저장 → 안내');
  type('#f-name','김치찜');
- q('.irow .i-n').value='돼지고기'; q('.irow .i-a').value='300g'; q('.irow .i-b').value='한돈';
+ q('#qing').value='돼지고기 300g (한돈)';
+ click('[data-a="qingAdd"]'); await sleep(60);
+ ok(qa('#ingRows .irow').length===1,'빠른 입력 → 재료 행 생성');
+ ok(q('.irow .i-n').value==='돼지고기'&&q('.irow .i-a').value==='300g'&&q('.irow .i-b').value==='한돈','이름·양·브랜드 자동 분해');
  click(byText('.sw button','메뉴판에 올리기')); await sleep(450);
  ok(g('S.menus.length')===2,'메뉴 2개로 증가');
  ok(g('ui.tab')==='menus','저장 후 메뉴판 탭 이동');
@@ -84,7 +87,7 @@ const sleep=ms=>new Promise(r=>setTimeout(r,ms));
  ok(!!byText('#scr .day.today .slot.fill .snm','김치찜'),'오늘 저녁 = 김치찜');
 
  console.log('\n[6단계] 홈 오늘 카드 · 다시 정하기');
- click(byText('.tb','오늘')); await sleep(80);
+ click(byText('.tb','홈')); await sleep(80);
  ok(!!byText('#scr .hero .nm','김치찜'),'홈에 오늘의 저녁 공지');
  click(byText('#scr .btn','다시 정하기')); await sleep(80);
  ok(!!q('#scr .hero h1'),'다시 정하기 → 질문 히어로 복귀');
@@ -115,7 +118,7 @@ const sleep=ms=>new Promise(r=>setTimeout(r,ms));
  ok(!!byText('#scr .sitem .snm2','대파'),'직접 추가 표시');
 
  console.log('\n[9단계] 가족 돌려찍기 투표');
- click(byText('.tb','오늘')); await sleep(80);
+ click(byText('.tb','홈')); await sleep(80);
  ok(!!byText('#scr .tbtn','가족 투표'),'결정 상태에도 투표 진입로(수정 반영)');
  click(byText('#scr .tbtn','가족 투표')); await sleep(100);
  ok(!!q('.sw #famN'),'가족 미설정 → 등록 유도');
@@ -211,6 +214,18 @@ const sleep=ms=>new Promise(r=>setTimeout(r,ms));
  click('[data-a="settings"]'); await sleep(80);
  ok(!!byText('.sw button','카카오 연결')&&!!byText('.sw button','Google 연결'),'소셜 로그인 버튼');
  await closeAll();
+
+ console.log('\n[15단계] 월간 달력 · 장보기 기간 확장');
+ click(byText('.tb','식단표')); await sleep(80);
+ click(byText('#scr .chip','월간 달력')); await sleep(120);
+ ok(qa('#scr .mcell').length>=28,'월간 달력 렌더');
+ click(qa('#scr .mcell:not(.dim)')[10]); await sleep(120);
+ ok(qa('#scr .day').length===7,'날짜 탭 → 해당 주간으로 이동');
+ click(byText('.tb','장보기')); await sleep(150);
+ click(byText('#scr .chip','한 달')); await sleep(100);
+ ok(g('ui.shopSpan')===4,'기간 한 달(4주) 선택');
+ ok(!!q('#scr .wknav'),'기간 확장 후 정상 렌더');
+ click(byText('#scr .chip','1주')); await sleep(80);
 
  console.log('\n────────────────────');
  console.log(`결과: ${pass} PASS / ${fail} FAIL`);
