@@ -74,7 +74,7 @@ svg{display:block}
 .strip .dcol.today{border-color:var(--acc);border-width:1.5px}
 .strip .dl{font:700 10px var(--mono);color:var(--sub);letter-spacing:.08em}
 .strip .dn{font-size:10.5px;color:var(--ink);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.strip .dn.none{color:var(--line)}
+.strip .dn.none{color:var(--sub);opacity:.5;font:600 10px var(--mono)}
 
 /* ── 가로 레일 (베스트) ── */
 .rail{display:flex;gap:10px;overflow-x:auto;padding:2px 2px 8px;scroll-snap-type:x proximity;scrollbar-width:none}
@@ -227,6 +227,7 @@ svg{display:block}
 .dhero .no{position:absolute;top:10px;left:11px;font:600 10px var(--mono);letter-spacing:.14em;
   color:#fff;background:rgba(20,26,20,.45);padding:4px 8px;border-radius:6px;backdrop-filter:blur(4px)}
 .dhero .mono-ph+.no{color:var(--acc);background:none;backdrop-filter:none}
+.dhero .mono-ph i{display:none}
 .dtit{display:flex;flex-direction:column;gap:7px}
 .dtit h3{font-size:23px;font-weight:900;letter-spacing:-.04em;line-height:1.3;text-wrap:balance}
 .dmeta{font:600 11px var(--mono);color:var(--sub);letter-spacing:.05em}
@@ -253,7 +254,7 @@ svg{display:block}
 textarea.in{height:auto;min-height:58px;padding:11px 13px;resize:vertical;line-height:1.55}
 .in::placeholder{color:var(--sub);opacity:.7}
 #f-name{height:52px;font-size:17px;font-weight:700}
-.fphoto{width:100%;height:120px;border:1.5px dashed var(--line);border-radius:13px;display:flex;
+.fphoto{width:100%;height:86px;border:1.5px dashed var(--line);border-radius:13px;display:flex;
   align-items:center;justify-content:center;gap:8px;color:var(--sub);font-size:13px;font-weight:600;
   background-size:cover;background-position:center}
 .fphoto.has{border-style:solid;color:transparent}
@@ -339,7 +340,7 @@ body.gate .tabbar,body.gate .hdr{display:none}
 #syncdot.on{background:#43A968}
 .obcode{font:800 30px var(--mono);letter-spacing:.3em;text-align:center;color:var(--acc);
   background:var(--soft);border-radius:14px;padding:18px 8px 18px calc(8px + .3em);margin:14px 0;user-select:all}
-.connbar{width:100%;margin-top:12px;background:var(--heart-soft);color:var(--heart);border:1.5px solid var(--heart);
+.connbar{width:100%;margin-top:12px;background:var(--soft);color:var(--acc);border:1.5px solid var(--acc);
   border-radius:12px;padding:11px 14px;font-size:13px;font-weight:700;text-align:left;letter-spacing:-.01em;line-height:1.5}
 
 /* ── 토스트 ── */
@@ -543,7 +544,7 @@ function vHome(){
  const days=weekDays(weekOf(0)).map(d=>{const k=iso(d);const nm=slotName((S.plan[k]||{}).d);
   return `<button class="dcol ${k===ti?'today':''}" data-a="go" data-t="plan">
    <span class="dl">${WDE[d.getDay()][0]}</span>
-   <span class="dn ${nm?'':'none'}">${nm?esc(nm):'·'}</span></button>`}).join('');
+   <span class="dn ${nm?'':'none'}">${nm?esc(nm):String(d.getDate())}</span></button>`}).join('');
  const connbar=(window.OT_CONFIG&&typeof sb!=='undefined'&&sb&&!syncOn)
   ?`<button class="connbar" data-a="ob">아직 우리집 계정에 연결 안 됐어요 — 가족과 같이 보려면 여기를 눌러 연결</button>`:'';
  return connbar+hero+
@@ -716,11 +717,11 @@ function openForm(id){const m=id?menu(id):null;
  const ings=(m&&m.ingredients.length?m.ingredients:[{}]).map(ingRowHTML).join('');
  sheet(`<div class="sec-h" style="margin-top:4px"><div><div class="eyebrow">${m?'Recipe Edit':'New Recipe'}</div>
    <h2>${m?'메뉴 고치기':'새 메뉴 올리기'}</h2></div><span class="cnt">No.${pad((m&&m.no)?m.no:S.seq)}</span></div>
-  ${m?'':`<button type="button" class="addrow" style="margin-top:14px" data-a="pz">메모 붙여넣기로 한 번에 채우기</button>`}
+  ${m?'':`<div style="display:flex;justify-content:flex-end;margin-top:8px"><button type="button" class="buy" style="margin:0" data-a="pz">메모 붙여넣기로 채우기</button></div>`}
+  <div class="fld" style="margin-top:10px"><label>이름 — 이것만 적어도 돼요</label><input id="f-name" class="in" placeholder="예) 화덕브레드 샌드위치" value="${esc(m?m.name:'')}"></div>
+  <div class="fld"><label>얼마나 맛있었나요</label><div id="f-hearts">${hearts(F.rating,'big tap','frate')}</div></div>
   <div class="fld"><button type="button" id="f-photo" class="fphoto ${F.photo?'has':''}" data-a="fphoto"
     ${F.photo?`style="background-image:url(${F.photo})"`:''}>${I.cam}<span>완성 사진 (선택)</span></button></div>
-  <div class="fld"><label>이름 — 이것만 적어도 돼요</label><input id="f-name" class="in" placeholder="예) 화덕브레드 샌드위치" value="${esc(m?m.name:'')}"></div>
-  <div class="fld"><label>얼마나 맛있었나요</label><div id="f-hearts">${hearts(F.rating,'big tap','frate')}</div></div>
   <div class="fld"><label>종류 (선택)</label><div class="fcats">${CATS.map(c=>`<button type="button" class="chip ${F.cat===c?'on':''}" data-a="fcat" data-c="${c}">${c}</button>`).join('')}</div></div>
   <div class="fld"><label>재료 (선택)</label><div id="ingRows">${ings}</div>
    <button type="button" class="addrow" data-a="ingAdd">${I.plus} 재료 추가</button></div>
@@ -842,18 +843,22 @@ function openSettings(){
    메뉴 ${S.menus.length}가지 · 데이터 약 ${kb}KB<br>${syncOn
     ?`우리집 계정 연결됨 · 코드 ${HOMEINFO?HOMEINFO.code:'—'}<br>가족: ${MEMBERS.map(x=>esc(x.name)).join(', ')||'—'}`
     :'이 브라우저 안에만 저장 중 (로컬 모드)'}</div></div>
-  <div class="dacts">
-   ${syncOn?`<button class="btn pri blk" data-a="shareInvite">가족 초대 링크 보내기 — 코드 ${HOMEINFO?HOMEINFO.code:''}</button>`
-    :`<button class="btn pri blk" data-a="ob">우리집 계정 연결하기 (가족 공유)</button>`}
-   ${window.OT_CONFIG?`<div style="display:flex;gap:8px">
+  <div class="eyebrow" style="margin:18px 0 8px">우리집</div>
+  ${syncOn?`<button class="btn pri blk" data-a="shareInvite">가족 초대 링크 보내기 — 코드 ${HOMEINFO?HOMEINFO.code:''}</button>`
+   :`<button class="btn pri blk" data-a="ob">우리집 계정 연결하기 (가족 공유)</button>`}
+  ${window.OT_CONFIG?`<div class="eyebrow" style="margin:18px 0 8px">계정</div>
+   <div style="display:flex;gap:8px">
     <button class="btn gho" style="flex:1" data-a="oauth" data-p="kakao">카카오 연결</button>
     <button class="btn gho" style="flex:1" data-a="oauth" data-p="google">Google 연결</button></div>`:''}
-   <button class="btn gho blk" data-a="exp">백업 파일 내려받기</button>
-   <button class="btn gho blk" data-a="impBtn">백업 파일 불러오기</button>
-   <input type="file" id="impF" accept="application/json,.json" hidden>
-   <button class="btn gho blk" data-a="fam">돌려찍기용 가족 명단 (${S.family.length}명)</button>
-   <div class="tbtns">${(typeof sb!=='undefined'&&sb&&AUTHUSER)?`<button class="tbtn" data-a="logout">로그아웃</button>`:''}
-    <button class="tbtn warn" data-a="wipe">전부 지우고 처음부터</button></div></div>
+  <div class="eyebrow" style="margin:18px 0 8px">데이터</div>
+  <div style="display:flex;gap:8px">
+   <button class="btn gho" style="flex:1" data-a="exp">백업 내려받기</button>
+   <button class="btn gho" style="flex:1" data-a="impBtn">백업 불러오기</button></div>
+  <input type="file" id="impF" accept="application/json,.json" hidden>
+  <div class="tbtns" style="margin-top:18px">
+   <button class="tbtn" data-a="fam">돌려찍기용 가족 명단 (${S.family.length}명)</button>
+   ${(typeof sb!=='undefined'&&sb&&AUTHUSER)?`<button class="tbtn" data-a="logout">로그아웃</button>`:''}
+   <button class="tbtn warn" data-a="wipe">전부 지우기</button></div>
   <hr class="hr"><div class="mut">휴대폰 홈 화면에 붙여두려면 — 브라우저 공유 메뉴에서 <b>‘홈 화면에 추가’</b>를 눌러주세요. 앱처럼 열려요.<br>카카오/구글 연결을 해두면 폰을 바꿔도 계정이 그대로 이어져요.</div>`)}
 
 async function exportJson(){
