@@ -662,6 +662,10 @@ const UNIT_RULES=[
 function unitFor(n){n=String(n||'').trim(); if(UNIT_MAP[n])return UNIT_MAP[n];
  for(const [re,u] of UNIT_RULES) if(re.test(n)) return u;
  return '개'}
+const KNUM={'반':0.5,'한':1,'두':2,'세':3,'네':4,'다섯':5,'여섯':6,'일곱':7,'여덟':8,'아홉':9,'열':10};
+function numOf(q){const t=String(q||'').trim(); if(KNUM[t]!=null)return KNUM[t];
+ if(/^\d+\/\d+$/.test(t)){const[a,b]=t.split('/').map(Number);return b?a/b:NaN}
+ const n=parseFloat(t.replace(/[^\d.]/g,'')); return isFinite(n)?n:NaN}
 function splitAmount(a){const t=String(a||'').trim(); if(!t)return{qty:'',unit:''};
  const m=t.match(/^([\d]+(?:[./~-][\d]+)?|반|한|두|세|네|다섯)\s*(.*)$/);
  if(m)return{qty:m[1],unit:(m[2]||'').trim()};
@@ -863,7 +867,7 @@ function shopData(){
     if(!e.brand&&g.brand)e.brand=g.brand; if(!e.photo&&g.photo)e.photo=g.photo;
     if(!e.url&&g.url)e.url=g.url;
     const sp=g.qty!=null?{qty:g.qty,unit:g.unit||''}:splitAmount(g.amount);
-    const n=parseFloat(String(sp.qty).replace(/[^\d.]/g,''));
+    const n=numOf(sp.qty);
     if(isFinite(n)&&n&&sp.unit)e.sums[sp.unit]=(e.sums[sp.unit]||0)+n;
     e.uses.push({m:m.name,a:g.amount});
     map.set(key,e)})})});
@@ -1057,7 +1061,7 @@ function splitIngredient(s){
  if(b){brand=b[1].trim();s=s.slice(0,b.index).trim()}
  const m=s.match(QTY_RE);
  if(m&&m.index>0)return {name:s.slice(0,m.index).replace(/[:,]\s*$/,'').trim(),amount:s.slice(m.index).trim(),brand,photo:''};
- return {name:s,amount:'',brand,photo:''}}
+ return {name:s,amount:'',brand,photo:'',qty:'1',unit:unitFor(s)}}
 function parseRecipes(text){
  const blocks=String(text||'').replace(/\r/g,'').split(/\n\s*\n+/).map(b=>b.trim()).filter(Boolean);
  const out=[];
