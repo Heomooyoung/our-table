@@ -235,6 +235,7 @@ const sleep=ms=>new Promise(r=>setTimeout(r,ms));
  q('#qing').value='그릭요거트';
  click('[data-a="qingAdd"]'); await sleep(60);
  click(q('#ingRows [data-a="ingFind"]')); await sleep(400);
+ ok(true,'행 안의 제품 찾기 진입');
  ok(!!q('.sw .prod'),'제품 검색 결과 렌더');
  ok(!!byText('.sw .disc','수수료'),'파트너스 고지 문구 노출');
  click(q('.sw .prod')); await sleep(300);
@@ -246,6 +247,19 @@ const sleep=ms=>new Promise(r=>setTimeout(r,ms));
  click(byText('.sw button','메뉴판에 올리기')); await sleep(450);
  const yg=g('S.menus.find(m=>m.name==="요거트볼")');
  ok(yg&&yg.ingredients[0].url.includes('coupang'),'저장된 메뉴에 구매 링크 유지');
+ // 재료 행이 하나도 없는 상태에서 입력칸 옆 돋보기로 바로 검색 (PC에서 안 보이던 문제)
+ click('.fab'); await sleep(80);
+ ok(qa('#ingRows .irow').length===0,'새 폼은 재료 행 0개');
+ ok(!!q('[data-a="qFind"]'),'행 없어도 검색 버튼 노출');
+ q('#qing').value='그릭요거트 200g';
+ click('[data-a="qFind"]'); await sleep(400);
+ ok(!!q('.sw .prod'),'행 없이 바로 제품 검색됨');
+ click(q('.sw .prod')); await sleep(300);
+ ok(qa('#ingRows .irow').length===1,'제품 선택 → 재료 행 자동 생성');
+ const nr=q('#ingRows .irow');
+ ok(nr.querySelector('.i-n').value==='그릭요거트'&&nr.querySelector('.i-a').value==='200g','입력한 이름·양 유지');
+ ok(nr.dataset.url.includes('coupang'),'새 행에 구매 링크 저장');
+ await closeAll();
 
  console.log('\n────────────────────');
  console.log(`결과: ${pass} PASS / ${fail} FAIL`);

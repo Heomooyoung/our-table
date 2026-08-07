@@ -793,8 +793,10 @@ function openForm(id){const m=id?menu(id):null;
     ${F.photo?`style="background-image:url(${F.photo})"`:''}>${I.cam}<span>완성 사진 (선택)</span></button></div>
   <div class="fld"><label>종류 (선택)</label><div class="fcats">${CATS.map(c=>`<button type="button" class="chip ${F.cat===c?'on':''}" data-a="fcat" data-c="${c}">${c}</button>`).join('')}</div></div>
   <div class="fld"><label>재료 — 쉼표로 여러 개 한 번에</label>
-   <div class="xadd" style="margin:0 0 8px"><input id="qing" list="dlIng" placeholder="돼지고기 300g, 김치 반 포기" autocomplete="off">
+   <div class="xadd" style="margin:0 0 6px"><input id="qing" list="dlIng" placeholder="돼지고기 300g, 김치 반 포기" autocomplete="off">
+    <button type="button" class="btn gho" style="height:42px;padding:0 12px" data-a="qFind" title="쿠팡에서 제품 찾기">${I.srch}</button>
     <button type="button" class="btn pri" style="height:42px;padding:0 14px" data-a="qingAdd">담기</button></div>
+   <div class="mut" style="margin-bottom:8px">돋보기를 누르면 실제 판매 제품을 찾아 브랜드·사진·구매링크까지 채워줘요.</div>
    <div id="ingRows">${ings}</div>
    <button type="button" class="addrow" data-a="ingAdd">${I.plus} 한 줄씩 직접 쓰기</button></div>
   <div class="fld"><label>만드는 법 (선택)</label><div id="stepRows"></div>
@@ -884,9 +886,9 @@ function bulkAdd(rs){rs.forEach(r=>{const m={id:uid(),no:S.seq++,name:r.name,cat
 
 /* ── 제품 검색 (쿠팡 파트너스 중계) ── */
 let FINDROW=null;
-async function openFind(row){
- const nm=(row.querySelector('.i-n').value||'').trim();
- if(!nm){toast('재료명을 먼저 적어주세요');row.querySelector('.i-n').focus();return}
+async function openFind(row,rawName){
+ const nm=(row?(row.querySelector('.i-n').value||''):(rawName||'')).trim().split(/[,，]/)[0].trim();
+ if(!nm){toast('재료명을 먼저 적어주세요');(row?row.querySelector('.i-n'):$('#qing')).focus();return}
  FINDROW=row;
  sheet(`<div id="fdbody"><div class="sec-h" style="margin-top:4px"><div><div class="eyebrow">Find Product</div>
    <h2>${esc(nm)}</h2></div></div>
@@ -909,11 +911,19 @@ async function renderFind(nm){
    ${rows||'<div class="empty"><b>검색 결과가 없어요</b><p>재료명을 조금 더 일반적으로 적어보세요.</p></div>'}
    <div class="disc">쿠팡 파트너스 활동의 일환으로, 이를 통해 일정액의 수수료를 제공받을 수 있습니다.</div>`;
  }catch(e){const el=$('#fdbody');if(el)el.innerHTML=`<div class="empty"><b>지금은 찾을 수 없어요</b><p>인터넷 연결을 확인해주세요.</p></div>`}}
-function pickProduct(i){const p=(window.__FD||[])[i];if(!p||!FINDROW)return;
- const b=FINDROW.querySelector('.i-b');
- if(!b.value){const m=String(p.name).match(/^\[?[^\]]*\]?\s*([가-힣A-Za-z0-9]+)/);if(m)b.value=m[1]}
- FINDROW.dataset.url=p.url||'';
- if(p.image){FINDROW.dataset.photo=p.image;const pb=FINDROW.querySelector('[data-a="ingPhoto"]');
+function brandOf(name){const m=String(name).replace(/^\[[^\]]*\]\s*/,'').match(/^([가-힣A-Za-z0-9]+)/);return m?m[1]:''}
+function pickProduct(i){const p=(window.__FD||[])[i];if(!p)return;
+ let row=FINDROW;
+ if(!row){                       // 행 없이 검색한 경우 → 새 행 생성
+  const q=$('#qing'),raw=(q?q.value:'').trim();
+  const parsed=raw?splitIngredient(raw.split(/[,，]/)[0]):{name:brandOf(p.name)};
+  $('#ingRows').insertAdjacentHTML('beforeend',ingRowHTML(parsed));
+  row=$('#ingRows .irow:last-child'); if(q)q.value='';
+ }
+ const b=row.querySelector('.i-b');
+ if(!b.value)b.value=brandOf(p.name);
+ row.dataset.url=p.url||'';
+ if(p.image){row.dataset.photo=p.image;const pb=row.querySelector('[data-a="ingPhoto"]');
   pb.classList.add('has');pb.style.backgroundImage=`url(${p.image})`}
  FINDROW=null;shClose();toast('제품을 담았어요 — 장보기에서 바로 살 수 있어요')}
 
@@ -1349,6 +1359,12 @@ function grabPhoto(cb){const inp=document.createElement('input');inp.type='file'
  inp.click()}
 
 /* ═══════════ 액션 ═══════════ */
+/* 새 창 열기 — 팝업 차단·iframe(에뮬레이터) 환경까지 대응 */
+function openUrl(u){if(!u)return;
+ try{const w=window.open(u,'_blank','noopener');if(w)return}catch(e){}
+ try{const a=document.createElement('a');a.href=u;a.target='_blank';a.rel='noopener';
+  document.body.appendChild(a);a.click();a.remove();return}catch(e){}
+ try{navigator.clipboard.writeText(u);toast('링크를 복사했어요 — 브라우저에 붙여넣어 주세요')}catch(e){}}
 function toast(msg){const t=$('#toast');t.textContent=msg;t.classList.add('on');
  clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('on'),2300)}
 
@@ -1473,9 +1489,10 @@ const ACT={
   AUTHUSER=r.data&&r.data.user;ui.gate=false;render();updateSyncBadge();connectAsMember(true)}
   catch(e){toast('시작하지 못했어요 — 인터넷을 확인해주세요')}},
  buy:d=>{const u=d.s==='c'?'https://www.coupang.com/np/search?q=':'https://www.kurly.com/search?sword=';
-  try{window.open(u+encodeURIComponent(d.n),'_blank')}catch(e){}},
- open:d=>{try{window.open(d.u,'_blank')}catch(e){}},
+  openUrl(u+encodeURIComponent(d.n))},
+ open:d=>openUrl(d.u),
  ingFind:(d,el)=>openFind(el.closest('.irow')),
+ qFind:()=>openFind(null,$('#qing')?$('#qing').value:''),
  fdPick:d=>pickProduct(Number(d.i)),
  shopShare:()=>shareText(buildShopText())
 };
