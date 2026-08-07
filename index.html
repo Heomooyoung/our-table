@@ -171,6 +171,17 @@ svg{display:block}
   border:1px solid var(--acc);border-radius:5px;padding:1px 5px;opacity:.85}
 .buy{font:600 10.5px var(--mono);color:var(--acc);letter-spacing:.02em;
   border-bottom:1px dotted var(--acc);margin-right:12px;cursor:pointer}
+/* ── 제품 검색 ── */
+.prod{display:flex;align-items:center;gap:11px;width:100%;text-align:left;padding:10px 2px;border-bottom:1px solid var(--line2)}
+.prod .pimg{flex:none;width:52px;height:52px;border-radius:9px;background-size:cover;background-position:center;
+  border:1px solid var(--line);background-color:var(--line2)}
+.prod .pinfo{flex:1;min-width:0}
+.prod .pn{font-size:13.5px;font-weight:600;letter-spacing:-.02em;line-height:1.4;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.prod .pp{font:700 12.5px var(--mono);color:var(--acc);margin-top:3px}
+.rk{display:inline-block;font:700 8.5px var(--mono);letter-spacing:.06em;color:#fff;background:#3B7BD9;
+  border-radius:4px;padding:1px 4px;margin-left:5px;vertical-align:1px}
+.disc{font-size:10.5px;color:var(--sub);line-height:1.5;margin-top:12px}
 .xadd{display:flex;gap:7px;margin-top:14px}
 .xadd input{flex:1;min-width:0;background:var(--card);border:1px solid var(--line);border-radius:10px;height:42px;padding:0 12px;outline:none;font-size:16px}
 .xadd input:focus{border-color:var(--acc)}
@@ -438,7 +449,8 @@ function phEl(m,cls){ if(m.photo) return `<div class="ph ${cls||''}" style="back
 window.OT_CONFIG={
  url:'https://bpevbqnadfboebntayrf.supabase.co',
  anon:'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJwZXZicW5hZGZib2VibnRheXJmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEzMzQ0MTAsImV4cCI6MjA5NjkxMDQxMH0.n39IWOm0nWKh_l-QT-G_a2kN1naYeDrzEJz73aLD3mA',
- page:'https://heomooyoung.github.io/our-table/'
+ page:'https://heomooyoung.github.io/our-table/',
+ shopApi:'https://bpevbqnadfboebntayrf.supabase.co/functions/v1/coupang'
 };
 
 /* ═══════════ 상태 ═══════════ */
@@ -654,8 +666,9 @@ function shopData(){
  days.forEach(d=>{const p=S.plan[iso(d)]||{};
   MEALS.forEach(([mk])=>{const m=p[mk]?menu(p[mk]):null; if(!m)return;
    (m.ingredients||[]).forEach(g=>{const key=g.name.trim(); if(!key)return;
-    const e=map.get(key)||{name:key,brand:'',photo:'',uses:[]};
+    const e=map.get(key)||{name:key,brand:'',photo:'',url:'',uses:[]};
     if(!e.brand&&g.brand)e.brand=g.brand; if(!e.photo&&g.photo)e.photo=g.photo;
+    if(!e.url&&g.url)e.url=g.url;
     if(!e.uses.some(u=>u.m===m.name&&u.a===g.amount))e.uses.push({m:m.name,a:g.amount});
     map.set(key,e)})})});
  const extras=(S.extra[wk]||[]);
@@ -678,13 +691,14 @@ function vShop(){
    <span class="cbox">${I.chk}</span>
    <span class="sb"><span class="snm2">${esc(it.name)}${it.brand?`<span class="brand">${esc(it.brand)}</span>`:''}</span>
     <span class="src">${it.uses.map(u=>`${esc(u.a||'적당량')} · ${esc(u.m)}`).join('<br>')}<br>
-     <span class="buy" data-a="buy" data-s="c" data-n="${esc(it.name)}">쿠팡에서 찾기</span><span class="buy" data-a="buy" data-s="k" data-n="${esc(it.name)}">컬리</span></span></span>
+     ${it.url?`<span class="buy" data-a="open" data-u="${esc(it.url)}">담아둔 제품 사기</span>`
+      :`<span class="buy" data-a="buy" data-s="c" data-n="${esc(it.name)}">쿠팡</span>`}<span class="buy" data-a="buy" data-s="k" data-n="${esc(it.name)}">컬리</span></span></span>
    ${it.photo?`<span class="thumb" style="background-image:url(${it.photo})"></span>`:''}</button>`}});
  const xArr=extras.map(x=>{const c=ck('x'+x.id);
   return {c,h:`<button class="sitem ${c?'done':''}" data-a="chk" data-k="x${x.id}">
    <span class="cbox">${I.chk}</span>
    <span class="sb"><span class="snm2">${esc(x.name)}</span><span class="src">${x.amount?esc(x.amount)+'<br>':''}
-     <span class="buy" data-a="buy" data-s="c" data-n="${esc(x.name)}">쿠팡에서 찾기</span><span class="buy" data-a="buy" data-s="k" data-n="${esc(x.name)}">컬리</span></span></span>
+     <span class="buy" data-a="buy" data-s="c" data-n="${esc(x.name)}">쿠팡</span><span class="buy" data-a="buy" data-s="k" data-n="${esc(x.name)}">컬리</span></span></span>
    <span class="sx" data-a="xdel" data-id="${x.id}" role="button" aria-label="삭제" style="color:var(--sub);width:26px;height:26px;display:grid;place-items:center">${I.x}</span></button>`}});
  // 안 산 것 먼저, 산 것은 전부 아래로
  const rows=[...rowArr.filter(r=>!r.c),...xArr.filter(r=>!r.c),
@@ -703,7 +717,8 @@ function vShop(){
   ${body}
   <div class="xadd"><input id="xn" list="dlIngS" placeholder="직접 추가 · 예) 화덕브레드" autocomplete="off"><input id="xa" class="amt" placeholder="양" autocomplete="off">
    <button class="btn pri" style="height:42px;padding:0 14px" data-a="xadd">추가</button></div>
-  <datalist id="dlIngS">${ingNames().map(n=>`<option value="${esc(n)}">`).join('')}</datalist></section>`;
+  <datalist id="dlIngS">${ingNames().map(n=>`<option value="${esc(n)}">`).join('')}</datalist>
+  ${total?`<div class="disc">쿠팡 링크는 쿠팡 파트너스 활동의 일환으로, 이를 통해 일정액의 수수료를 제공받을 수 있습니다.</div>`:''}</section>`;
 }
 
 /* ═══════════ 시트 ═══════════ */
@@ -755,9 +770,10 @@ function openDetail(id){const m=menu(id);if(!m)return;
     <button class="tbtn warn" data-a="delMenu" data-id="${m.id}">메뉴판에서 빼기</button></div></div>`)}
 
 /* ── 등록/수정 폼 ── */
-function ingRowHTML(v={}){return `<div class="irow" data-photo="${esc(v.photo||'')}">
+function ingRowHTML(v={}){return `<div class="irow" data-photo="${esc(v.photo||'')}" data-url="${esc(v.url||'')}">
  <div class="ir1"><input class="in i-n" list="dlIng" placeholder="재료명" value="${esc(v.name||'')}"><input class="in i-a" placeholder="양 · 2큰술" value="${esc(v.amount||'')}"></div>
  <div class="ir2"><input class="in i-b" list="dlBrand" placeholder="브랜드 (선택)" value="${esc(v.brand||'')}">
+  <button type="button" class="pbtn" data-a="ingFind" aria-label="제품 찾기" title="쿠팡에서 제품 찾기">${I.srch}</button>
   <button type="button" class="pbtn ${v.photo?'has':''}" data-a="ingPhoto" aria-label="재료 사진" ${v.photo?`style="background-image:url(${v.photo})"`:''}>${I.cam}</button>
   <button type="button" class="xbtn" data-a="rowDel" aria-label="재료 삭제">${I.x}</button></div></div>`}
 function stepRowHTML(v){return `<div class="srow"><b>${pad($$('#stepRows .srow').length+1)}</b>
@@ -794,7 +810,7 @@ function saveMenu(){
  const dup=S.menus.find(x=>x.name===name&&x.id!==F.editId);
  if(dup&&!F.dupOk){F.dupOk=true;toast(`'${name}' 이미 메뉴판에 있어요 — 그래도 올리려면 한 번 더 눌러주세요`);return}
  const ings=$$('#ingRows .irow').map(r=>({name:r.querySelector('.i-n').value.trim(),amount:r.querySelector('.i-a').value.trim(),
-   brand:r.querySelector('.i-b').value.trim(),photo:r.dataset.photo||''})).filter(g=>g.name);
+   brand:r.querySelector('.i-b').value.trim(),photo:r.dataset.photo||'',url:r.dataset.url||''})).filter(g=>g.name);
  const steps=$$('#stepRows .step').map(t=>t.value.trim()).filter(Boolean);
  const memo=$('#f-memo').value.trim();
  let m;
@@ -865,6 +881,41 @@ function bulkAdd(rs){rs.forEach(r=>{const m={id:uid(),no:S.seq++,name:r.name,cat
   memo:r.memo||'',ingredients:r.ingredients||[],steps:r.steps||[]};
  S.menus.push(m);if(typeof syncOn!=='undefined'&&syncOn)pushMenu(m)});
  save();shCloseAll();go('menus');toast(`${rs.length}개 메뉴를 올렸어요 — 하나씩 열어 다듬어보세요`)}
+
+/* ── 제품 검색 (쿠팡 파트너스 중계) ── */
+let FINDROW=null;
+async function openFind(row){
+ const nm=(row.querySelector('.i-n').value||'').trim();
+ if(!nm){toast('재료명을 먼저 적어주세요');row.querySelector('.i-n').focus();return}
+ FINDROW=row;
+ sheet(`<div id="fdbody"><div class="sec-h" style="margin-top:4px"><div><div class="eyebrow">Find Product</div>
+   <h2>${esc(nm)}</h2></div></div>
+  <div class="mut" style="margin-bottom:10px">고르면 브랜드·사진·구매 링크가 자동으로 채워져요.</div>
+  <div class="empty"><b>찾는 중…</b></div></div>`);
+ renderFind(nm)}
+async function renderFind(nm){
+ try{
+  const r=await fetch(`${OT_CONFIG.shopApi}?mode=search&q=${encodeURIComponent(nm)}&limit=8`);
+  const j=await r.json();const items=j.items||[];
+  const el=$('#fdbody');if(!el)return;
+  const rows=items.map((p,i)=>`<button class="prod" data-a="fdPick" data-i="${i}">
+   <span class="pimg" style="background-image:url(${esc(p.image||'')})"></span>
+   <span class="pinfo"><span class="pn">${esc(p.name)}${p.rocket?'<span class="rk">로켓</span>':''}</span>
+    <span class="pp">${Number(p.price||0).toLocaleString()}원</span></span></button>`).join('');
+  window.__FD=items;
+  el.innerHTML=`<div class="sec-h" style="margin-top:4px"><div><div class="eyebrow">Find Product</div>
+    <h2>${esc(nm)}</h2></div><span class="cnt">${items.length}건</span></div>
+   <div class="mut" style="margin-bottom:6px">고르면 브랜드·사진·구매 링크가 자동으로 채워져요.</div>
+   ${rows||'<div class="empty"><b>검색 결과가 없어요</b><p>재료명을 조금 더 일반적으로 적어보세요.</p></div>'}
+   <div class="disc">쿠팡 파트너스 활동의 일환으로, 이를 통해 일정액의 수수료를 제공받을 수 있습니다.</div>`;
+ }catch(e){const el=$('#fdbody');if(el)el.innerHTML=`<div class="empty"><b>지금은 찾을 수 없어요</b><p>인터넷 연결을 확인해주세요.</p></div>`}}
+function pickProduct(i){const p=(window.__FD||[])[i];if(!p||!FINDROW)return;
+ const b=FINDROW.querySelector('.i-b');
+ if(!b.value){const m=String(p.name).match(/^\[?[^\]]*\]?\s*([가-힣A-Za-z0-9]+)/);if(m)b.value=m[1]}
+ FINDROW.dataset.url=p.url||'';
+ if(p.image){FINDROW.dataset.photo=p.image;const pb=FINDROW.querySelector('[data-a="ingPhoto"]');
+  pb.classList.add('has');pb.style.backgroundImage=`url(${p.image})`}
+ FINDROW=null;shClose();toast('제품을 담았어요 — 장보기에서 바로 살 수 있어요')}
 
 /* ── 식단표에 넣기 (날짜 고르기) ── */
 function openChooser(id){const m=menu(id);if(!m)return;
@@ -1423,6 +1474,9 @@ const ACT={
   catch(e){toast('시작하지 못했어요 — 인터넷을 확인해주세요')}},
  buy:d=>{const u=d.s==='c'?'https://www.coupang.com/np/search?q=':'https://www.kurly.com/search?sword=';
   try{window.open(u+encodeURIComponent(d.n),'_blank')}catch(e){}},
+ open:d=>{try{window.open(d.u,'_blank')}catch(e){}},
+ ingFind:(d,el)=>openFind(el.closest('.irow')),
+ fdPick:d=>pickProduct(Number(d.i)),
  shopShare:()=>shareText(buildShopText())
 };
 document.addEventListener('click',e=>{const el=e.target.closest('[data-a]');if(!el)return;

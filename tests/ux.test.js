@@ -227,6 +227,26 @@ const sleep=ms=>new Promise(r=>setTimeout(r,ms));
  ok(!!q('#scr .wknav'),'기간 확장 후 정상 렌더');
  click(byText('#scr .chip','1주')); await sleep(80);
 
+ console.log('\n[16단계] 쿠팡 제품 검색 연동');
+ // 중계 API를 가짜 응답으로 대체 (오프라인/CI에서도 동작)
+ w.fetch=async(u)=>({json:async()=>({items:[{name:'[로켓프레시] 매일바이오 그릭요거트 무가당',price:6980,
+   image:'https://img.example/1.jpg',url:'https://link.coupang.com/re/AFF?x=1',rocket:true}],notice:'고지'})});
+ click('.fab'); await sleep(80);
+ q('#qing').value='그릭요거트';
+ click('[data-a="qingAdd"]'); await sleep(60);
+ click(q('#ingRows [data-a="ingFind"]')); await sleep(400);
+ ok(!!q('.sw .prod'),'제품 검색 결과 렌더');
+ ok(!!byText('.sw .disc','수수료'),'파트너스 고지 문구 노출');
+ click(q('.sw .prod')); await sleep(300);
+ const row=q('#ingRows .irow');
+ ok(row.dataset.url.includes('link.coupang.com'),'선택 → 구매 링크 저장');
+ ok(row.dataset.photo.includes('img.example'),'선택 → 제품 사진 저장');
+ ok(row.querySelector('.i-b').value.length>0,'선택 → 브랜드 자동 입력');
+ type('#f-name','요거트볼');
+ click(byText('.sw button','메뉴판에 올리기')); await sleep(450);
+ const yg=g('S.menus.find(m=>m.name==="요거트볼")');
+ ok(yg&&yg.ingredients[0].url.includes('coupang'),'저장된 메뉴에 구매 링크 유지');
+
  console.log('\n────────────────────');
  console.log(`결과: ${pass} PASS / ${fail} FAIL`);
  if(fails.length){console.log('실패 목록:');fails.forEach(f=>console.log(' -',f))}
