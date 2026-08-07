@@ -1,6 +1,7 @@
 /* 우리집 식탁 앱 아이콘 생성 — 법랑 그린 바탕 + 밥그릇 + 김. 순수 node (외부 라이브러리 없음) */
 const zlib=require('zlib'),fs=require('fs');
-const W=512,H=512,SS=2,SW=W*SS,SH=H*SS; // 2배 슈퍼샘플링
+const SZ=Number(process.argv[3]||512);
+const W=SZ,H=SZ,SS=2,SW=W*SS,SH=H*SS; // 2배 슈퍼샘플링
 const BG=[44,91,69],FG=[244,244,239]; // 파인 그린 / 종이 화이트
 
 function inRoundRect(x,y,w,h,r){ // (0,0)-(w,h) 라운드 사각형 내부 판정
@@ -12,7 +13,8 @@ const buf=Buffer.alloc(SW*SH*4);
 const CX=SW/2, BOWL_Y=SH*0.60, BOWL_R=SW*0.30, RIM=SW*0.016;
 for(let y=0;y<SH;y++)for(let x=0;x<SW;x++){
  const i=(y*SW+x)*4;
- if(!inRoundRect(x,y,SW,SH,SW*0.20)){buf[i+3]=0;continue}   // 모서리 밖 투명
+ const RAD=process.argv[4]==='maskable'?0:SW*0.20;
+ if(!inRoundRect(x,y,SW,SH,RAD)){buf[i+3]=0;continue}   // 모서리 밖 투명
  let c=BG;
  const dx=x-CX,dy=y-BOWL_Y;
  // 그릇: 상단 평평한 반원 + 림 라인

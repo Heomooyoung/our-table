@@ -1,5 +1,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>우리집 식탁</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#F7F7F7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0F0F0F" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="우리집 식탁">
+<link rel="apple-touch-icon" href="assets/icon-192.png">
+<link rel="icon" href="assets/icon-192.png">
 <style>
 /* ── 디자인 토큰: 종이 노트 × 법랑 그린. 밤에는 '밤의 주방' ── */
 :root{
@@ -1934,6 +1942,8 @@ async function demoOff(){
  ui.shopSpan=S.shopSpanDefault;
  autoCount();
  render();
+ if('serviceWorker' in navigator&&location.protocol==='https:')
+  navigator.serviceWorker.register('sw.js').catch(()=>{});
  if(/[#&]demo(=on)?\b/.test(location.hash)){history.replaceState(null,'',location.pathname);await demoOn();return}
  if(/[#&]demo=off\b/.test(location.hash)){history.replaceState(null,'',location.pathname);await demoOff();return}
  syncInit();
