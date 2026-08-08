@@ -7,7 +7,7 @@
 
 | 동작 | 방법 |
 |---|---|
-| 켜기 | 주소 끝에 `#demo` 붙여서 열기 → `https://heomooyoung.github.io/our-table/#demo` |
+| 켜기 | 주소 끝에 `#demo` 붙여서 열기 → `https://uritable.vercel.app/#demo` |
 | 끄기 | 홈 상단 검은 배너의 **[끄기]** 버튼, 또는 `#demo=off` 로 접속 |
 
 켤 때 원래 데이터를 브라우저에 백업해두고, 끄면 그대로 되돌립니다.

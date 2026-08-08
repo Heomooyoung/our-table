@@ -8,7 +8,8 @@
 
 | 항목 | 내용 |
 |---|---|
-| 웹 | https://heomooyoung.github.io/our-table/ (GitHub Pages, 무료) |
+| 웹 (정식) | **https://uritable.vercel.app** (Vercel, 무료 · `git push` 시 자동 배포) |
+| 웹 (구주소) | https://heomooyoung.github.io/our-table/ (GitHub Pages, 당분간 유지) |
 | 백엔드 | Supabase **무료** 프로젝트 `bapsang` (ap-southeast-1) |
 | 인증 | 익명 로그인 + 초대 코드, 카카오 로그인(앱 키 등록 대기) |
 | 저장 | Postgres + RLS(가족 단위 격리), Storage `photos`(공개 버킷) |
@@ -106,6 +107,20 @@ npx cap open ios      # Xcode에서 빌드·업로드
 즉 **Pro 한 장($25/월)으로 수백~수천 가족까지** 감당됩니다. 그 이상은 그때 수익 구조를 함께 논의할 단계입니다.
 
 ---
+
+## 2-1. 호스팅 (Vercel)
+
+- 프로젝트 `our-table` / 계정 `myscan1213-4257`
+- 주소: **uritable.vercel.app** (별칭) · our-table-nu.vercel.app (기본)
+- **GitHub 연결 완료** — `main`에 push하면 자동 배포
+- 배포 보호(Vercel Authentication)는 **꺼둠** — 켜져 있으면 방문자가 로그인 화면으로 튕김
+- Supabase 리다이렉트 허용 목록에 새·구 주소 모두 등록됨
+
+수동 배포가 필요하면:
+
+```
+npx vercel deploy --prod --yes
+```
 
 ## 3. 다음에 바로 할 수 있는 것
 
