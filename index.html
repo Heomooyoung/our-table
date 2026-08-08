@@ -729,7 +729,7 @@ function go(t){ if(t==='shop'&&!ui.shopInit){ui.shopInit=true;
 
 function render(){
  document.body.classList.toggle('gate',!!ui.gate);
- if(ui.gate){$('#scr').innerHTML=vGate();return}
+ if(ui.gate){const t=$('#tour');if(t)t.remove();$('#scr').innerHTML=vGate();return}
  $$('.tb').forEach(b=>b.classList.toggle('act',b.dataset.t===ui.tab));
  $('#scr').innerHTML=({home:vHome,menus:vMenus,plan:vPlan,shop:vShop})[ui.tab]();
  if(TSTEP>=0&&TSTEP<TOUR.length&&!$('#tour'))setTimeout(tourRender,0);
@@ -1958,24 +1958,30 @@ document.addEventListener('change',e=>{if(e.target.id==='impF')importJson(e.targ
 
 /* ═══════════ 둘러보기 투어 ═══════════ */
 const TOUR=[
- {tab:'home', t:'오늘 뭐 먹지, 여기서 끝나요',
-  d:'우리 가족이 “맛있다”고 했던 것들 중에서 오늘 한 끼를 정해요. 인터넷의 백만 개 레시피가 아니라, 우리집이 검증한 것들만요.'},
- {tab:'menus', t:'맛있었으면 이름 한 줄만',
-  d:'그게 쌓이면 우리집 메뉴판이 돼요. 재료·사진·만드는 법은 나중에 채워도 되고, 별점과 해먹은 횟수로 베스트가 저절로 정해져요.'},
- {tab:'plan', t:'일주일 식단을 미리',
-  d:'메뉴판에서 골라 요일에 넣기만 하면 돼요. 여러 날을 한 번에 고를 수도 있고, 한 달 달력으로도 볼 수 있어요.'},
- {tab:'shop', t:'장 볼 것은 알아서 모여요',
-  d:'식단에 넣은 메뉴들의 재료가 자동으로 합쳐져요. “간장 4큰술”이 아니라 “간장 1병”처럼 사는 단위로, 우리집 인원수에 맞춰서요.'},
- {tab:'home', t:'못 정하겠으면 사다리, 아니면 투표',
-  d:'가족에게 링크를 보내면 각자 폰에서 투표하고 실시간으로 개표돼요. 배달 찬스도 후보에 넣을 수 있고요.',
-  last:true},
+ {tab:'menus', t:'맛있었던 건 우리집 메뉴판에',
+  d:'가족이 “이거 맛있다” 한 메뉴를 이름 한 줄로 남겨두세요. 한 번 등록해두면 다음부터는 골라서 식단에 올리기만 하면 돼요. 별점과 해먹은 횟수로 우리집 베스트가 저절로 정해집니다.'},
+ {tab:'menus', t:'재료는 브랜드까지 찾아서', demoFind:true,
+  d:'재료를 적고 돋보기를 누르면 실제 판매 중인 제품을 찾아줘요. 고르면 브랜드·사진·구매 링크가 한 번에 채워집니다. “그때 그 빵 어디 거였지?”를 다시 묻지 않아도 돼요.'},
+ {tab:'home', t:'못 정하겠으면 가족끼리',
+  d:'오늘 메뉴가 한눈에 보이고, 정하기 어려우면 사다리를 타거나 가족 투표를 돌리세요. 링크를 보내면 각자 폰에서 찍고 실시간으로 개표돼요. 배달 찬스도 후보에 넣을 수 있고요.'},
+ {tab:'plan', t:'일주일 식단을 한 번에',
+  d:'메뉴판에서 골라 요일에 넣기만 하면 끝. 여러 날을 한 번에 선택할 수도 있고, 한 달 달력으로 지난 식단을 돌아볼 수도 있어요.'},
+ {tab:'shop', t:'핵심 — 장 볼 것이 저절로 모여요', last:true,
+  d:'짜둔 일주일 식단의 재료가 자동으로 합쳐집니다. “간장 4큰술”이 아니라 “간장 1병”처럼 사는 단위로, 우리집 인원수에 맞춰서요. 옆의 쿠팡·컬리 링크를 누르면 그 상품 페이지로 바로 갑니다.'},
 ];
 let TSTEP=0;
 function tourRender(){
  const old=$('#tour'); if(old)old.remove();
- if(TSTEP<0||TSTEP>=TOUR.length)return;
+ if(TSTEP<0||TSTEP>=TOUR.length||ui.gate)return;
  const s0=TOUR[TSTEP];
  if(ui.tab!==s0.tab){ui.tab=s0.tab;render();return tourRender()}
+ if(s0.demoFind){ if(!$('#fdbody')){ shCloseAll();
+   setTimeout(()=>{FINDROW=null;FINDQ='화덕브레드';FINDN=8;
+    sheet(`<div id="fdbody"><div class="sec-h" style="margin-top:4px"><div><div class="eyebrow">Find Product</div><h2>화덕브레드</h2></div></div>
+     <div class="empty"><b>찾는 중…</b></div></div>`);
+    renderFind('화덕브레드'); setTimeout(tourRender,60)},60);
+   return } }
+ else if(SHEETS.length)shCloseAll();
  const el=document.createElement('div');el.className='tour';el.id='tour';
  el.innerHTML=`<div class="tourin">
    <div class="tstep">${TSTEP+1} / ${TOUR.length}</div>

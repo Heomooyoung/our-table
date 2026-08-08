@@ -340,15 +340,18 @@ const sleep=ms=>new Promise(r=>setTimeout(r,ms));
  ok(g('TOUR.length')===5,'투어 5단계 정의');
  g('(function(){ui.tab="menus";render();tourStart()})()'); await sleep(200);
  ok(!!q('#tour'),'투어 카드 표시');
- ok(g('ui.tab')==='home','1단계는 홈으로 이동');
- ok(!!byText('#tour h4','오늘 뭐 먹지'),'1단계 문구');
+ ok(g('ui.tab')==='menus','1단계 → 메뉴판');
+ ok(!!byText('#tour h4','우리집 메뉴판'),'1단계: 메뉴 등록');
+ click(q('#tour [data-a="tourNext"]')); await sleep(400);
+ ok(!!byText('#tour h4','브랜드'),'2단계: 브랜드 제품 검색');
+ click(q('#tour [data-a="tourNext"]')); await sleep(300);
+ ok(g('ui.tab')==='home'&&g('SHEETS.length')===0,'3단계 → 홈(시트 정리됨)');
+ ok(!!byText('#tour h4','가족끼리'),'3단계: 함께 고르기');
  click(q('#tour [data-a="tourNext"]')); await sleep(200);
- ok(g('ui.tab')==='menus','2단계 → 메뉴판 화면으로 전환');
+ ok(g('ui.tab')==='plan','4단계 → 식단표');
+ ok(!!byText('#tour h4','일주일 식단'),'4단계: 주간 식단');
  click(q('#tour [data-a="tourNext"]')); await sleep(200);
- ok(g('ui.tab')==='plan','3단계 → 식단표');
- click(q('#tour [data-a="tourNext"]')); await sleep(200);
- ok(g('ui.tab')==='shop','4단계 → 장보기');
- click(q('#tour [data-a="tourNext"]')); await sleep(200);
+ ok(g('ui.tab')==='shop'&&!!byText('#tour h4','장 볼 것'),'5단계 → 장보기(핵심)');
  ok(!!byText('#tour .next','우리집 시작하기'),'마지막 단계 CTA');
  ok(qa('#tour .tdots i.on').length===1,'진행 점 표시');
  click(q('#tour [data-a="tourEnd"]')); await sleep(150);
@@ -356,6 +359,10 @@ const sleep=ms=>new Promise(r=>setTimeout(r,ms));
  // 탭 이동해도 되살아나지 않음
  click(byText('.tb','메뉴판')); await sleep(150);
  ok(!q('#tour'),'닫은 뒤에는 다시 안 뜸');
+ // 로그인 화면에서는 투어가 보이면 안 됨
+ g('(function(){TSTEP=0;ui.gate=true;render()})()'); await sleep(200);
+ ok(!q('#tour'),'로그인 화면에선 투어 숨김');
+ g('(function(){TSTEP=-1;ui.gate=false;render()})()'); await sleep(150);
 
  console.log('\n────────────────────');
  console.log(`결과: ${pass} PASS / ${fail} FAIL`);
