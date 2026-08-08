@@ -1,0 +1,7 @@
+node_modules
+tests
+package-lock.json
+supabase
+assets/make_icon.js
+DEPLOY.md
+README.md
