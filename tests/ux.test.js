@@ -336,6 +336,27 @@ const sleep=ms=>new Promise(r=>setTimeout(r,ms));
  ok(!!q('[data-a="guest"]'),'게스트 진입도 유지');
  g('(function(){ui.gate=false;render()})()'); await sleep(120);
 
+ console.log('\n[19단계] 둘러보기 투어');
+ ok(g('TOUR.length')===5,'투어 5단계 정의');
+ g('(function(){ui.tab="menus";render();tourStart()})()'); await sleep(200);
+ ok(!!q('#tour'),'투어 카드 표시');
+ ok(g('ui.tab')==='home','1단계는 홈으로 이동');
+ ok(!!byText('#tour h4','오늘 뭐 먹지'),'1단계 문구');
+ click(q('#tour [data-a="tourNext"]')); await sleep(200);
+ ok(g('ui.tab')==='menus','2단계 → 메뉴판 화면으로 전환');
+ click(q('#tour [data-a="tourNext"]')); await sleep(200);
+ ok(g('ui.tab')==='plan','3단계 → 식단표');
+ click(q('#tour [data-a="tourNext"]')); await sleep(200);
+ ok(g('ui.tab')==='shop','4단계 → 장보기');
+ click(q('#tour [data-a="tourNext"]')); await sleep(200);
+ ok(!!byText('#tour .next','우리집 시작하기'),'마지막 단계 CTA');
+ ok(qa('#tour .tdots i.on').length===1,'진행 점 표시');
+ click(q('#tour [data-a="tourEnd"]')); await sleep(150);
+ ok(!q('#tour'),'그만 보기 → 카드 제거');
+ // 탭 이동해도 되살아나지 않음
+ click(byText('.tb','메뉴판')); await sleep(150);
+ ok(!q('#tour'),'닫은 뒤에는 다시 안 뜸');
+
  console.log('\n────────────────────');
  console.log(`결과: ${pass} PASS / ${fail} FAIL`);
  if(fails.length){console.log('실패 목록:');fails.forEach(f=>console.log(' -',f))}
