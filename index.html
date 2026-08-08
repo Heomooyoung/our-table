@@ -1969,7 +1969,7 @@ const TOUR=[
  {tab:'shop', t:'핵심 — 장 볼 것이 저절로 모여요', last:true,
   d:'짜둔 일주일 식단의 재료가 자동으로 합쳐집니다. “간장 4큰술”이 아니라 “간장 1병”처럼 사는 단위로, 우리집 인원수에 맞춰서요. 옆의 쿠팡·컬리 링크를 누르면 그 상품 페이지로 바로 갑니다.'},
 ];
-let TSTEP=0;
+let TSTEP=-1;   // -1 = 투어 꺼짐 (시작 전에는 절대 뜨지 않게)
 function tourRender(){
  const old=$('#tour'); if(old)old.remove();
  if(TSTEP<0||TSTEP>=TOUR.length||ui.gate)return;
