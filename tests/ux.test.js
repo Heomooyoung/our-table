@@ -322,6 +322,20 @@ const sleep=ms=>new Promise(r=>setTimeout(r,ms));
   await closeAll();}
  else ok(false,'바꾸기 버튼 노출');
 
+ console.log('\n[18단계] 공유 준비 — 둘러보기·의견');
+ ok(!!g('typeof openFeedback')&&g('typeof openFeedback')==='function','의견 보내기 존재');
+ click('[data-a="settings"]'); await sleep(100);
+ ok(!!byText('.sw .srow','의견 보내기'),'설정에 의견 보내기');
+ click(byText('.sw .srow','의견 보내기')); await sleep(150);
+ ok(!!q('#fbMsg'),'의견 입력 시트');
+ click(byText('.sw button','보내기')); await sleep(200);
+ ok(toast().includes('내용')||!!q('#fbMsg'),'빈 내용이면 전송 안 됨');
+ await closeAll();
+ g('(function(){ui.gate=true;render()})()'); await sleep(120);
+ ok(!!q('[data-a="peek"]'),'게이트에 먼저 둘러보기');
+ ok(!!q('[data-a="guest"]'),'게스트 진입도 유지');
+ g('(function(){ui.gate=false;render()})()'); await sleep(120);
+
  console.log('\n────────────────────');
  console.log(`결과: ${pass} PASS / ${fail} FAIL`);
  if(fails.length){console.log('실패 목록:');fails.forEach(f=>console.log(' -',f))}

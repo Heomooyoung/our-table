@@ -726,6 +726,7 @@ function vGate(){return `<section class="hero" style="margin-top:46px">
  <div class="dacts" style="margin-top:24px">
   <button class="btn pri blk" data-a="oauth" data-p="kakao" style="background:#FEE500;color:#191919">카카오로 시작하기</button>
   <button class="btn gho blk" data-a="oauth" data-p="google">Google로 시작하기</button>
+  <button class="btn gho blk" data-a="peek">먼저 둘러보기 — 어떤 앱인지 보기</button>
   <div class="tbtns"><button class="tbtn" data-a="guest">로그인 없이 이 폰에서만 써보기</button></div>
  </div></section>
  <div class="ghint" style="margin-top:14px">가족 초대 링크로 왔다면, 로그인 뒤 자동으로 이어져요.</div>`}
@@ -786,7 +787,9 @@ function vHome(){
    <span class="wtx"><span class="wm ${nm?'':'none'}">${nm?esc(nm):'비어있음'}</span>
     ${sub?`<span class="wsub">${esc(sub)}</span>`:''}</span>
    ${k===ti?'<span class="wt">오늘</span>':(n>1?`<span class="wc">${n}끼</span>`:'')}</button>`}).join('');
- const demobar=S._demo?`<div class="demobar">데모 데이터로 보는 중 <button data-a="demoOff">끄기</button></div>`:'';
+ const demobar=S._demo?(ui.peek
+   ?`<div class="demobar">예시로 둘러보는 중이에요 <button data-a="startNow">우리집 시작하기</button></div>`
+   :`<div class="demobar">데모 데이터로 보는 중 <button data-a="demoOff">끄기</button></div>`):'';
  const connbar=(!S._demo&&window.OT_CONFIG&&typeof sb!=='undefined'&&sb&&!syncOn)
   ?`<button class="connbar" data-a="ob">아직 우리집 계정에 연결 안 됐어요 — 가족과 같이 보려면 여기를 눌러 연결</button>`:'';
  return demobar+connbar+hero+
@@ -1283,6 +1286,11 @@ function openSettings(){
   <div class="mut" style="margin-top:8px">로그인하면 가족과 자동으로 동기화돼서 백업이 필요 없어요.</div>`:''}
   <input type="file" id="impF" accept="application/json,.json" hidden>
 
+  <div class="sgrp">의견</div>
+  <div class="slist">
+   ${srow('만든 사람에게 의견 보내기',{value:'불편한 점·바라는 것',action:'fbOpen'})}
+  </div>
+
   <div class="sgrp">정보</div>
   <div class="slist">
    ${srow('저장된 메뉴',{value:`${S.menus.length}가지 · ${kb}KB`,chev:false})}
@@ -1349,6 +1357,27 @@ function openDay(date){
    <b>${d.getMonth()+1}월 ${d.getDate()}일 ${WDK[d.getDay()]}요일</b></div>
   <div class="meals">${MEALS.map(([mk])=>mealCard(mk,date)).join('')}</div>
   <div class="ghint" style="margin-top:14px">칸을 누르면 메뉴를 고르거나 바꿀 수 있어요</div>`)}
+
+/* ── 의견 보내기 ── */
+function openFeedback(){
+ sheet(`<div class="shead"><button class="x icobtn" data-a="shClose" aria-label="닫기">${I.lt}</button><b>의견 보내기</b></div>
+  <div class="mut" style="margin-bottom:12px">불편했던 점, 있으면 좋겠는 기능, 뭐든 좋아요. 짧아도 큰 도움이 됩니다.</div>
+  <div class="fld" style="margin-top:0"><textarea id="fbMsg" class="in" rows="4" placeholder="예) 장보기 목록을 마트에서 볼 때 글씨가 좀 작아요"></textarea></div>
+  <div class="fld"><label>답장받을 곳 (선택)</label><input id="fbTo" class="in" placeholder="카톡 아이디·이메일 등" autocomplete="off"></div>
+  <div class="dacts"><button class="btn pri blk" data-a="fbSend">보내기</button></div>`);
+ setTimeout(()=>{const t=$('#fbMsg');if(t){t.style.height='auto';t.style.height='96px'}},50)}
+async function sendFeedback(){
+ const m=($('#fbMsg').value||'').trim();
+ if(!m){toast('내용을 적어주세요');$('#fbMsg').focus();return}
+ const contact=($('#fbTo').value||'').trim();
+ if(!sb||!AUTHUSER){ // 서버 연결 전이면 공유로 대신
+  shareText('[우리집 식탁 의견]\n'+m+(contact?'\n연락: '+contact:''));shClose();return}
+ try{
+  const {error}=await sb.from('feedback').insert({user_id:AUTHUSER.id,home_id:HOME,message:m,contact,
+   ua:(navigator.userAgent||'').slice(0,180)});
+  if(error)throw error;
+  shClose();toast('보냈어요 — 읽고 반영할게요. 고맙습니다!');
+ }catch(e){toast('전송이 안 됐어요 — 잠시 뒤 다시 시도해주세요')}}
 
 /* ── 확인 ── */
 function openConfirm(msg,yes,fn){CONF=fn;
@@ -1529,7 +1558,10 @@ async function obCreate(){const n=($('#ob-name').value||'').trim();
    <div class="obcode">${r.code}</div>
    <div class="dacts"><button class="btn pri blk" data-a="shareInvite">가족에게 초대 링크 보내기</button>
     <button class="btn gho blk" data-a="obDone">시작하기</button></div>`)}
- catch(e){toast('만들지 못했어요 — 인터넷을 확인해주세요')}}
+ catch(e){const m=String(e&&e.message||'');
+  if(m.includes('TOO_MANY_HOMES'))toast('한 계정으로는 우리집을 3개까지 만들 수 있어요');
+  else if(m.includes('RATE_LIMITED'))toast('지금 접속이 많아요 — 잠시 뒤 다시 시도해주세요');
+  else toast('만들지 못했어요 — 인터넷을 확인해주세요')}}
 async function obJoin(){const n=($('#ob-name').value||'').trim(),c=($('#ob-code').value||'').trim();
  if(!n){toast('이름을 적어주세요');return}
  if(c.length!==6){toast('초대 코드 6자리를 확인해주세요');return}
@@ -1867,6 +1899,11 @@ const ACT={
   oauth:d=>oauthLogin(d.p),
  logout:logout,
  demoOff:()=>demoOff(),
+ fbOpen:()=>openFeedback(),
+ fbSend:()=>sendFeedback(),
+ startNow:async()=>{ui.peek=false;await demoOff();ui.gate=true;render()},
+ peek:async()=>{ui.gate=false;ui.peek=true;render();await demoOn();
+  toast('둘러보기 중이에요 — 마음에 들면 시작하기를 눌러주세요')},
  guest:async()=>{try{const r=await sb.auth.signInAnonymously();if(r.error)throw r.error;
   AUTHUSER=r.data&&r.data.user;ui.gate=false;render();updateSyncBadge();connectAsMember(true)}
   catch(e){toast('시작하지 못했어요 — 인터넷을 확인해주세요')}},
