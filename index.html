@@ -587,7 +587,8 @@ function phEl(m,cls){ if(m.photo) return `<div class="ph ${cls||''}" style="back
 window.OT_CONFIG={
  url:'https://bpevbqnadfboebntayrf.supabase.co',
  anon:'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJwZXZicW5hZGZib2VibnRheXJmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEzMzQ0MTAsImV4cCI6MjA5NjkxMDQxMH0.n39IWOm0nWKh_l-QT-G_a2kN1naYeDrzEJz73aLD3mA',
- page:'https://heomooyoung.github.io/our-table/',
+ // 주소는 실행 중인 위치에서 자동으로 잡는다 — 도메인을 옮겨도 초대·투표 링크가 안 깨짐
+ page:(location.origin+location.pathname).replace(/index\.html$/,''),
  shopApi:'https://bpevbqnadfboebntayrf.supabase.co/functions/v1/coupang'
 };
 
