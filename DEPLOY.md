@@ -14,7 +14,7 @@
 | 인증 | **카카오·구글 로그인만** (익명 로그인은 꺼둠). 로그인하면 우리집이 자동 생성 |
 | 가족 합류 | 초대 **링크** 하나 — 열고 로그인하면 끝. 코드 입력 화면 없음 |
 | 저장 | Postgres + RLS(가족 단위 격리), Storage `photos`(`<home_id>/` 폴더 강제) |
-| 외부 | 쿠팡 파트너스 중계 Edge Function `coupang` — 배포됨(키 재발급 필요) |
+| 외부 | 쿠팡 파트너스 중계 Edge Function `coupang` — **동작 중** (인앱 제품 찾기·파트너스 링크) |
 | 앱화 | **PWA 완료** — 홈 화면 설치·전체화면·오프라인 실행 |
 
 ---
@@ -178,33 +178,33 @@ npx vercel deploy --prod --yes
 변경분 SQL은 `supabase/schema-v2.sql`. 새 프로젝트를 또 만들 일이 생기면
 `schema.sql` → `analytics.sql` → `schema-v2.sql` 순서로 돌리면 된다.
 
-### 아직 사장님 손이 필요한 것
+### 외부 연동 — 전부 연결 완료 (2026-08-09)
 
-1. **카카오 콘솔에 콜백 주소 등록** — [카카오 개발자 콘솔](https://developers.kakao.com)
-   → 내 애플리케이션 → 카카오 로그인 → **Redirect URI**에 아래 한 줄이 있어야 한다.
-   옛 프로젝트 주소(`bpevbqnadfboebntayrf...`)만 있으면 로그인이 튕긴다.
-   ```
-   https://agiclnnwevimdkwaufdl.supabase.co/auth/v1/callback
-   ```
-   같은 화면에서 **활성화 설정 ON**, 동의항목에 **닉네임**(선택 동의라도) 체크.
+| 연동 | 상태 | 어디에 값이 있나 |
+|---|---|---|
+| 카카오 로그인 | ✅ 실계정 확인 | Supabase Auth · Redirect URI는 카카오 콘솔 |
+| 구글 로그인 | ✅ 실계정 확인 | Supabase Auth · Redirect URI는 GCP 콘솔 |
+| 쿠팡 파트너스 | ✅ 인앱 제품 찾기 동작 | Edge Functions → Secrets |
 
-2. **구글 로그인 키 발급** — 아직 어디에도 없다(옛 프로젝트에도 없음).
-   [Google Cloud Console](https://console.cloud.google.com) → API 및 서비스 → 사용자 인증 정보
-   → 사용자 인증 정보 만들기 → **OAuth 클라이언트 ID** → 웹 애플리케이션
-   - 승인된 리디렉션 URI: `https://agiclnnwevimdkwaufdl.supabase.co/auth/v1/callback`
-   - 나온 **클라이언트 ID**와 **클라이언트 보안 비밀번호**를
-     Supabase → Authentication → Sign In / Providers → Google 에 붙여넣고 켜기
+세 곳 모두 **Redirect URI는 같은 주소** 하나다.
+```
+https://agiclnnwevimdkwaufdl.supabase.co/auth/v1/callback
+```
 
-3. **쿠팡 파트너스 키 재발급** — 지금 키는 쿠팡이 거부한다
-   (`Specified key is not registered`). 재발급 후 Supabase →
-   Edge Functions → Secrets 의 `COUPANG_ACCESS_KEY`·`COUPANG_SECRET_KEY` 교체.
+값을 바꿀 일이 생기면, 넣기 전에 **해당 서비스에 직접 물어 검증**하는 게 빠르다.
+가짜 인증코드로 토큰 발급을 시도하면, 자격이 틀렸는지(`invalid_client`·`KOE010`)
+코드만 틀렸는지(`invalid_grant`·`KOE320`) 구분된다. 실제로 이 방법으로
+"카카오 secret이 틀렸다"를 로그인 시도 없이 짚어냈다.
+
+> 함정 하나: Supabase Management API가 돌려주는 `external_*_secret`은 **암호화된 값**(64자)이다.
+> 그걸 다른 프로젝트에 평문 secret으로 옮기면 당연히 거부당한다. 프로바이더 키는 항상 원본 콘솔에서 가져올 것.
 
 ### 쿠팡은 두 가지다 (헷갈리기 쉬움)
 
 | 기능 | 어디에 있나 | 서버 필요? | 상태 |
 |---|---|---|---|
-| **쿠팡·컬리 링크 버튼** | 장보기 목록의 재료 옆 | 아니오 — 검색 페이지를 열 뿐 | **항상 동작** |
-| **인앱 제품 찾기** | 메뉴 등록 → 재료 옆 '찾기' (사진·가격·브랜드 자동 채움) | 예 — `coupang` 함수 | 키 거부로 **안 됨** |
+| **쿠팡·컬리 링크 버튼** | 장보기 목록의 재료 옆 | 아니오 — 검색 페이지를 열 뿐 | ✅ 동작 |
+| **인앱 제품 찾기** | 메뉴 등록 → 재료 옆 '찾기' (사진·가격·브랜드 자동 채움) | 예 — `coupang` 함수 | ✅ 동작 (파트너스 링크 포함) |
 
 ## 2-2. 누가 들어왔는지 보기 (테스트 관찰)
 
@@ -230,20 +230,23 @@ npx vercel deploy --prod --yes
 
 ## 3. 다음에 바로 할 수 있는 것
 
-- [ ] **카카오 콘솔에 새 콜백 주소 등록** → 카카오 로그인 완성 (2-1-2 참고)
-- [ ] **구글 OAuth 키 발급** → 구글 로그인 완성 (2-1-2 참고)
-- [ ] **쿠팡 파트너스 키 재발급** → 인앱 제품 찾기 복구 (2-1-2 참고)
+- [ ] 계정·데이터 삭제 기능 (개인정보 요구사항이자 Apple 필수)
   ```
-  # 함수 자체는 이미 배포돼 있다. 다시 올릴 일이 생기면:
+  # coupang 함수를 다시 올릴 일이 생기면:
   npx supabase link --project-ref agiclnnwevimdkwaufdl
   npx supabase functions deploy coupang
   ```
-- [ ] 웹푸시(투표 알림) — PWA 상태에서 바로 가능, iOS는 홈 화면 추가 필요
+- [ ] 웹푸시(투표 알림) — **앱(Capacitor)으로 옮길 때 함께**. 지금 앱 안에서는
+      투표가 올라오면 홈에 배너가 뜨는 방식으로 대신하고 있다. 웹푸시는 iOS에서
+      사파리로 홈 화면에 추가한 경우에만 되고 iOS 크롬은 아예 지원하지 않아,
+      웹 상태로는 실사용 확인이 어렵다.
 - [ ] 계정·데이터 삭제 기능
 - [x] ~~전용 Supabase 프로젝트 이관~~ (2026-08-09 완료 — 2-1-1 참고)
 - [x] ~~`coupang` Edge Function 배포~~ (2026-08-09 완료)
 - [x] ~~가입·초대 흐름 단순화~~ (v4.0 — 2-1-2 참고)
 - [x] ~~우리집 무제한 생성·사진 경로·비밀투표 보완~~ (v4.0)
+- [x] ~~카카오·구글 로그인 연결~~ (2026-08-09 — 실계정 확인)
+- [x] ~~쿠팡 파트너스 키 교체 → 인앱 제품 찾기~~ (2026-08-09)
 - [ ] Supabase Pro 전환
 - [ ] 약관·개인정보처리방침 페이지
 - [ ] Capacitor 스캐폴드 (Mac에서 빌드)
