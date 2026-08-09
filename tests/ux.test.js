@@ -344,6 +344,21 @@ const sleep=ms=>new Promise(r=>setTimeout(r,ms));
  ok(!q('[data-a="obJoin"]')&&!q('[data-a="obCreate"]'),'합류/새로만들기 2지선다 사라짐');
  g('(function(){pendingHash=null;ui.gate=false;render()})()'); await sleep(120);
 
+ console.log('\n[18-2-2단계] 로그인하고 돌아왔을 때 주소 처리');
+ w.history.replaceState({},'','/#access_token=AAA&refresh_token=BBB&expires_in=3600');
+ ok(g('hasAuthParam()')===true,'토큰이 붙은 주소를 알아본다');
+ g('parseHash()');
+ ok(w.location.hash.includes('access_token'),'토큰을 지우지 않는다 (supabase가 읽기 전)');
+ ok(g('oauthError()')==='','정상 복귀에는 오류 메시지 없음');
+ w.history.replaceState({},'','/#error=server_error&error_code=unexpected_failure&error_description=Bad+client+credentials');
+ ok(g('oauthError()')==='Bad client credentials','실패 사유를 주소에서 읽어낸다');
+ w.history.replaceState({},'','/#join=ABC123');
+ ok(g('hasAuthParam()')===false,'초대 링크는 인증 파라미터가 아니다');
+ g('parseHash()');
+ ok(w.location.hash==='','초대 코드는 읽은 뒤 주소에서 지운다');
+ ok(g('pendingHash&&pendingHash.join')==='ABC123','초대 코드는 기억해둔다');
+ g('consumePending()');
+
  console.log('\n[18-3단계] 자동 시작 · 환영 화면');
  ok(g('typeof autoSetup')==='function','로그인 후 자동 시작 함수 존재');
  ok(g('typeof openOnboard')==='undefined','옛 온보딩 시트 제거됨');
