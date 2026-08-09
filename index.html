@@ -1602,7 +1602,16 @@ function oauthError(){
   return m?decodeURIComponent(m[1].replace(/\+/g,' ')):''};
  const desc=pick('error_description'), code=pick('error_code')||pick('error');
  if(!desc&&!code)return '';
- return desc||code}
+ return {raw:desc||code, msg:oauthMsg(desc||code)}}
+/* 로그인 실패 사유는 영어로 온다. 그대로 보여주면 아무도 못 알아보니 할 일을 알려주는 말로 바꾼다.
+   가장 흔한 건 '시간 초과' — 로그인 요청은 5분만 유효해서, 카카오·구글 화면에서 오래 머무르면 만료된다. */
+function oauthMsg(e){const t=String(e||'').toLowerCase();
+ if(t.includes('expired')||t.includes('state'))return '시간이 좀 지나서 다시 해야 해요. 한 번 더 눌러주세요';
+ if(t.includes('access_denied')||t.includes('cancel'))return '로그인을 취소하셨어요';
+ if(t.includes('email'))return '이메일 제공에 동의해야 로그인할 수 있어요';
+ if(t.includes('disabled')||t.includes('provider'))return '지금은 이 방법으로 로그인할 수 없어요';
+ if(t.includes('network')||t.includes('timeout'))return '인터넷 연결을 확인하고 다시 눌러주세요';
+ return '다시 한 번 눌러주세요'}
 function restorePending(){if(!pendingHash)try{const p=sessionStorage.getItem('otPending');if(p)pendingHash=JSON.parse(p)}catch(e){}}
 function consumePending(){pendingHash=null;try{sessionStorage.removeItem('otPending')}catch(e){}}
 async function syncInit(){
@@ -1615,7 +1624,8 @@ async function syncInit(){
   const oerr=oauthError();
   let {data:{session}}=await sb.auth.getSession();
   if(!session){cleanUrl();ui.gate=true;render();
-   if(oerr){toast('로그인하지 못했어요 — '+oerr);logVisit('login_fail',oerr)}   // 조용히 튕기지 않는다
+   // 조용히 튕기지 않는다 — 사람 말로 알려주고, 원인 추적용 원문은 로그에 남긴다
+   if(oerr){toast(oerr.msg,4200);logVisit('login_fail',oerr.raw)}
    if(WANTLOG)openVisitLog();return}                  // 최초 접속 = 로그인부터
   cleanUrl();                                         // 세션이 잡혔으니 주소에서 토큰을 지운다
   AUTHUSER=session.user;
@@ -1896,8 +1906,8 @@ function openUrl(u){if(!u)return;
   document.body.appendChild(a);a.click();a.remove();return}catch(e){}
  try{navigator.clipboard.writeText(u);toast('링크를 복사했어요 — 브라우저에 붙여넣어 주세요')}catch(e){}}
 function autoGrow(t){if(!t)return;t.style.height='auto';t.style.height=Math.min(t.scrollHeight,180)+'px'}
-function toast(msg){const t=$('#toast');t.textContent=msg;t.classList.add('on');
- clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('on'),2300)}
+function toast(msg,ms){const t=$('#toast');t.textContent=msg;t.classList.add('on');
+ clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('on'),ms||2300)}
 
 const ACT={
  go:d=>go(d.t),
