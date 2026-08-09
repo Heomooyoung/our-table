@@ -4,16 +4,17 @@
 
 ---
 
-## 지금 상태 (2026-08-08)
+## 지금 상태 (2026-08-09)
 
 | 항목 | 내용 |
 |---|---|
 | 웹 (정식) | **https://uritable.vercel.app** (Vercel, 무료 · `git push` 시 자동 배포) |
 | 웹 (구주소) | https://heomooyoung.github.io/our-table/ (GitHub Pages, 당분간 유지) |
 | 백엔드 | Supabase **무료** 전용 프로젝트 `uritable` (`agiclnnwevimdkwaufdl`, Seoul) |
-| 인증 | 익명 로그인 + 초대 코드, 카카오 로그인(앱 키 등록 대기) |
-| 저장 | Postgres + RLS(가족 단위 격리), Storage `photos`(공개 버킷) |
-| 외부 | 쿠팡 파트너스 중계 Edge Function `coupang` — **새 프로젝트에 아직 미배포** |
+| 인증 | **카카오·구글 로그인만** (익명 로그인은 꺼둠). 로그인하면 우리집이 자동 생성 |
+| 가족 합류 | 초대 **링크** 하나 — 열고 로그인하면 끝. 코드 입력 화면 없음 |
+| 저장 | Postgres + RLS(가족 단위 격리), Storage `photos`(`<home_id>/` 폴더 강제) |
+| 외부 | 쿠팡 파트너스 중계 Edge Function `coupang` — 배포됨(키 재발급 필요) |
 | 앱화 | **PWA 완료** — 홈 화면 설치·전체화면·오프라인 실행 |
 
 ---
@@ -147,7 +148,6 @@ npx vercel deploy --prod --yes
 
 | 확인한 것 | 결과 |
 |---|---|
-| 익명 로그인 | 정상 (`anonymous_users: true`) |
 | 우리집 만들기 → 초대 코드 → 다른 기기 합류 | 정상 |
 | 메뉴 등록 · No. 서버 발급 트리거 | 정상 (`no=1` 자동 부여) |
 | 식단표 배치 | 정상 |
@@ -155,24 +155,56 @@ npx vercel deploy --prod --yes
 | 잘못된 초대 코드 | `INVALID_CODE`로 거절 |
 | 실시간 동기화 | 정상 — A가 등록한 메뉴가 B 기기에 즉시 도착 |
 | **실시간에도 RLS 적용** | 정상 — 남의 집 변경은 아예 안 옴 (채널명이 `home-sync` 공용이라 확인함) |
-| 접속 로그 쓰기(익명 포함) / 읽기 차단 | 정상 — 비관리자는 빈 배열 |
+| 접속 로그 쓰기(로그인 전 포함) / 읽기 차단 | 정상 — 비관리자는 빈 배열 |
 | 의견 보내기 / 읽기 차단 | 정상 |
 | 사진 업로드 + 공개 URL 읽기 | 정상 |
 | 남의 사진 목록 훑기 · 덮어쓰기 · 삭제 | 전부 막힘 |
 | 옛 앱 테이블(`elders`·`meals`·`medications`) 혼입 | 없음 — 분리 성공 |
-| 로컬 UX 테스트 `npm test` | 140 PASS / 0 FAIL |
+| 로컬 UX 테스트 `npm test` | 156 PASS / 0 FAIL |
 | 배포본(uritable.vercel.app)·구주소 설정 | 둘 다 새 프로젝트를 봄 |
 
-아직 안 되는 것 (알고 있는 것):
+### 그 뒤 손본 것 (v4.0)
 
-- **`coupang` Edge Function 미배포** — 호출 시 404. 장보기의 쿠팡 검색만 동작 안 함 (3장 참고)
-- **카카오 로그인 미설정** — 프로바이더 `kakao: false`
-- **우리집 무제한 생성** — 익명 계정 하나로 연속 3번 만들어짐 (2장 항목 4)
-- **사진 경로에 `home_id` 강제 없음** — 로그인만 하면 `photos/아무데나`로 올릴 수 있음 (2장 항목 3)
-- **투표는 DB상 비밀이 아님** — 같은 집 식구면 `ballots`에서 누가 뭘 찍었는지 조회 가능.
-  지금은 한 폰을 돌려 쓰는 방식이라 문제가 없지만, **원격 투표를 붙일 때 정책을 좁혀야 한다.**
+| 전에는 | 지금은 |
+|---|---|
+| 익명 계정 하나로 우리집을 무제한 생성 | **계정당 우리집 하나** — `create_home`이 이미 있으면 그 집을 돌려준다 |
+| 로그인만 하면 `photos/아무데나` 업로드 | **`photos/<home_id>/` 안에만** — 남의 집 폴더는 거부 |
+| 같은 집 식구면 `ballots`로 누가 뭘 찍었는지 조회 | **자기 표만 보인다.** 개표는 `vote_tally`가 숫자만 돌려줌 |
+| (위 때문에 실시간 개표가 끊길 수 있음) | 표가 들어오면 `votes.updated_at`을 건드려 개표 신호를 보냄 |
+| 익명 로그인 켜짐 | **꺼짐** — 카카오·구글만 입구 |
+| `coupang` 함수 미배포 | **배포됨** (다만 쿠팡 키 자체가 거부됨 — 아래 참고) |
+| 카카오 키가 옛 프로젝트에만 있음 | 새 프로젝트로 이관 + 리다이렉트 허용 목록·`site_url` 재설정 |
 
-점검하며 만든 테스트 데이터는 `supabase/cleanup-test-data.sql`을 SQL Editor에서 한 번 실행하면 지워진다.
+변경분 SQL은 `supabase/schema-v2.sql`. 새 프로젝트를 또 만들 일이 생기면
+`schema.sql` → `analytics.sql` → `schema-v2.sql` 순서로 돌리면 된다.
+
+### 아직 사장님 손이 필요한 것
+
+1. **카카오 콘솔에 콜백 주소 등록** — [카카오 개발자 콘솔](https://developers.kakao.com)
+   → 내 애플리케이션 → 카카오 로그인 → **Redirect URI**에 아래 한 줄이 있어야 한다.
+   옛 프로젝트 주소(`bpevbqnadfboebntayrf...`)만 있으면 로그인이 튕긴다.
+   ```
+   https://agiclnnwevimdkwaufdl.supabase.co/auth/v1/callback
+   ```
+   같은 화면에서 **활성화 설정 ON**, 동의항목에 **닉네임**(선택 동의라도) 체크.
+
+2. **구글 로그인 키 발급** — 아직 어디에도 없다(옛 프로젝트에도 없음).
+   [Google Cloud Console](https://console.cloud.google.com) → API 및 서비스 → 사용자 인증 정보
+   → 사용자 인증 정보 만들기 → **OAuth 클라이언트 ID** → 웹 애플리케이션
+   - 승인된 리디렉션 URI: `https://agiclnnwevimdkwaufdl.supabase.co/auth/v1/callback`
+   - 나온 **클라이언트 ID**와 **클라이언트 보안 비밀번호**를
+     Supabase → Authentication → Sign In / Providers → Google 에 붙여넣고 켜기
+
+3. **쿠팡 파트너스 키 재발급** — 지금 키는 쿠팡이 거부한다
+   (`Specified key is not registered`). 재발급 후 Supabase →
+   Edge Functions → Secrets 의 `COUPANG_ACCESS_KEY`·`COUPANG_SECRET_KEY` 교체.
+
+### 쿠팡은 두 가지다 (헷갈리기 쉬움)
+
+| 기능 | 어디에 있나 | 서버 필요? | 상태 |
+|---|---|---|---|
+| **쿠팡·컬리 링크 버튼** | 장보기 목록의 재료 옆 | 아니오 — 검색 페이지를 열 뿐 | **항상 동작** |
+| **인앱 제품 찾기** | 메뉴 등록 → 재료 옆 '찾기' (사진·가격·브랜드 자동 채움) | 예 — `coupang` 함수 | 키 거부로 **안 됨** |
 
 ## 2-2. 누가 들어왔는지 보기 (테스트 관찰)
 
@@ -198,18 +230,20 @@ npx vercel deploy --prod --yes
 
 ## 3. 다음에 바로 할 수 있는 것
 
-- [ ] **`coupang` Edge Function을 새 프로젝트에 배포** — 이거 전엔 장보기의 쿠팡 검색만 동작 안 함
+- [ ] **카카오 콘솔에 새 콜백 주소 등록** → 카카오 로그인 완성 (2-1-2 참고)
+- [ ] **구글 OAuth 키 발급** → 구글 로그인 완성 (2-1-2 참고)
+- [ ] **쿠팡 파트너스 키 재발급** → 인앱 제품 찾기 복구 (2-1-2 참고)
   ```
-  npx supabase login
+  # 함수 자체는 이미 배포돼 있다. 다시 올릴 일이 생기면:
   npx supabase link --project-ref agiclnnwevimdkwaufdl
   npx supabase functions deploy coupang
   ```
-  그리고 Edge Functions → Secrets에 `COUPANG_ACCESS_KEY`·`COUPANG_SECRET_KEY` 등록.
-  구 프로젝트에서 값이 안 보이면 쿠팡 파트너스에서 재발급받아야 한다.
-- [ ] 카카오 앱 키 등록 → 로그인 완성 (개발자 콘솔 작업만 남음)
 - [ ] 웹푸시(투표 알림) — PWA 상태에서 바로 가능, iOS는 홈 화면 추가 필요
 - [ ] 계정·데이터 삭제 기능
 - [x] ~~전용 Supabase 프로젝트 이관~~ (2026-08-09 완료 — 2-1-1 참고)
+- [x] ~~`coupang` Edge Function 배포~~ (2026-08-09 완료)
+- [x] ~~가입·초대 흐름 단순화~~ (v4.0 — 2-1-2 참고)
+- [x] ~~우리집 무제한 생성·사진 경로·비밀투표 보완~~ (v4.0)
 - [ ] Supabase Pro 전환
 - [ ] 약관·개인정보처리방침 페이지
 - [ ] Capacitor 스캐폴드 (Mac에서 빌드)

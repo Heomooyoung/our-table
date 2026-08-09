@@ -741,18 +741,22 @@ function render(){
  if(ui._last!==ui.tab){window.scrollTo(0,0);ui._last=ui.tab}
 }
 
-/* ── 로그인 게이트 (최초 접속) ── */
-function vGate(){return `<section class="hero" style="margin-top:46px">
+/* ── 로그인 게이트 (최초 접속) ──
+   여기서 갈라지는 길은 하나뿐이다: 로그인. 로그인하면 우리집이 알아서 만들어지고,
+   초대 링크로 들어온 사람은 알아서 그 집에 합류한다. 코드를 옮겨 적을 일이 없다. */
+function vGate(){const inv=!!(pendingHash&&pendingHash.join);
+ return `<section class="hero" style="margin-top:46px">
  <div class="date">FAMILY RECIPE BOX</div>
  <h1 style="font-size:38px">우리집 식탁</h1>
- <div class="sub">우리 가족의 맛있는 기록.<br>메뉴판 · 주간 식단 · 장보기 · 오늘 뭐 먹지 투표까지.</div>
+ <div class="sub">${inv?'가족이 초대했어요.<br>로그인하면 같은 메뉴판을 바로 함께 봐요.'
+   :'우리 가족의 맛있는 기록.<br>메뉴판 · 주간 식단 · 장보기 · 오늘 뭐 먹지 투표까지.'}</div>
  <div class="dacts" style="margin-top:24px">
   <button class="btn pri blk" data-a="oauth" data-p="kakao" style="background:#FEE500;color:#191919">카카오로 시작하기</button>
   <button class="btn gho blk" data-a="oauth" data-p="google">Google로 시작하기</button>
   <button class="btn gho blk" data-a="peek">먼저 둘러보기 — 어떤 앱인지 보기</button>
-  <div class="tbtns"><button class="tbtn" data-a="guest">로그인 없이 이 폰에서만 써보기</button></div>
  </div></section>
- <div class="ghint" style="margin-top:14px">가족 초대 링크로 왔다면, 로그인 뒤 자동으로 이어져요.</div>`}
+ <div class="ghint" style="margin-top:14px">${inv?'초대 코드를 입력할 필요 없어요. 로그인만 하면 합류됩니다.'
+  :'로그인하면 우리집이 만들어져요. 가족은 링크 하나로 합류합니다.'}</div>`}
 
 /* ── 홈 ── */
 const I_SWAP='<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4v6h6M20 20v-6h-6"/><path d="M19.5 9A8 8 0 0 0 6 6.3L4 8M4.5 15A8 8 0 0 0 18 17.7l2-1.7"/></svg>';
@@ -814,7 +818,7 @@ function vHome(){
    ?`<div class="demobar">예시로 둘러보는 중이에요 <button data-a="startNow">우리집 시작하기</button></div>`
    :`<div class="demobar">데모 데이터로 보는 중 <button data-a="demoOff">끄기</button></div>`):'';
  const connbar=(!S._demo&&window.OT_CONFIG&&typeof sb!=='undefined'&&sb&&!syncOn)
-  ?`<button class="connbar" data-a="ob">아직 우리집 계정에 연결 안 됐어요 — 가족과 같이 보려면 여기를 눌러 연결</button>`:'';
+  ?`<button class="connbar" data-a="retrySync">가족과 연결이 끊겼어요 — 눌러서 다시 시도</button>`:'';
  return demobar+connbar+hero+
   `<section class="sec"><div class="sec-h"><div><div class="eyebrow">This Week</div><h2>이번 주 저녁</h2></div>
     <button class="chip" data-a="go" data-t="plan">식단표</button></div>
@@ -1277,23 +1281,24 @@ function srow(label,opts={}){const {value,action,data,badge,warn,chev=true}=opts
 function providerOf(){const ids=(AUTHUSER&&AUTHUSER.identities)||[];return ids.map(i=>i.provider)}
 function openSettings(){
  const kb=Math.max(1,Math.round(JSON.stringify(S).length/1024));
- const prov=providerOf(), anon=!AUTHUSER||AUTHUSER.is_anonymous;
+ const prov=providerOf();
+ const provLabel=prov.includes('kakao')?'카카오':(prov.includes('google')?'Google':'연결됨');
  const homeMealLabel=S.homeMeals==='all'?'세 끼 모두':'저녁만';
  const spanLabel={1:'1주',2:'2주',4:'한 달'}[S.shopSpanDefault||1];
  sheet(`<div class="shead"><button class="x icobtn" data-a="shClose" aria-label="닫기">${I.lt}</button><b>설정</b></div>
 
   <div class="sgrp">우리집</div>
   <div class="slist">
-   ${syncOn?srow('초대 코드',{value:HOMEINFO?HOMEINFO.code:'—',action:'shareInvite'})
-    :srow('우리집 계정 연결',{value:'가족과 공유하기',action:'ob'})}
-   ${syncOn?srow('가족',{value:MEMBERS.map(x=>esc(x.name)).join(', ')||'—',chev:false}):''}
+   ${syncOn?srow('가족 초대하기',{value:'링크 보내기',action:'shareInvite'}):''}
+   ${syncOn?srow('우리집 식구',{value:MEMBERS.map(x=>esc(x.name)).join(', ')||'—',chev:false}):''}
+   ${syncOn?srow('내 이름',{value:ME?esc(ME.name):'—',action:'meRename'}):''}
+   ${syncOn?srow('초대 코드',{value:HOMEINFO?HOMEINFO.code:'—',chev:false}):''}
    ${srow('가족 명단',{value:S.family.length?S.family.length+'명':'없음',action:'fam'})}
   </div>
 
-  ${window.OT_CONFIG?`<div class="sgrp">계정</div>
+  ${(window.OT_CONFIG&&AUTHUSER)?`<div class="sgrp">계정</div>
   <div class="slist">
-   ${!anon?srow('로그인 계정',{value:prov.includes('kakao')?'카카오':(prov.includes('google')?'Google':'연결됨'),chev:false})
-     :srow('카카오로 로그인',{value:'폰을 바꿔도 이어져요',action:'oauth',data:{p:'kakao'}})}
+   ${srow('로그인 계정',{value:provLabel,chev:false})}
   </div>`:''}
 
   <div class="sgrp">표시</div>
@@ -1302,12 +1307,12 @@ function openSettings(){
    ${srow('장보기 기본 기간',{value:spanLabel,action:'pickSpan'})}
   </div>
 
-  ${anon?`<div class="sgrp">이 폰의 데이터</div>
+  <div class="sgrp">데이터</div>
   <div class="slist">
    ${srow('백업 내려받기',{action:'exp'})}
    ${srow('백업 불러오기',{action:'impBtn'})}
   </div>
-  <div class="mut" style="margin-top:8px">로그인하면 가족과 자동으로 동기화돼서 백업이 필요 없어요.</div>`:''}
+  ${syncOn?`<div class="mut" style="margin-top:8px">가족과 자동으로 동기화되고 있어요. 백업은 따로 보관하고 싶을 때만 쓰면 됩니다.</div>`:''}
   <input type="file" id="impF" accept="application/json,.json" hidden>
 
   <div class="sgrp">의견</div>
@@ -1319,35 +1324,10 @@ function openSettings(){
   <div class="sgrp">정보</div>
   <div class="slist">
    ${srow('저장된 메뉴',{value:`${S.menus.length}가지 · ${kb}KB`,chev:false})}
-   ${srow('앱 버전',{value:'v2.1',chev:false})}
+   ${srow('앱 버전',{value:'v4.0',chev:false})}
    ${ISADMIN?srow('접속 로그',{value:'들어온 사람들',action:'logOpen'}):''}
    ${(typeof sb!=='undefined'&&sb&&AUTHUSER)?srow('로그아웃',{action:'logout',warn:true}):''}
   </div>`)}
-function openSettingsOld(){
- const kb=Math.max(1,Math.round(JSON.stringify(S).length/1024));
- sheet(`<div class="sec-h" style="margin-top:4px"><div><div class="eyebrow">Our Table</div><h2>보관함 관리</h2></div>
-   <span class="cnt">v1.0</span></div>
-  <div class="paper" style="padding:14px"><div class="mut" style="font-family:var(--mono);letter-spacing:.04em">
-   메뉴 ${S.menus.length}가지 · 데이터 약 ${kb}KB<br>${syncOn
-    ?`우리집 계정 연결됨 · 코드 ${HOMEINFO?HOMEINFO.code:'—'}<br>가족: ${MEMBERS.map(x=>esc(x.name)).join(', ')||'—'}`
-    :'이 브라우저 안에만 저장 중 (로컬 모드)'}</div></div>
-  <div class="eyebrow" style="margin:18px 0 8px">우리집</div>
-  ${syncOn?`<button class="btn pri blk" data-a="shareInvite">가족 초대 링크 보내기 — 코드 ${HOMEINFO?HOMEINFO.code:''}</button>`
-   :`<button class="btn pri blk" data-a="ob">우리집 계정 연결하기 (가족 공유)</button>`}
-  ${window.OT_CONFIG?`<div class="eyebrow" style="margin:18px 0 8px">계정</div>
-   <div style="display:flex;gap:8px">
-    <button class="btn gho" style="flex:1" data-a="oauth" data-p="kakao">카카오 연결</button>
-    <button class="btn gho" style="flex:1" data-a="oauth" data-p="google">Google 연결</button></div>`:''}
-  <div class="eyebrow" style="margin:18px 0 8px">데이터</div>
-  <div style="display:flex;gap:8px">
-   <button class="btn gho" style="flex:1" data-a="exp">백업 내려받기</button>
-   <button class="btn gho" style="flex:1" data-a="impBtn">백업 불러오기</button></div>
-  <input type="file" id="impF" accept="application/json,.json" hidden>
-  <div class="tbtns" style="margin-top:18px">
-   <button class="tbtn" data-a="fam">돌려찍기용 가족 명단 (${S.family.length}명)</button>
-   ${(typeof sb!=='undefined'&&sb&&AUTHUSER)?`<button class="tbtn" data-a="logout">로그아웃</button>`:''}
-   <button class="tbtn warn" data-a="wipe">전부 지우기</button></div>
-  <hr class="hr"><div class="mut">휴대폰 홈 화면에 붙여두려면 — 브라우저 공유 메뉴에서 <b>‘홈 화면에 추가’</b>를 눌러주세요. 앱처럼 열려요.<br>카카오/구글 연결을 해두면 폰을 바꿔도 계정이 그대로 이어져요.</div>`)}
 
 async function exportJson(){
  const data=JSON.stringify(S,null,2), fn=`ourtable-backup-${todayISO()}.json`;
@@ -1460,6 +1440,11 @@ async function openVisitLog(){
   <div class="ghint">기기 단위로 묶은 기록이에요. 방문 수·유입 경로 통계는 Vercel → Analytics 에서 따로 볼 수 있어요.</div>`)}
 
 /* ── 확인 ── */
+function openRename(){
+ sheet(`<div class="sec-h" style="margin-top:4px"><div><div class="eyebrow">Our Table</div><h2>내 이름</h2></div></div>
+  <div class="mut" style="margin-bottom:4px">가족 명단·투표에 이 이름으로 보여요.</div>
+  <div class="fld"><label>이름</label><input id="rn-name" class="in" placeholder="예) 엄마 / 아빠 / 하몽" value="${esc(ME?ME.name:'')}" autocomplete="off"></div>
+  <div class="dacts"><button class="btn pri blk" data-a="meRenameSave">저장</button></div>`)}
 function openConfirm(msg,yes,fn){CONF=fn;
  sheet(`<div style="text-align:center;padding:10px 6px 2px"><b style="font-size:16px;letter-spacing:-.02em">${msg}</b></div>
   <div class="dacts"><button class="btn pri blk" style="background:var(--heart)" data-a="confYes">${yes}</button>
@@ -1614,7 +1599,8 @@ async function syncInit(){
   AUTHUSER=session.user;
   try{const {data:adm}=await sb.rpc('is_admin');ISADMIN=!!adm}catch(e){}
   const ok=await connectAsMember(true);
-  if(!ok&&(pendingHash||!AUTHUSER.is_anonymous||!sessionStorage.getItem('obSkip')))openOnboard();
+  if(!ok)await autoSetup();          // 우리집이 없으면 묻지 않고 만들거나 합류시킨다
+  else if(pendingHash&&pendingHash.join)await joinFromLink();
   if(WANTLOG){shCloseAll();openVisitLog()}
  }catch(e){}
  updateSyncBadge()}
@@ -1623,9 +1609,13 @@ async function connectAsMember(initial){
  AUTHUSER=u.data.user;
  const {data:mem,error}=await sb.from('members').select('*');
  if(error||!mem)return false;
- MEMBERS=mem;ME=mem.find(x=>x.user_id===uid_);
+ // 초대 링크를 타고 다른 집에 합류했을 수 있다 — 가장 최근에 들어간 집을 본다
+ const mine=mem.filter(x=>x.user_id===uid_)
+  .sort((a,b)=>String(b.created_at||'').localeCompare(String(a.created_at||'')));
+ ME=mine[0];
  if(!ME)return false;
- HOME=ME.home_id;syncOn=true;updateSyncBadge();
+ HOME=ME.home_id;MEMBERS=mem.filter(x=>x.home_id===HOME);
+ syncOn=true;updateSyncBadge();
  const {data:hi}=await sb.from('homes').select('*').eq('id',HOME).maybeSingle();if(hi)HOMEINFO=hi;
  await flushDirty();
  const {count}=await sb.from('menus').select('id',{count:'exact',head:true});
@@ -1635,43 +1625,65 @@ async function connectAsMember(initial){
  if(pendingHash&&pendingHash.vote){const v=pendingHash.vote;consumePending();openVoteLive(v)}
  return true}
 
-/* ── 온보딩 ── */
-function openOnboard(){
+/* ── 시작 처리 (물어보지 않고 알아서) ──
+   로그인은 했는데 아직 우리집이 없는 사람은 둘 중 하나다.
+     · 초대 링크로 온 사람  → 그 집에 합류
+     · 그냥 온 사람        → 자기 집을 만듦
+   어느 쪽이든 화면에서 고르게 하지 않는다. 이름은 카카오·구글 프로필에서 가져오고,
+   마음에 안 들면 바로 다음 화면에서 고칠 수 있다. */
+function profileName(){const m=(AUTHUSER&&AUTHUSER.user_metadata)||{};
+ return String(m.full_name||m.name||m.user_name||m.preferred_username||'').trim().slice(0,20)||'나'}
+async function autoSetup(){
+ if(!sb||!AUTHUSER)return;
+ const nm=profileName();
  const jc=pendingHash&&pendingHash.join?pendingHash.join:'';
- const anon=!AUTHUSER||AUTHUSER.is_anonymous;
- const nm=(AUTHUSER&&AUTHUSER.user_metadata&&(AUTHUSER.user_metadata.full_name||AUTHUSER.user_metadata.name||AUTHUSER.user_metadata.user_name))||'';
- sheet(`<div class="sec-h" style="margin-top:4px"><div><div class="eyebrow">Our Table</div><h2>${anon?'우리집 계정 연결':'거의 다 왔어요'}</h2></div></div>
-  <div class="mut" style="margin-bottom:4px">${anon?'연결하면 가족이 같은 메뉴판·식단·장보기를 실시간으로 봐요. 기기마다 한 번만 하면 됩니다.':'가족이 보내준 초대 코드로 합류하거나, 새로 우리집을 만들어주세요.'}</div>
-  <div class="fld"><label>내 이름</label><input id="ob-name" class="in" placeholder="예) 엄마 / 아빠 / 하몽" value="${esc(nm)}" autocomplete="off"></div>
-  <div class="fld"><label>초대 코드 (가족이 보내줬다면)</label><input id="ob-code" class="in" placeholder="6자리 코드" value="${esc(jc)}" autocomplete="off" style="text-transform:uppercase;font-family:var(--mono);letter-spacing:.2em"></div>
+ if(jc){
+  try{
+   const {error}=await sb.rpc('join_home',{invite_code:jc,member_name:nm});
+   if(error)throw error;
+   consumePending();logVisit('join',nm);
+   if(await connectAsMember(false)){shCloseAll();openWelcome(true);return}
+  }catch(e){consumePending();toast('초대 링크가 더 이상 유효하지 않아요')}
+ }
+ try{
+  const {data,error}=await sb.rpc('create_home',{member_name:nm});
+  if(error)throw error;
+  HOMEINFO={id:data[0].home_id,code:data[0].code};
+  logVisit('home_new',nm);
+  await connectAsMember(false);
+  shCloseAll();openWelcome(false);
+ }catch(e){toast('시작하지 못했어요 — 인터넷을 확인해주세요')}}
+/* 환영 화면 — 만든 사람에겐 '초대 보내기'가, 합류한 사람에겐 '시작하기'가 큰 버튼이다. */
+function openWelcome(joined){
+ const c=(HOMEINFO&&HOMEINFO.code)||'';
+ const fam=MEMBERS.filter(x=>x.home_id===HOME&&(!ME||x.id!==ME.id)).map(x=>esc(x.name)).join(', ');
+ sheet(`<div class="vturn"><div class="vt1">${joined?'Welcome':'Our Table'}</div>
+  <div class="vt2">${joined?'우리집에 합류했어요!':'우리집이 생겼어요!'}</div>
+  <div class="vt3">${joined?(fam?`${fam} 님과 같은 메뉴판·식단·장보기를<br>이제 함께 봐요.`:'이제 가족과 같은 메뉴판을 함께 봐요.')
+   :'가족에게 링크를 보내면,<br>링크를 열고 로그인하는 것만으로 합류돼요.'}</div></div>
+  <div class="fld"><label>가족에게 보일 내 이름</label>
+   <input id="wl-name" class="in" placeholder="예) 엄마 / 아빠 / 하몽" value="${esc(ME?ME.name:'')}" autocomplete="off"></div>
   <div class="dacts">
-   <button class="btn pri blk" data-a="obJoin">코드로 우리집 합류</button>
-   <button class="btn gho blk" data-a="obCreate">새로 우리집 만들기</button>
-   ${anon?`<div class="tbtns"><button class="tbtn" data-a="obSkip">나중에 — 이 폰에만</button></div>`:''}</div>`)}
-async function obCreate(){const n=($('#ob-name').value||'').trim();
- if(!n){toast('이름을 적어주세요');$('#ob-name').focus();return}
- try{const {data,error}=await sb.rpc('create_home',{member_name:n});if(error)throw error;
-  const r=data[0];HOMEINFO={id:r.home_id,code:r.code};
-  logVisit('home_new',n);
-  shCloseAll();
-  sheet(`<div class="vturn"><div class="vt1">Invite Code</div><div class="vt2">우리집이 생겼어요!</div>
-   <div class="vt3">가족은 이 코드(또는 초대 링크)로<br>같은 메뉴판에 합류할 수 있어요.</div></div>
-   <div class="obcode">${r.code}</div>
-   <div class="dacts"><button class="btn pri blk" data-a="shareInvite">가족에게 초대 링크 보내기</button>
-    <button class="btn gho blk" data-a="obDone">시작하기</button></div>`)}
- catch(e){const m=String(e&&e.message||'');
-  if(m.includes('TOO_MANY_HOMES'))toast('한 계정으로는 우리집을 3개까지 만들 수 있어요');
-  else if(m.includes('RATE_LIMITED'))toast('지금 접속이 많아요 — 잠시 뒤 다시 시도해주세요');
-  else toast('만들지 못했어요 — 인터넷을 확인해주세요')}}
-async function obJoin(){const n=($('#ob-name').value||'').trim(),c=($('#ob-code').value||'').trim();
- if(!n){toast('이름을 적어주세요');return}
- if(c.length!==6){toast('초대 코드 6자리를 확인해주세요');return}
- try{const {error}=await sb.rpc('join_home',{invite_code:c,member_name:n});if(error)throw error;
-  logVisit('join',n);
-  consumePending();shCloseAll();toast('우리집에 합류했어요!');connectAsMember(false)}
- catch(e){toast('코드가 맞지 않아요')}}
+   ${joined?'':`<button class="btn pri blk" data-a="shareInvite">가족 초대 링크 보내기</button>`}
+   <button class="btn ${joined?'pri':'gho'} blk" data-a="wlDone">시작하기</button></div>
+  ${joined?'':`<div class="mut" style="margin-top:12px;text-align:center">링크가 안 열린다고 하면 초대 코드 <b style="font-family:var(--mono);letter-spacing:.2em">${esc(c)}</b> 를 알려주세요.</div>`}`)}
+/* 이미 우리집이 있는 사람이 초대 링크를 열었을 때 — 말없이 옮기지 않고 한 번 물어본다. */
+async function joinFromLink(){
+ const c=pendingHash&&pendingHash.join;if(!c)return;
+ if(HOMEINFO&&String(HOMEINFO.code)===String(c).toUpperCase()){consumePending();return}  // 이미 그 집 식구
+ openConfirm('가족이 보낸 초대예요. 이 우리집으로 옮길까요?','네, 합류할게요',async()=>{
+  try{const {error}=await sb.rpc('join_home',{invite_code:c,member_name:(ME&&ME.name)||profileName()});
+   if(error)throw error;
+   consumePending();logVisit('join');
+   await connectAsMember(false);shCloseAll();openWelcome(true)}
+  catch(e){consumePending();toast('초대 링크가 더 이상 유효하지 않아요')}})}
+async function renameMe(n){
+ if(!sb||!n||!ME||n===ME.name)return;
+ try{const {error}=await sb.rpc('rename_me',{new_name:n});if(error)throw error;
+  ME.name=n;const {data}=await sb.from('members').select('*');if(data)MEMBERS=data;
+  updateGreeting()}catch(e){toast('이름을 바꾸지 못했어요')}}
 function shareInvite(){const c=HOMEINFO&&HOMEINFO.code;if(!c){toast('아직 초대 코드가 없어요');return}
- shareText(`'우리집 식탁'에 합류해줘! 초대 코드: ${c}`,OT_CONFIG.page+'#join='+c)}
+ shareText(`'우리집 식탁'에 합류해줘! 링크를 열고 로그인하면 바로 우리집 메뉴판이 보여.`,OT_CONFIG.page+'#join='+c)}
 function logout(){
  const wasMember=!!HOME;
  openConfirm(wasMember?'로그아웃할까요? 이 폰의 화면은 비우지만, 기록은 우리집 계정에 그대로 남아요.'
@@ -1686,15 +1698,14 @@ function logout(){
 async function shareText(text,url){const full=url?text+'\n'+url:text;
  if(navigator.share){try{await navigator.share({text:full})}catch(e){}}
  else{try{await navigator.clipboard.writeText(full);toast('복사했어요 — 카톡에 붙여넣기')}catch(e){toast('복사가 막혀 있어요')}}}
-/* 소셜 로그인 — 익명 계정은 연결(승격), 새 기기는 바로 로그인 */
+/* 소셜 로그인 — 이 앱의 유일한 입구.
+   초대 링크로 온 사람은 pendingHash가 sessionStorage에 남아 있어, 돌아온 뒤 자동으로 합류한다. */
 async function oauthLogin(provider){
  if(!sb){toast('인터넷 연결 후 가능해요');return}
  try{
-  const u=(await sb.auth.getUser()).data.user;
-  const options={redirectTo:OT_CONFIG.page};
-  if(u&&u.is_anonymous){const {error}=await sb.auth.linkIdentity({provider,options});if(error)throw error}
-  else{const {error}=await sb.auth.signInWithOAuth({provider,options});if(error)throw error}
- }catch(e){toast((provider==='kakao'?'카카오':'Google')+' 로그인은 아직 연결 준비 중이에요')}}
+  const {error}=await sb.auth.signInWithOAuth({provider,options:{redirectTo:OT_CONFIG.page}});
+  if(error)throw error;
+ }catch(e){toast((provider==='kakao'?'카카오':'Google')+' 로그인이 아직 준비되지 않았어요')}}
 
 /* ── 당겨오기 · 실시간 ── */
 let pullT=null;
@@ -1791,13 +1802,21 @@ async function openVoteLive(id,justCreated){
   sheet(`<div id="vlive"></div>`);
   refreshVoteLive()}
  catch(e){toast('투표를 찾지 못했어요')}}
+/* 개표는 vote_tally가 후보별 숫자만 돌려준다 — 누가 뭘 찍었는지는 서버 밖으로 안 나온다.
+   내가 찍은 것만 내 표로 따로 읽어 표시한다. */
+async function tallyOf(id,cands){
+ const cnt={};(cands||[]).forEach(k=>cnt[k]=0);
+ const {data}=await sb.rpc('vote_tally',{v_id:id});
+ let total=0;(data||[]).forEach(r=>{if(cnt[r.choice]!=null)cnt[r.choice]=Number(r.cnt);total+=Number(r.cnt)});
+ return {cnt,total}}
 async function refreshVoteLive(){
  if(!LIVE||!$('#vlive'))return;
  const {data:v2}=await sb.from('votes').select('*').eq('id',LIVE.id).maybeSingle();if(v2)LIVE.vote=v2;
- const {data:bs}=await sb.from('ballots').select('*').eq('vote_id',LIVE.id);
- const v=LIVE.vote,ballots=bs||[],closed=v.status==='closed';
- const my=ballots.find(b=>b.member_id===(ME&&ME.id));
- const cnt={};(v.candidates||[]).forEach(k=>cnt[k]=0);ballots.forEach(b=>{if(cnt[b.choice]!=null)cnt[b.choice]++});
+ const v=LIVE.vote,closed=v.status==='closed';
+ const {cnt,total}=await tallyOf(LIVE.id,v.candidates);
+ const {data:mine}=await sb.from('ballots').select('*').eq('vote_id',LIVE.id);   // 정책상 내 표만 온다
+ const my=(mine||[])[0];
+ const ballots={length:total};
  const nm=k=>k==='DELIV'?'배달 찬스':(menu(k)?menu(k).name:'?');
  const bars=[...(v.candidates||[])].sort((a,b)=>cnt[b]-cnt[a]).map(k=>`<div class="vbar">
   <span class="vn">${esc(nm(k))}</span><span class="vtrack"><span class="vfill" style="width:${Math.round(cnt[k]/Math.max(1,MEMBERS.length)*100)}%"></span></span>
@@ -1819,9 +1838,8 @@ async function vlCast(k){try{
  if(error)throw error;refreshVoteLive()}
  catch(e){toast('투표가 안 들어갔어요 — 인터넷 확인')}}
 async function vlFinish(){try{
- const {data:bs}=await sb.from('ballots').select('*').eq('vote_id',LIVE.id);
- const v=LIVE.vote,cnt={};(v.candidates||[]).forEach(k=>cnt[k]=0);
- (bs||[]).forEach(b=>{if(cnt[b.choice]!=null)cnt[b.choice]++});
+ const v=LIVE.vote;
+ const {cnt}=await tallyOf(LIVE.id,v.candidates);
  const mx=Math.max(...Object.values(cnt));
  const ws=v.candidates.filter(k=>cnt[k]===mx);
  const win=ws[Math.floor(Math.random()*ws.length)];
@@ -1990,10 +2008,14 @@ const ACT={
  famDel:d=>{S.family=S.family.filter(f=>f.id!==d.id);save();
   $('#famList').innerHTML=famRows();const c=$('#famCnt');if(c)c.textContent=S.family.length+'명'},
  famDone:()=>{if(S.family.length<2){toast('2명은 있어야 투표할 수 있어요');return}shClose();openVote()},
- ob:()=>openOnboard(),
- obCreate:obCreate, obJoin:obJoin,
- obSkip:()=>{sessionStorage.setItem('obSkip','1');shClose()},
- obDone:()=>{shCloseAll();connectAsMember(false)},
+ retrySync:async()=>{if(!sb){toast('인터넷 연결 후 가능해요');return}
+  const ok=await connectAsMember(false);if(!ok)await autoSetup();
+  if(syncOn)toast('가족과 다시 연결됐어요')},
+ wlDone:async(d,el)=>{const i=$('#wl-name');await renameMe(i?(i.value||'').trim():'');
+  shCloseAll();ui.gate=false;render()},
+ meRename:()=>openRename(),
+ meRenameSave:async()=>{const i=$('#rn-name');await renameMe(i?(i.value||'').trim():'');
+  shCloseAll();toast('이름을 바꿨어요');openSettings()},
  shareInvite:shareInvite,
  vstartRemote:vstartRemote,
  vlCast:d=>vlCast(d.k),
@@ -2012,9 +2034,6 @@ const ACT={
  tourNext:()=>{TSTEP++;tourRender()},
  tourEnd:()=>tourEnd(),
  tourAgain:()=>{shCloseAll();if(!S._demo){ui.peek=true;demoOn().then(tourStart)}else tourStart()},
- guest:async()=>{try{const r=await sb.auth.signInAnonymously();if(r.error)throw r.error;
-  AUTHUSER=r.data&&r.data.user;logVisit('guest');ui.gate=false;render();updateSyncBadge();connectAsMember(true)}
-  catch(e){toast('시작하지 못했어요 — 인터넷을 확인해주세요')}},
  buy:d=>{const u=d.s==='c'?'https://www.coupang.com/np/search?q=':'https://www.kurly.com/search?sword=';
   openUrl(u+encodeURIComponent(d.n))},
  open:d=>openUrl(d.u),
