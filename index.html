@@ -522,6 +522,10 @@ body.gate .tabbar,body.gate .hdr{display:none}
 /* 장보기 내보내기 미리보기 — 실제로 나갈 문구를 그대로 보여준다 */
 .sspv{padding:15px 16px;white-space:pre-wrap;font-size:13px;line-height:1.8;
   color:var(--ink);letter-spacing:-.01em}
+/* 보내기 시트: 체크된 것이 '장 봐올 것'이다 (장보기 탭의 체크는 '이미 샀음'이라 반대) */
+.sitem.pick .cbox{background:var(--acc-bg);border-color:var(--acc-bg);color:var(--acc-ink)}
+.sitem.nopick{opacity:.45}
+.sitem.nopick .snm2{font-weight:600}
 .vshare:active{background:var(--line2)}
 
 /* ── 토스트 ── */
@@ -990,17 +994,18 @@ function shopShareOpen(){
  if(!rows.length){toast('보낼 목록이 아직 없어요');return}
  SHOPSEL=new Set(rows.filter(r=>!r.bought).map(r=>r.k));
  sheet(`<div class="shead"><button class="x icobtn" data-a="shClose" aria-label="닫기">${I.lt}</button><b>장보기 목록 보내기</b></div>
-  <div class="mut" style="margin-bottom:8px">보낼 것만 골라주세요. 고른 것만 정리해서 나갑니다.</div>
+  <div class="mut" style="margin-bottom:8px">체크된 것이 <b>장 봐올 것</b>이에요. 빼려면 눌러서 체크를 풀어주세요.</div>
   <div id="ssbody"></div>`);
  shopShareRender()}
 function shopShareRender(){
  const el=$('#ssbody');if(!el)return;
  const rows=shopKeys(), txt=buildShopText(SHOPSEL);
- el.innerHTML=`<div class="paper">${rows.map(r=>`<button class="sitem ${SHOPSEL.has(r.k)?'':'done'}" data-a="ssTog" data-k="${esc(r.k)}">
+ el.innerHTML=`<div class="paper">${rows.map(r=>{const on=SHOPSEL.has(r.k);
+  return `<button class="sitem ${on?'pick':'nopick'}" data-a="ssTog" data-k="${esc(r.k)}">
    <span class="cbox">${I.chk}</span>
    <span class="sb"><span class="snm2">${esc(r.name)}${r.amount?`<span class="need">${esc(r.amount)}</span>`:''}</span>
     ${r.brand?`<span class="src" style="color:var(--acc)">${esc(r.brand)}</span>`:''}
-    ${r.bought?`<span class="src">이미 산 것</span>`:''}</span></button>`).join('')}</div>
+    ${r.bought?`<span class="src">이미 산 것</span>`:''}</span></button>`}).join('')}</div>
   <div class="sgrp" style="margin-top:16px">이렇게 나갑니다</div>
   <div class="paper sspv">${esc(txt)||'고른 항목이 없어요'}</div>
   <div class="dacts"><button class="btn pri blk" data-a="ssSend">${SHOPSEL.size}개 보내기</button>

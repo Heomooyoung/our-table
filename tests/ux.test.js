@@ -221,10 +221,13 @@ const sleep=ms=>new Promise(r=>setTimeout(r,ms));
  const n0=g('SHOPSEL.size');
  ok(n0>0,`기본으로 아직 안 산 것 ${n0}개가 골라져 있음`);
  ok(!!byText('.sw .btn',`${n0}개 보내기`),'고른 개수가 버튼에 보임');
- click(q('.sw [data-a="ssTog"]:not(.done)')); await sleep(80);
- ok(g('SHOPSEL.size')===n0-1,'고른 항목을 눌러 뺄 수 있음');
- click(q('.sw [data-a="ssTog"].done')); await sleep(80);
- ok(g('SHOPSEL.size')===n0,'안 고른 항목을 눌러 넣을 수 있음');
+ ok(qa('.sw .sitem.pick').length===n0,'장 봐올 것이 체크된 상태로 보임');
+ ok(!q('.sw .sitem.done'),'장보기 탭의 "이미 샀음" 표시와 섞이지 않음');
+ click(q('.sw [data-a="ssTog"].pick')); await sleep(80);
+ ok(g('SHOPSEL.size')===n0-1,'체크를 풀면 목록에서 빠짐');
+ ok(qa('.sw .sitem.pick').length===n0-1,'푼 항목은 체크가 해제되어 보임');
+ click(q('.sw [data-a="ssTog"].nopick')); await sleep(80);
+ ok(g('SHOPSEL.size')===n0,'다시 체크하면 목록에 들어감');
  click(byText('.sw .btn','전부 고르기')); await sleep(80);
  ok(g('SHOPSEL.size')===g('shopKeys().length'),'전부 고르기 동작');
  // 시트를 덮는 검은 판(스크림)은 .sw의 직계 자식 하나뿐이어야 한다.
