@@ -1384,7 +1384,7 @@ function openSettings(){
   <div class="slist">
    ${srow('저장된 메뉴',{value:`${S.menus.length}가지 · ${kb}KB`,chev:false})}
    ${srow('앱 버전',{value:'v4.0',chev:false})}
-   ${ISADMIN?srow('접속 로그',{value:'들어온 사람들',action:'logOpen'}):''}
+   ${ISADMIN?srow('들어온 사람들',{value:'접속 로그 · 의견',action:'logOpen'}):''}
    ${(typeof sb!=='undefined'&&sb&&AUTHUSER)?srow('로그아웃',{action:'logout',warn:true}):''}
   </div>`)}
 
@@ -1461,20 +1461,18 @@ function uaShort(ua){ua=ua||'';
 function refShort(r){if(!r)return'';try{const h=new URL(r).hostname.replace(/^www\./,'');
  return h.includes('kakao')?'카톡':h}catch(e){return''}}
 async function openVisitLog(){
- if(!sb){toast('인터넷 연결 후 볼 수 있어요');return}
- if(!AUTHUSER){toast('로그인한 뒤 주소 끝에 #log 를 붙여 다시 들어와주세요');return}
- let rows=null;
- try{const r=await sb.from('visits').select('*').order('created_at',{ascending:false}).limit(500);
-  if(r.error)throw r.error; rows=r.data}catch(e){rows=null}
- const head=`<div class="shead"><button class="x icobtn" data-a="shClose" aria-label="닫기">${I.lt}</button><b>접속 로그</b></div>`;
- if(!rows){   // RLS에 막혔다 = 아직 이 계정이 관리자로 등록되기 전
-  sheet(`${head}
-   <div class="mut" style="margin-bottom:12px">이 계정은 접속 로그를 볼 수 없어요.<br>
-    아래 이메일을 관리자로 등록하면 됩니다 (Supabase → SQL Editor 에서 한 번만).</div>
-   <div class="obcode" style="font-size:13px;letter-spacing:0;word-break:break-all;padding:14px">${esc(AUTHUSER.email||AUTHUSER.id)}</div>
-   <div class="dacts"><button class="btn pri blk" data-a="logCopy">복사하기</button></div>
-   <div class="ghint" style="font-family:var(--mono);font-size:11px">insert into admins (email, memo) values ('붙여넣기', '나');</div>`);
-  return}
+ if(!sb||!AUTHUSER)return;
+ // 관리자가 아니면 화면 자체를 열지 않는다 — 주소에 #log 를 붙여도 아무 일도 일어나지 않는다.
+ // (읽기는 어차피 서버에서 막히지만, 그런 화면이 있다는 것조차 보일 이유가 없다)
+ if(!ISADMIN){try{const {data}=await sb.rpc('is_admin');ISADMIN=!!data}catch(e){}}
+ if(!ISADMIN)return;
+ let rows=null,fb=[];
+ try{const [r,f]=await Promise.all([
+   sb.from('visits').select('*').order('created_at',{ascending:false}).limit(500),
+   sb.from('feedback').select('*').order('created_at',{ascending:false}).limit(100)]);
+  if(r.error)throw r.error; rows=r.data; fb=f.data||[]}catch(e){rows=null}
+ const head=`<div class="shead"><button class="x icobtn" data-a="shClose" aria-label="닫기">${I.lt}</button><b>들어온 사람들</b></div>`;
+ if(!rows){sheet(`${head}<div class="empty"><b>지금은 불러올 수 없어요</b><p>인터넷 연결을 확인해주세요.</p></div>`);return}
  const by={},today=new Date().toDateString();
  rows.forEach(r=>{(by[r.device]=by[r.device]||[]).push(r)});   // rows는 최신순 → 각 묶음의 [0]이 마지막 방문
  const devs=Object.values(by);
@@ -1512,6 +1510,12 @@ async function openVisitLog(){
   ${(stuck||failed)?`<div class="mut" style="margin:10px 2px 0;font-size:12.5px">
    ${stuck?`열어보기만 하고 나간 사람 <b>${stuck}명</b>`:''}${(stuck&&failed)?' · ':''}
    ${failed?`로그인 실패 <b>${failed}건</b>`:''}</div>`:''}
+  ${fb.length?`<div class="sgrp" style="margin-top:18px">보내온 의견 ${fb.length}건</div>
+   <div class="paper" style="padding:2px 14px 8px">${fb.map(f=>`
+    <div style="padding:11px 0;border-bottom:1px solid var(--line2)">
+     <div style="font-size:13.5px;white-space:pre-wrap;line-height:1.6">${esc(f.message)}</div>
+     <div class="mut" style="font-size:11.5px;margin-top:5px">${logTime(f.created_at)}${f.contact?` · ${esc(f.contact)}`:''}${f.user_id?'':' · 로그인 전'}</div>
+    </div>`).join('')}</div>`:''}
   <div class="sgrp" style="margin-top:18px">기기별로 무엇을 했나</div>
   <div class="paper" style="padding:2px 14px 8px">${body||'<div class="empty"><b>아직 아무도 안 들어왔어요</b></div>'}</div>
   <div class="ghint">기기 단위로 묶은 기록이에요. 방문 수·유입 경로 통계는 Vercel → Analytics 에서 따로 볼 수 있어요.</div>`)}

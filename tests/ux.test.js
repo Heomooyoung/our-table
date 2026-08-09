@@ -484,25 +484,29 @@ const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 
  console.log('\n[20단계] 접속 로그 (만든 사람용)');
  await closeAll();
- // 관리자 등록 전 — 읽기가 RLS에 막힌 상황
- g(`(function(){AUTHUSER={id:'11111111-2222-3333-4444-555555555555',email:'me@example.com'};
-  sb={from:()=>({select:()=>({order:()=>({limit:async()=>({data:null,error:{message:'denied'}})})})})}})()`);
- g('openVisitLog()'); await sleep(150);
- ok(!!byText('.sw','접속 로그를 볼 수 없어요'),'권한 없으면 안내 화면');
- ok(!!byText('.sw .obcode','me@example.com'),'등록에 쓸 이메일을 보여줌 (계정을 지웠다 만들어도 유지되게)');
- ok(!!q('[data-a="logCopy"]'),'ID 복사 버튼');
+ // 관리자가 아니면 화면 자체가 열리지 않아야 한다
+ g(`(function(){ISADMIN=false;AUTHUSER={id:'u1',email:'other@example.com'};
+  sb={rpc:async()=>({data:false}),from:()=>({select:()=>({order:()=>({limit:async()=>({data:[],error:null})})})})}})()`);
+ g('openVisitLog()'); await sleep(220);
+ ok(g('SHEETS.length')===0,'관리자가 아니면 #log 로 들어와도 아무것도 안 열림');
+ ok(!byText('.sw','관리자'),'관리자 등록 안내조차 안 뜸 (그런 화면이 있다는 것도 안 알림)');
 
  // 관리자 — 실제 로그 화면
  await closeAll();
- g(`(function(){const now=Date.now(),iso=m=>new Date(now-m*60000).toISOString();
+ g(`(function(){ISADMIN=true;AUTHUSER={id:'me',email:'me@example.com'};
+  const now=Date.now(),iso=m=>new Date(now-m*60000).toISOString();
   const rows=[
    {device:'d1',user_id:'u1',event:'menu_add',detail:'김치찜',ua:'iPhone; CriOS',ref:'https://kakao.com/x',created_at:iso(1)},
-   {device:'d1',user_id:'u1',event:'guest',detail:'',ua:'iPhone; CriOS',ref:'https://kakao.com/x',created_at:iso(2)},
+   {device:'d1',user_id:'u1',event:'home_new',detail:'허무영',ua:'iPhone; CriOS',ref:'https://kakao.com/x',created_at:iso(2)},
    {device:'d1',user_id:null,event:'open',detail:'',ua:'iPhone; CriOS',ref:'https://kakao.com/x',created_at:iso(3)},
    {device:'d2',user_id:null,event:'open',detail:'',ua:'Windows NT 10.0; Chrome',ref:'',created_at:iso(20)}];
-  sb={from:()=>({select:()=>({order:()=>({limit:async()=>({data:rows,error:null})})})})}})()`);
- g('openVisitLog()'); await sleep(150);
+  const fbs=[{message:'장보기 목록이 편해요',contact:'',user_id:'u1',created_at:iso(5)}];
+  sb={rpc:async()=>({data:true}),
+      from:t=>({select:()=>({order:()=>({limit:async()=>({data:t==='feedback'?fbs:rows,error:null})})})})}})()`);
+ g('openVisitLog()'); await sleep(200);
  ok(!!byText('.sw','들어온 사람들'),'로그 화면 열림');
+ ok(!!byText('.sw .sgrp','보내온 의견'),'보내온 의견도 같은 화면에서 보임');
+ ok(!!byText('.sw','장보기 목록이 편해요'),'의견 내용이 그대로 보임');
  ok(!!byText('.sw .cnt','전체 2명'),'기기 단위로 사람 수 집계');
  ok(!!byText('.sw','iPhone · Chrome'),'기기·브라우저 요약');
  ok(!!byText('.sw','카톡에서 옴'),'유입 경로 표시');
