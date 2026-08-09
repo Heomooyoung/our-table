@@ -496,14 +496,22 @@ body.gate .tabbar,body.gate .hdr{display:none}
 .tourin .tstep{font:700 10px var(--mono);letter-spacing:.2em;color:var(--acc)}
 .tourin h4{font-size:18px;font-weight:900;letter-spacing:-.04em;margin:6px 0 5px;text-wrap:balance}
 .tourin p{font-size:13.5px;color:var(--sub);line-height:1.55}
-.tourfoot{display:flex;align-items:center;gap:10px;margin-top:14px}
-.tdots{display:flex;gap:5px;flex:1}
+/* 진행 점은 윗줄, 버튼은 아랫줄. 마지막 단계는 버튼이 셋이라 한 줄로는 빠듯해
+   글자가 세로로 쪼개졌다. 줄을 나누고 버튼 글자는 절대 안 꺾이게 한다. */
+.tourfoot{margin-top:14px;display:flex;flex-direction:column;gap:11px}
+.tdots{display:flex;gap:5px}
 .tdots i{width:6px;height:6px;border-radius:99px;background:var(--line);display:block}
 .tdots i.on{background:var(--acc);width:16px}
-.tourfoot .skip{font-size:12.5px;font-weight:600;color:var(--sub);padding:8px 4px}
-.tourfoot .next{background:var(--dark);color:var(--dark-ink);border-radius:99px;padding:11px 20px;
-  font-size:13.5px;font-weight:700}
-.tourfoot .next.go{background:var(--acc-bg);color:var(--acc-ink)}
+.tacts{display:flex;align-items:center;gap:4px}
+.tacts .skip{font-size:12.5px;font-weight:600;color:var(--sub);padding:9px 7px;
+  white-space:nowrap;flex:none}
+.tacts .next{margin-left:auto;background:var(--dark);color:var(--dark-ink);border-radius:99px;
+  padding:11px 18px;font-size:13.5px;font-weight:700;white-space:nowrap;flex:none}
+.tacts .next.go{background:var(--acc-bg);color:var(--acc-ink)}
+@media (max-width:360px){
+  .tacts .skip{font-size:12px;padding:9px 5px}
+  .tacts .next{font-size:13px;padding:10px 15px}
+}
 .demobar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:12px;
   background:var(--dark);color:var(--dark-ink);border-radius:12px;padding:10px 12px 10px 14px;
   font-size:12.5px;font-weight:700}
@@ -2386,9 +2394,11 @@ function tourRender(){
    <h4>${s0.t}</h4><p>${s0.d}</p>
    <div class="tourfoot">
     <div class="tdots">${TOUR.map((_,i)=>`<i class="${i===TSTEP?'on':''}"></i>`).join('')}</div>
-    ${TSTEP>0?`<button class="skip" data-a="tourPrev">이전</button>`:''}
-    <button class="skip" data-a="tourEnd">그만 보기</button>
-    <button class="next ${s0.last?'go':''}" data-a="${s0.last?'startNow':'tourNext'}">${s0.last?'로그인하고 시작하기':'다음'}</button>
+    <div class="tacts">
+     ${TSTEP>0?`<button class="skip" data-a="tourPrev">이전</button>`:''}
+     <button class="skip" data-a="tourEnd">그만 보기</button>
+     <button class="next ${s0.last?'go':''}" data-a="${s0.last?'startNow':'tourNext'}">${s0.last?'로그인하고 시작':'다음'}</button>
+    </div>
    </div></div>`;
  document.body.appendChild(el)}
 function tourStart(){TSTEP=0;TDONE=-1;tourRender()}

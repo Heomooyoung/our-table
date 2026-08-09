@@ -515,7 +515,9 @@ const sleep=ms=>new Promise(r=>setTimeout(r,ms));
  // ⑥ 내보내기 실연
  click(q('#tour [data-a="tourNext"]')); await sleep(400);
  ok(!!byText('.sw .shead b','장보기 목록 보내기'),'⑥ 내보내기 시트가 실제로 열림');
- ok(!!byText('#tour .next','로그인하고 시작하기'),'⑥ 마지막 CTA');
+ ok(!!byText('#tour .next','로그인하고 시작'),'⑥ 마지막 CTA');
+ ok(qa('#tour .tacts button').length===3,'⑥ 버튼 세 개가 한 줄(.tacts)에 모임');
+ ok(!!q('#tour .tdots')&&q('#tour .tdots').parentElement.className==='tourfoot','진행 점은 버튼과 다른 줄');
  ok(g('TSTEP')===5,'⑥ 마지막 단계');
 
  // 앞으로 돌아가기
