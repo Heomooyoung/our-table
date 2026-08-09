@@ -508,6 +508,9 @@ body.gate .tabbar,body.gate .hdr{display:none}
   background:var(--dark);color:var(--dark-ink);border-radius:12px;padding:10px 12px 10px 14px;
   font-size:12.5px;font-weight:700}
 .demobar button{background:var(--acc-bg);color:var(--acc-ink);border-radius:99px;padding:6px 14px;font-size:12px;font-weight:700}
+.peekbar{width:100%;text-align:left}
+.peekbar .pk{background:var(--acc-bg);color:var(--acc-ink);border-radius:99px;padding:6px 14px;
+  font-size:12px;font-weight:700;white-space:nowrap;flex:none}
 .connbar{width:100%;margin-top:12px;background:var(--soft);color:var(--acc);border:1.5px solid var(--acc);
   border-radius:12px;padding:11px 14px;font-size:13px;font-weight:700;text-align:left;letter-spacing:-.01em;line-height:1.5}
 /* 투표 중 알림 배너 — 가족이 투표를 올리면 홈 맨 위에 뜬다 */
@@ -756,10 +759,14 @@ function render(){
  document.body.classList.toggle('gate',!!ui.gate);
  if(ui.gate){const t=$('#tour');if(t)t.remove();$('#scr').innerHTML=vGate();return}
  $$('.tb').forEach(b=>b.classList.toggle('act',b.dataset.t===ui.tab));
- $('#scr').innerHTML=({home:vHome,menus:vMenus,plan:vPlan,shop:vShop})[ui.tab]();
+ $('#scr').innerHTML=peekBar()+({home:vHome,menus:vMenus,plan:vPlan,shop:vShop})[ui.tab]();
  if(TSTEP>=0&&TSTEP<TOUR.length&&!$('#tour'))setTimeout(tourRender,0);
  if(ui._last!==ui.tab){window.scrollTo(0,0);ui._last=ui.tab}
 }
+
+/* 둘러보기 중이라는 표시와 나가는 길. 어느 탭에 있든 항상 보여야 한다. */
+function peekBar(){return ui.peek?`<button class="demobar peekbar" data-a="startNow">
+  <span>예시로 둘러보는 중 · 저장되지 않아요</span><span class="pk">로그인하러 가기</span></button>`:''}
 
 /* ── 로그인 게이트 (최초 접속) ──
    여기서 갈라지는 길은 하나뿐이다: 로그인. 로그인하면 우리집이 알아서 만들어지고,
@@ -834,9 +841,8 @@ function vHome(){
    <span class="wtx"><span class="wm ${nm?'':'none'}">${nm?esc(nm):'비어있음'}</span>
     ${sub?`<span class="wsub">${esc(sub)}</span>`:''}</span>
    ${k===ti?'<span class="wt">오늘</span>':(n>1?`<span class="wc">${n}끼</span>`:'')}</button>`}).join('');
- const demobar=S._demo?(ui.peek
-   ?`<div class="demobar">예시로 둘러보는 중이에요 <button data-a="startNow">우리집 시작하기</button></div>`
-   :`<div class="demobar">데모 데이터로 보는 중 <button data-a="demoOff">끄기</button></div>`):'';
+ const demobar=(S._demo&&!ui.peek)
+   ?`<div class="demobar">데모 데이터로 보는 중 <button data-a="demoOff">끄기</button></div>`:'';
  const connbar=(!S._demo&&window.OT_CONFIG&&typeof sb!=='undefined'&&sb&&!syncOn)
   ?`<button class="connbar" data-a="retrySync">가족과 연결이 끊겼어요 — 눌러서 다시 시도</button>`:'';
  return demobar+connbar+voteBar()+hero+
@@ -1678,7 +1684,8 @@ function devId(){ if(DEVID)return DEVID;
  if(!DEVID){DEVID=uid();try{localStorage.setItem('otDev',DEVID)}catch(e){}}
  return DEVID}
 function logVisit(event,detail){
- if(!sb)return;   // 로컬·오프라인 모드에서는 남길 곳이 없다
+ if(!sb)return;            // 로컬·오프라인 모드에서는 남길 곳이 없다
+ if(ui.peek)return;        // 둘러보기는 예시일 뿐 — 서버에 흔적을 남기지 않는다
  try{ sb.from('visits').insert({device:devId(),user_id:AUTHUSER?AUTHUSER.id:null,home_id:HOME||null,
   event,detail:String(detail||'').slice(0,120),ref:(document.referrer||'').slice(0,180),
   ua:(navigator.userAgent||'').slice(0,180)}).then(()=>{},()=>{}) }catch(e){}}
@@ -2257,6 +2264,7 @@ const ACT={
  startNow:async()=>{logVisit('tour_done');tourEnd();ui.peek=false;await demoOff();ui.gate=true;render()},
  peek:async()=>{ui.gate=false;ui.peek=true;render();await demoOn();tourStart()},
  tourNext:()=>{TSTEP++;tourRender()},
+ tourPrev:()=>{if(TSTEP<=0)return;TSTEP--;shCloseAll();setTimeout(tourRender,60)},
  tourEnd:()=>tourEnd(),
  tourAgain:()=>{shCloseAll();if(!S._demo){ui.peek=true;demoOn().then(tourStart)}else tourStart()},
  buy:d=>{const u=d.s==='c'?'https://www.coupang.com/np/search?q=':'https://www.kurly.com/search?sword=';
@@ -2274,9 +2282,23 @@ const ACT={
   if(!t){toast('보낼 항목을 골라주세요');return}
   shCloseAll();shareText(t)}
 };
+/* ── 둘러보기(peek)에서 허용하는 동작 ──
+   예시를 구경만 하는 모드다. 화면을 넘겨보는 것과 투어 조작, 그리고 로그인하러 나가기만 된다.
+   나머지는 전부 막는다 — 여기서 만든 것은 어차피 아무 데도 남지 않으므로,
+   되지도 않을 일을 되는 것처럼 보여주지 않는 편이 낫다. */
+const PEEK_OK=new Set([
+ 'go','detail','sort','filt','cat','wk','swk','span','hideDone','wday','planView','mnav','mday',
+ 'openDay','chWk','buy','open',                       // 읽기·탐색
+ 'tourNext','tourPrev','tourEnd','startNow','peek',   // 투어 조작
+ 'shClose','confYes']);                               // 시트 닫기
+function peekBlocked(name){
+ if(!ui.peek||PEEK_OK.has(name))return false;
+ toast('둘러보기에서는 구경만 할 수 있어요 — 시작하려면 로그인해주세요',3000);
+ return true}
 document.addEventListener('click',e=>{const el=e.target.closest('[data-a]');if(!el)return;
  const a=ACT[el.dataset.a];if(!a)return;
  e.preventDefault();
+ if(peekBlocked(el.dataset.a))return;
  // 하나가 실패해도 화면이 빈 채로 남지 않도록 — 조용히 죽지 말고 알린다
  try{const r=a(el.dataset,el,e); if(r&&r.catch)r.catch(err=>actFail(el.dataset.a,err))}
  catch(err){actFail(el.dataset.a,err)}});
@@ -2291,6 +2313,7 @@ document.addEventListener('input',e=>{
    const n=$('#q');if(n){n.focus();n.setSelectionRange(pos,pos)}},350)}});
 document.addEventListener('keydown',e=>{   // 엔터로 빠른 입력 (한글 조합 중 중복 방지)
  if(e.key!=='Enter'||e.isComposing||e.keyCode===229)return;
+ if(ui.peek){e.preventDefault();return}
  if(e.target.id==='qing'){e.preventDefault();ACT.qingAdd()}
  else if(e.target.id==='qstep'&&!e.shiftKey){e.preventDefault();ACT.stepAdd()}
  else if(e.target.id==='xn'||e.target.id==='xa'){e.preventDefault();ACT.xadd()}});
@@ -2333,8 +2356,9 @@ function tourRender(){
    <h4>${s0.t}</h4><p>${s0.d}</p>
    <div class="tourfoot">
     <div class="tdots">${TOUR.map((_,i)=>`<i class="${i===TSTEP?'on':''}"></i>`).join('')}</div>
+    ${TSTEP>0?`<button class="skip" data-a="tourPrev">이전</button>`:''}
     <button class="skip" data-a="tourEnd">그만 보기</button>
-    <button class="next ${s0.last?'go':''}" data-a="${s0.last?'startNow':'tourNext'}">${s0.last?'우리집 시작하기':'다음'}</button>
+    <button class="next ${s0.last?'go':''}" data-a="${s0.last?'startNow':'tourNext'}">${s0.last?'로그인하고 시작하기':'다음'}</button>
    </div></div>`;
  document.body.appendChild(el)}
 function tourStart(){TSTEP=0;tourRender()}
