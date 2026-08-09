@@ -10,10 +10,10 @@
 |---|---|
 | 웹 (정식) | **https://uritable.vercel.app** (Vercel, 무료 · `git push` 시 자동 배포) |
 | 웹 (구주소) | https://heomooyoung.github.io/our-table/ (GitHub Pages, 당분간 유지) |
-| 백엔드 | Supabase **무료** 프로젝트 `bapsang` (ap-southeast-1) |
+| 백엔드 | Supabase **무료** 전용 프로젝트 `uritable` (`agiclnnwevimdkwaufdl`, Seoul) |
 | 인증 | 익명 로그인 + 초대 코드, 카카오 로그인(앱 키 등록 대기) |
 | 저장 | Postgres + RLS(가족 단위 격리), Storage `photos`(공개 버킷) |
-| 외부 | 쿠팡 파트너스 중계 Edge Function `coupang` |
+| 외부 | 쿠팡 파트너스 중계 Edge Function `coupang` — **새 프로젝트에 아직 미배포** |
 | 앱화 | **PWA 완료** — 홈 화면 설치·전체화면·오프라인 실행 |
 
 ---
@@ -122,11 +122,61 @@ npx cap open ios      # Xcode에서 빌드·업로드
 npx vercel deploy --prod --yes
 ```
 
+## 2-1-1. Supabase 전용 프로젝트 (2026-08-09 이관)
+
+전에는 다른 앱(노인 돌봄)과 `bapsang` 프로젝트를 같이 쓰고 있었다. 테이블 이름이 겹치고
+(`is_admin()` 충돌) 서로의 데이터가 한 DB에 섞여서, 실사용자가 붙기 전에 **전용 프로젝트로 분리**했다.
+이관 시점 데이터는 0건이라 옮긴 것은 없다. 구 프로젝트 `bapsang`은 그대로 두었다.
+
+새로 만들 때 필요한 것 (대시보드에서 4가지, 순서대로):
+
+1. 프로젝트 생성 — 리전 **Seoul**, DB 비밀번호는 따로 보관
+2. Authentication → Sign In / Providers → **Allow anonymous sign-ins 켜기**
+   (안 켜면 '시작하기'가 아예 동작하지 않는다)
+3. Storage → New bucket → 이름 `photos`, **Public 체크**
+4. SQL Editor에서 **`supabase/schema.sql` → `supabase/analytics.sql` 순서로** 실행
+   (analytics가 schema의 `feedback`을 참조하므로 순서를 지켜야 한다)
+
+그리고 Settings → API의 Project URL·publishable 키를 `index.html`의 `OT_CONFIG`에 넣는다.
+※ 키가 예전 JWT(`eyJ...`)가 아니라 새 형식(`sb_publishable_...`)이다. supabase-js 2.112 이상에서 동작하며,
+   앱은 esm.sh에서 `@2` 최신을 받으므로 그대로 두면 된다.
+
+## 2-2. 누가 들어왔는지 보기 (테스트 관찰)
+
+두 가지를 같이 쓴다. 하나는 "몇 명이 왔나", 하나는 "와서 뭘 했나".
+
+### A. Vercel Web Analytics — 방문 수·유입 경로
+
+- `index.html`에 `/_vercel/insights/script.js` 태그가 들어가 있다.
+- **Vercel 대시보드 → 프로젝트 → Analytics → Enable** 을 한 번 눌러야 수집이 시작된다. (Hobby 무료, 이벤트 상한 있음)
+- 여기서 보이는 것: 방문자 수·페이지뷰·유입 경로(카톡/직접 접속)·기기·국가. **익명 집계라 개인 추적은 안 된다.**
+
+### B. 앱 안 접속 로그 — 와서 뭘 했나
+
+- 스키마: `supabase/analytics.sql` (Supabase → SQL Editor에 붙여넣고 전체 실행)
+- 기록되는 것: `open`(열어봄) · `guest`(시작하기) · `home_new` · `join` · `menu_add` · `plan_set` · `vote` · `tour_done` · `feedback`
+- 기기 단위(`localStorage`의 device id)로 묶이므로 **로그인 전에 나간 사람도 잡힌다.**
+- 보는 법: 주소 끝에 `#log` → `https://uritable.vercel.app/#log`
+  - 처음엔 "관리자 등록 전" 화면이 뜬다. 거기 뜬 ID를 복사해서 SQL Editor에서 한 번만 실행:
+    `insert into admins (user_id, memo) values ('붙여넣기', '나') on conflict do nothing;`
+  - 등록 후에는 `#log`로 바로 열리고, **설정 → 정보**에도 '접속 로그' 항목이 생긴다(관리자에게만 보임).
+- 읽기는 RLS로 `admins` 계정만 가능. 쓰기는 익명 포함 누구나(첫 방문을 잡아야 하므로) — 그래서 이론상 스팸이 가능하니, 필요하면 오래된 기록을 지운다:
+  `delete from visits where created_at < now() - interval '90 days';`
+
 ## 3. 다음에 바로 할 수 있는 것
 
+- [ ] **`coupang` Edge Function을 새 프로젝트에 배포** — 이거 전엔 장보기의 쿠팡 검색만 동작 안 함
+  ```
+  npx supabase login
+  npx supabase link --project-ref agiclnnwevimdkwaufdl
+  npx supabase functions deploy coupang
+  ```
+  그리고 Edge Functions → Secrets에 `COUPANG_ACCESS_KEY`·`COUPANG_SECRET_KEY` 등록.
+  구 프로젝트에서 값이 안 보이면 쿠팡 파트너스에서 재발급받아야 한다.
 - [ ] 카카오 앱 키 등록 → 로그인 완성 (개발자 콘솔 작업만 남음)
 - [ ] 웹푸시(투표 알림) — PWA 상태에서 바로 가능, iOS는 홈 화면 추가 필요
 - [ ] 계정·데이터 삭제 기능
-- [ ] Supabase Pro 전환 + 전용 프로젝트 이관
+- [x] ~~전용 Supabase 프로젝트 이관~~ (2026-08-09 완료 — 2-1-1 참고)
+- [ ] Supabase Pro 전환
 - [ ] 약관·개인정보처리방침 페이지
 - [ ] Capacitor 스캐폴드 (Mac에서 빌드)

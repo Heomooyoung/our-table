@@ -17,6 +17,7 @@
 - 구주소: https://heomooyoung.github.io/our-table/
 - 로컬 미러(Claude Artifact): https://claude.ai/code/artifact/a928241d-850a-433e-a9c8-2e716c3bb2aa
 - 데이터는 브라우저 IndexedDB에 저장(기기별). 설정에서 JSON 백업/복원 가능.
+- 테스터 접속 확인: 주소 끝에 `#log` (만든 사람만 보임 — 설정 방법은 `DEPLOY.md` 2-2)
 
 ## 디자인
 

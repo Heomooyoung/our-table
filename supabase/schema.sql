@@ -108,6 +108,18 @@ create table ballots (
   primary key (vote_id, member_id)              -- 1인 1표, 다시 찍으면 upsert
 );
 
+-- 의견 보내기 (설정 → 의견 보내기)
+-- 쓰기만 열려 있고 읽기는 관리자 전용. 읽기 정책은 analytics.sql에서 is_admin()과 함께 붙는다.
+create table feedback (
+  id         uuid primary key default gen_random_uuid(),
+  user_id    uuid,
+  home_id    uuid,
+  message    text not null,
+  contact    text not null default '',
+  ua         text not null default '',
+  created_at timestamptz not null default now()
+);
+
 -- ═══════════ RLS: 우리집 멤버만 우리집 데이터 접근 ═══════════
 alter table homes            enable row level security;
 alter table members          enable row level security;
@@ -117,6 +129,7 @@ alter table shopping_extras  enable row level security;
 alter table shopping_checked enable row level security;
 alter table votes            enable row level security;
 alter table ballots          enable row level security;
+alter table feedback         enable row level security;
 
 create or replace function my_home_ids() returns setof uuid
 language sql security definer set search_path = public stable as $$
@@ -136,6 +149,9 @@ create policy votes_all   on votes            for all using (home_id in (select 
 create policy ballots_all on ballots
   for all using (vote_id in (select id from votes where home_id in (select my_home_ids())))
   with check (member_id in (select id from members where user_id = auth.uid()));
+
+-- 의견은 보낼 수만 있다 (읽기 정책 없음 = 아무도 못 읽음. 관리자 읽기는 analytics.sql에서 추가)
+create policy feedback_w on feedback for insert to authenticated with check (user_id = auth.uid());
 
 -- ═══════════ 가입/합류 RPC (RLS 우회가 필요한 두 동작) ═══════════
 

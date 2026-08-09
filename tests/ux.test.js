@@ -364,6 +364,43 @@ const sleep=ms=>new Promise(r=>setTimeout(r,ms));
  ok(!q('#tour'),'로그인 화면에선 투어 숨김');
  g('(function(){TSTEP=-1;ui.gate=false;render()})()'); await sleep(150);
 
+ console.log('\n[20단계] 접속 로그 (만든 사람용)');
+ await closeAll();
+ // 관리자 등록 전 — 읽기가 RLS에 막힌 상황
+ g(`(function(){AUTHUSER={id:'11111111-2222-3333-4444-555555555555',is_anonymous:true};
+  sb={from:()=>({select:()=>({order:()=>({limit:async()=>({data:null,error:{message:'denied'}})})})})}})()`);
+ g('openVisitLog()'); await sleep(150);
+ ok(!!byText('.sw','관리자로 등록되지'),'등록 전 → 안내 화면');
+ ok(!!byText('.sw','11111111-2222-3333-4444-555555555555'),'등록에 쓸 내 계정 ID 노출');
+ ok(!!q('[data-a="logCopy"]'),'ID 복사 버튼');
+
+ // 관리자 — 실제 로그 화면
+ await closeAll();
+ g(`(function(){const now=Date.now(),iso=m=>new Date(now-m*60000).toISOString();
+  const rows=[
+   {device:'d1',user_id:'u1',event:'menu_add',detail:'김치찜',ua:'iPhone; CriOS',ref:'https://kakao.com/x',created_at:iso(1)},
+   {device:'d1',user_id:'u1',event:'guest',detail:'',ua:'iPhone; CriOS',ref:'https://kakao.com/x',created_at:iso(2)},
+   {device:'d1',user_id:null,event:'open',detail:'',ua:'iPhone; CriOS',ref:'https://kakao.com/x',created_at:iso(3)},
+   {device:'d2',user_id:null,event:'open',detail:'',ua:'Windows NT 10.0; Chrome',ref:'',created_at:iso(20)}];
+  sb={from:()=>({select:()=>({order:()=>({limit:async()=>({data:rows,error:null})})})})}})()`);
+ g('openVisitLog()'); await sleep(150);
+ ok(!!byText('.sw','들어온 사람들'),'로그 화면 열림');
+ ok(!!byText('.sw .cnt','전체 2명'),'기기 단위로 사람 수 집계');
+ ok(!!byText('.sw','iPhone · Chrome'),'기기·브라우저 요약');
+ ok(!!byText('.sw','카톡에서 옴'),'유입 경로 표시');
+ ok(!!byText('.sw','메뉴 등록')&&!!byText('.sw','김치찜'),'무엇을 했는지 한글로');
+ ok(!!byText('.sw','열어보기만 하고'),'들어왔다 그냥 나간 사람도 보임');
+ await closeAll();
+
+ // 설정 진입로는 관리자에게만
+ g('(function(){ISADMIN=false})()'); g('openSettings()'); await sleep(120);
+ ok(!q('[data-a="logOpen"]'),'일반 사용자 설정엔 접속 로그 없음');
+ await closeAll();
+ g('(function(){ISADMIN=true})()'); g('openSettings()'); await sleep(120);
+ ok(!!q('[data-a="logOpen"]'),'관리자 설정엔 접속 로그 있음');
+ await closeAll();
+ g('(function(){ISADMIN=false;AUTHUSER=null;sb=null})()');
+
  console.log('\n────────────────────');
  console.log(`결과: ${pass} PASS / ${fail} FAIL`);
  if(fails.length){console.log('실패 목록:');fails.forEach(f=>console.log(' -',f))}
