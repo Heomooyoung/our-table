@@ -178,9 +178,17 @@ const sleep=ms=>new Promise(r=>setTimeout(r,ms));
  ok(!!byText('.sw .srow','우리집 식구'),'구성원은 한 항목으로만 보임');
  click(byText('.sw .srow','우리집 식구')); await sleep(80);
  ok(!!byText('.sw .shead b','우리집 식구'),'구성원 시트 열림');
+ ok(!!byText('.sw','자동으로 이 목록에 들어옵니다'),'식구는 초대로 자동 합류한다고 안내');
+ ok(!q('.sw #famN'),'식구를 손으로 등록하는 칸이 없음');
+ ok(!q('.sw [data-a="famDel"]'),'식구를 손으로 빼는 버튼도 없음');
+ await closeAll();
+
+ // 돌려찍기용 이름은 투표를 시작할 때만 다룬다
  const famN=g('famAll().length');
- ok(qa('.sw #famList .fam').length===famN,`목록에 ${famN}명 표시`);
- ok(!!byText('.sw','폰이 없는 식구'),'폰 없는 식구를 따로 넣는 자리 안내');
+ g('openFamily(true)'); await sleep(100);
+ ok(!!byText('.sw .shead b','이 폰으로 돌아가며 투표'),'돌려찍기 시트는 따로 열림');
+ ok(!!byText('.sw','이 투표에서만'),'여기 이름은 이 투표용이라고 밝힘');
+ ok(!!q('.sw #famN'),'여기서는 이름을 넣을 수 있음');
  click(qa('.sw [data-a="famDel"]')[0]); await sleep(60);
  ok(g('famAll().length')===famN-1,'이 폰에만 있던 이름은 뺄 수 있음');
  await closeAll();
