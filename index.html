@@ -313,7 +313,7 @@ svg{display:block}
 
 /* ── 시트 ── */
 .sw{position:fixed;inset:0;z-index:60}
-.sw .sb{position:absolute;inset:0;background:rgba(14,20,14,.58);opacity:0;transition:opacity .24s}
+.sw>.sb{position:absolute;inset:0;background:rgba(14,20,14,.58);opacity:0;transition:opacity .24s}
 .sw .sp{position:absolute;left:0;right:0;bottom:0;margin:0 auto;max-width:520px;background:var(--paper);
   border-radius:20px 20px 0 0;max-height:92dvh;overflow-y:auto;overscroll-behavior:contain;
   padding:0 18px calc(26px + env(safe-area-inset-bottom));
@@ -321,9 +321,9 @@ svg{display:block}
   transform:translateY(100%);transition:transform .26s cubic-bezier(.32,.72,.3,1)}
 .grabzone{position:sticky;top:0;z-index:5;background:var(--paper);padding:11px 0 5px;margin:0 -18px;
   touch-action:none;cursor:grab}
-.sw.on .sb{opacity:1}
+.sw.on>.sb{opacity:1}
 .sw.on .sp{transform:translateY(0)}
-.sw.closing .sb{opacity:0}
+.sw.closing>.sb{opacity:0}
 .sw.closing .sp{transform:translateY(100%)}
 .grab{width:46px;height:5px;border-radius:99px;background:var(--line);margin:0 auto}
 

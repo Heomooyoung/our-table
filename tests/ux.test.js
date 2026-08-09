@@ -227,6 +227,13 @@ const sleep=ms=>new Promise(r=>setTimeout(r,ms));
  ok(g('SHOPSEL.size')===n0,'안 고른 항목을 눌러 넣을 수 있음');
  click(byText('.sw .btn','전부 고르기')); await sleep(80);
  ok(g('SHOPSEL.size')===g('shopKeys().length'),'전부 고르기 동작');
+ // 시트를 덮는 검은 판(스크림)은 .sw의 직계 자식 하나뿐이어야 한다.
+ // 장보기 항목 본문도 class="sb"라, 자손 전체를 잡으면 항목마다 화면을 덮어 시트가 까맣게 된다.
+ ok(qa('.sw > .sb').length===1,'스크림은 시트당 하나');
+ ok(qa('.sw .sb').length>1,'시트 안에 같은 이름의 항목 본문이 실제로 존재함');
+ const css=d.querySelector('style').textContent;
+ ok(css.includes('.sw>.sb{')&&!/\.sw \.sb\{/.test(css),'스크림 스타일이 직계 자식으로 한정됨');
+ ok(!!byText('.sw .snm2',''),'항목 이름이 시트에 렌더됨');
  await closeAll();
  click('[data-a="settings"]'); await sleep(80);
  ok(!byText('.sw .srow','카카오'),'미로그인 설정엔 계정 항목 없음');
