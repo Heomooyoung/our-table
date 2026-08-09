@@ -460,6 +460,8 @@ textarea.in{height:auto;min-height:58px;padding:11px 13px;resize:vertical;line-h
 .vopt{display:flex;align-items:center;gap:11px;width:100%;text-align:left;background:var(--card);
   border:1.5px solid var(--line);border-radius:13px;padding:10px 12px;margin-bottom:8px}
 .vopt.on{border-color:var(--acc);background:var(--soft)}
+.vopt{transition:background .08s ease,border-color .08s ease,transform .08s ease}
+.vopt:active{transform:scale(.985);background:var(--line2)}
 .vopt .vck{flex:none;width:24px;height:24px;border-radius:99px;border:1.5px solid var(--line);
   display:grid;place-items:center;color:transparent}
 .vopt.on .vck{background:var(--acc-bg);border-color:var(--acc-bg);color:var(--acc-ink)}
@@ -515,8 +517,12 @@ body.gate .tabbar,body.gate .hdr{display:none}
 .votebar .vbt{flex:1;font-size:13.5px;line-height:1.45}
 .votebar .vbt i{display:block;font-style:normal;font-weight:600;font-size:12px;opacity:.9;margin-top:1px}
 .votebar .vbg{background:rgba(255,255,255,.22);border-radius:99px;padding:6px 13px;font-size:12px;font-weight:800;white-space:nowrap}
-/* 투표 시트 우상단 내보내기 아이콘 */
-.vshare{position:absolute;top:6px;right:4px;color:var(--sub);z-index:2}
+/* 투표 시트 우상단 내보내기 아이콘 — 손가락으로 누르기 충분한 크기 */
+.vshare{position:absolute;top:2px;right:0;width:44px;height:44px;color:var(--ink);z-index:2}
+/* 장보기 내보내기 미리보기 — 실제로 나갈 문구를 그대로 보여준다 */
+.sspv{padding:15px 16px;white-space:pre-wrap;font-size:13px;line-height:1.8;
+  color:var(--ink);letter-spacing:-.01em}
+.vshare:active{background:var(--line2)}
 
 /* ── 토스트 ── */
 #toast{position:fixed;left:50%;bottom:calc(88px + env(safe-area-inset-bottom));transform:translate(-50%,14px);
@@ -607,7 +613,7 @@ const I={
  star:'<svg viewBox="0 0 24 24"><path d="M12 3.3l2.65 5.37 5.93.86-4.29 4.18 1.01 5.9L12 16.83l-5.3 2.78 1.01-5.9L3.42 9.53l5.93-.86L12 3.3Z"/></svg>',
  srch:'<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg>',
  plus:'<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>',
- share:'<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V4"/><path d="M8.5 7.5L12 4l3.5 3.5"/><path d="M5 13v5.5a1.5 1.5 0 0 0 1.5 1.5h11a1.5 1.5 0 0 0 1.5-1.5V13"/></svg>'
+ share:'<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5.5" r="2.6"/><circle cx="6" cy="12" r="2.6"/><circle cx="18" cy="18.5" r="2.6"/><path d="M8.3 10.8l7.4-4M8.3 13.2l7.4 4"/></svg>'
 };
 function hearts(r,cls,act){let h=`<span class="hearts ${cls||''}">`;for(let i=1;i<=5;i++)h+=`<span ${act?`data-a="${act}" data-v="${i}"`:''} style="display:inline-flex">${I.star.replace('<svg','<svg class="'+(i<=r?'on':'')+'"')}</span>`;return h+'</span>'}
 function phEl(m,cls){ if(m.photo) return `<div class="ph ${cls||''}" style="background-image:url(${m.photo})"></div>`;
@@ -852,7 +858,7 @@ function vMenus(){
    <button class="lmain" data-a="detail" data-id="${m.id}">${phEl(m)}
     <span class="lb"><span class="lnm">${esc(m.name)}</span>
      <span class="lmt">${m.cat?`<span class="cooked">${esc(m.cat)}</span>`:''}${hearts(m.rating)}<span class="cooked">${m.cookCount}번</span></span></span></button>
-   <button class="ladd" data-a="toPlan" data-id="${m.id}" aria-label="식단표에 넣기">${I.plus}</button></div>`).join('');
+   <button class="ladd" data-a="toPlan" data-id="${m.id}" aria-label="주간 식단표에 넣기">${I.plus}</button></div>`).join('');
  const sorts=[['best','베스트순'],['new','최근 등록'],['often','자주 해먹은']];
  return `<section class="sec"><div class="sec-h"><div><div class="eyebrow">House Menu</div><h2>우리집 메뉴판</h2></div>
    <span class="cnt">${list.length} / ${S.menus.length}</span></div>
@@ -996,7 +1002,7 @@ function shopShareRender(){
     ${r.brand?`<span class="src" style="color:var(--acc)">${esc(r.brand)}</span>`:''}
     ${r.bought?`<span class="src">이미 산 것</span>`:''}</span></button>`).join('')}</div>
   <div class="sgrp" style="margin-top:16px">이렇게 나갑니다</div>
-  <div class="paper" style="padding:14px"><div class="mut" style="white-space:pre-wrap;font-size:13px;line-height:1.75;color:var(--ink)">${esc(txt)||'고른 항목이 없어요'}</div></div>
+  <div class="paper sspv">${esc(txt)||'고른 항목이 없어요'}</div>
   <div class="dacts"><button class="btn pri blk" data-a="ssSend">${SHOPSEL.size}개 보내기</button>
    <button class="btn gho blk" data-a="ssAll">${SHOPSEL.size===rows.length?'전부 해제':'전부 고르기'}</button></div>`}
 function vShop(){
@@ -1088,7 +1094,7 @@ function openDetail(id){const m=menu(id);if(!m)return;
   ${steps?`<div class="sec"><div class="eyebrow">만드는 법</div><ol class="steps" style="margin-top:12px">${steps}</ol></div>`:''}
   ${m.memo?`<div class="sec"><div class="eyebrow">우리집 메모</div><div class="note" style="margin-top:10px">${esc(m.memo)}</div></div>`:''}
   <div class="dacts">
-   <button class="btn pri blk" data-a="toPlan" data-id="${m.id}">식단표에 넣기</button>
+   <button class="btn pri blk" data-a="toPlan" data-id="${m.id}">주간 식단표에 넣기</button>
    <div class="tbtns"><button class="tbtn" data-a="edit" data-id="${m.id}">수정하기</button>
     <button class="tbtn warn" data-a="delMenu" data-id="${m.id}">메뉴판에서 빼기</button></div></div>`)}
 
@@ -1437,7 +1443,7 @@ async function sendFeedback(){
 
 /* ── 접속 로그 보기 (관리자 전용 · 주소 끝에 #log) ── */
 const EVK={open:'열어봄',guest:'시작하기 누름',home_new:'우리집 만듦',join:'초대 링크로 합류',
- login_fail:'로그인 실패',
+ login_fail:'로그인 실패',ui_error:'화면 오류',
  menu_add:'메뉴 등록',plan_set:'식단표에 배치',vote:'가족 투표',tour_done:'둘러보기 끝까지',feedback:'의견 보냄'};
 function logTime(t){const d=new Date(t),m=Math.round((Date.now()-d)/60000);
  if(m<1)return'방금';if(m<60)return m+'분 전';if(m<1440)return Math.round(m/60)+'시간 전';
@@ -1900,9 +1906,10 @@ async function openVoteLive(id,justCreated){
  if(!syncOn){toast('우리집 계정 연결이 필요해요');return}
  try{const {data:v,error}=await sb.from('votes').select('*').eq('id',id).single();
   if(error||!v)throw error;
-  LIVE={id,vote:v,justCreated:!!justCreated};
+  LIVE={id,vote:v,justCreated:!!justCreated,cnt:{},total:0,my:null};
   sheet(`<div id="vlive"></div>`);
-  refreshVoteLive()}
+  paintVoteLive();          // 뼈대를 먼저 보여주고
+  refreshVoteLive()}        // 숫자는 뒤이어 채운다
  catch(e){toast('투표를 찾지 못했어요')}}
 /* 개표는 vote_tally가 후보별 숫자만 돌려준다 — 누가 뭘 찍었는지는 서버 밖으로 안 나온다.
    내가 찍은 것만 내 표로 따로 읽어 표시한다. */
@@ -1911,30 +1918,44 @@ async function tallyOf(id,cands){
  const {data}=await sb.rpc('vote_tally',{v_id:id});
  let total=0;(data||[]).forEach(r=>{if(cnt[r.choice]!=null)cnt[r.choice]=Number(r.cnt);total+=Number(r.cnt)});
  return {cnt,total}}
-async function refreshVoteLive(){
- if(!LIVE||!$('#vlive'))return;
- const {data:v2}=await sb.from('votes').select('*').eq('id',LIVE.id).maybeSingle();if(v2)LIVE.vote=v2;
- const v=LIVE.vote,closed=v.status==='closed';
- const {cnt,total}=await tallyOf(LIVE.id,v.candidates);
- const {data:mine}=await sb.from('ballots').select('*').eq('vote_id',LIVE.id);   // 정책상 내 표만 온다
- const my=(mine||[])[0];
- const ballots={length:total};
+/* 그리기와 불러오기를 나눈다.
+   전에는 후보를 누를 때마다 서버 왕복(투표 조회 → 개표 → 내 표 조회)이 끝나야
+   화면이 바뀌어서, 눌러도 한참 반응이 없었다. 이제는 누른 즉시 화면부터 바꾸고
+   서버에는 뒤이어 보낸다. */
+function paintVoteLive(){
+ const el=$('#vlive');if(!el||!LIVE)return;
+ const v=LIVE.vote, closed=v.status==='closed';
+ const cnt=LIVE.cnt||{}, total=LIVE.total||0, my=LIVE.my;
  const nm=k=>k==='DELIV'?'배달 찬스':(menu(k)?menu(k).name:'?');
- const bars=[...(v.candidates||[])].sort((a,b)=>cnt[b]-cnt[a]).map(k=>`<div class="vbar">
-  <span class="vn">${esc(nm(k))}</span><span class="vtrack"><span class="vfill" style="width:${Math.round(cnt[k]/Math.max(1,MEMBERS.length)*100)}%"></span></span>
-  <span class="vc">${cnt[k]}</span></div>`).join('');
+ const denom=Math.max(1,MEMBERS.length);
+ const bars=[...(v.candidates||[])].sort((a,b)=>(cnt[b]||0)-(cnt[a]||0)).map(k=>`<div class="vbar">
+  <span class="vn">${esc(nm(k))}</span><span class="vtrack"><span class="vfill" style="width:${Math.round((cnt[k]||0)/denom*100)}%"></span></span>
+  <span class="vc">${cnt[k]||0}</span></div>`).join('');
  const opts=closed?'':(v.candidates||[]).map(k=>`<button class="vopt ${my&&my.choice===k?'on':''}" data-a="vlCast" data-k="${k}">
   ${phEl(k==='DELIV'?DELIV:(menu(k)||{name:'?',no:0,photo:''}))}<span class="vnm">${esc(nm(k))}</span>${my&&my.choice===k?'<span class="cooked">내 표</span>':''}</button>`).join('');
- const el=$('#vlive');if(!el)return;
  el.innerHTML=`${closed?'':`<button class="icobtn vshare" data-a="vlShare" aria-label="투표 링크 내보내기" title="아직 안 한 가족에게 링크 보내기">${I.share}</button>`}
   <div class="vturn" style="padding:8px 0 8px"><div class="vt1">${closed?'Result':'Family Vote'}</div>
   <div class="vt2">오늘 ${MEAL[v.meal]}, 뭐 먹을까?</div>
-  <div class="vt3">${ballots.length} / ${MEMBERS.length}명 투표${closed?' · 마감됨':' · 실시간 개표 중'}</div></div>
+  <div class="vt3">${total} / ${MEMBERS.length}명 투표${closed?' · 마감됨':' · 실시간 개표 중'}</div></div>
   ${bars}
   ${opts?`<div style="margin-top:14px">${opts}</div>`:''}
   <div class="dacts">
-   ${!closed&&ballots.length?`<button class="btn pri blk" data-a="vlFinish">마감하고 오늘 식단에 반영</button>`:''}
+   ${!closed&&total?`<button class="btn pri blk" data-a="vlFinish">마감하고 오늘 식단에 반영</button>`:''}
   </div>`}
+async function refreshVoteLive(){
+ if(!LIVE||!$('#vlive'))return;
+ try{
+  const id=LIVE.id;
+  const [vr,tl,mb]=await Promise.all([
+   sb.from('votes').select('*').eq('id',id).maybeSingle(),
+   tallyOf(id,LIVE.vote.candidates),
+   sb.from('ballots').select('*').eq('vote_id',id)]);   // 정책상 내 표만 온다
+  if(!LIVE||LIVE.id!==id)return;
+  if(vr.data)LIVE.vote=vr.data;
+  LIVE.cnt=tl.cnt;LIVE.total=tl.total;LIVE.my=(mb.data||[])[0]||null;
+  paintVoteLive()
+ }catch(e){}}
+
 /* ── 진행 중인 투표 알림 ──
    투표를 올리면 가족 폰에 실시간으로 신호가 간다. 앱이 열려 있으면 그 자리에서 토스트가 뜨고,
    나중에 열어도 홈 맨 위에 배너가 남아 있어 놓치지 않는다. */
@@ -1964,10 +1985,24 @@ function voteBar(){
   <span class="vbt">${done?`오늘 ${MEAL[v.meal]} 투표 진행 중`:`오늘 ${MEAL[v.meal]}, 뭐 먹을지 투표해주세요`}
    <i>${v.total||0} / ${MEMBERS.length}명 참여${done?' · 내 표 완료':''}</i></span>
   <span class="vbg">${done?'결과 보기':'투표하기'}</span></button>`}
-async function vlCast(k){try{
- const {error}=await sb.from('ballots').upsert({vote_id:LIVE.id,member_id:ME.id,choice:k});
- if(error)throw error;refreshVoteLive()}
- catch(e){toast('투표가 안 들어갔어요 — 인터넷 확인')}}
+async function vlCast(k){
+ if(!LIVE||!ME)return;
+ const before={my:LIVE.my,cnt:Object.assign({},LIVE.cnt),total:LIVE.total};
+ // 누른 즉시 화면 반영 — 서버 응답을 기다리지 않는다
+ const prev=LIVE.my&&LIVE.my.choice;
+ LIVE.cnt=LIVE.cnt||{};
+ if(prev===k)return;                                  // 같은 걸 다시 누름 — 할 일 없음
+ if(prev)LIVE.cnt[prev]=Math.max(0,(LIVE.cnt[prev]||0)-1); else LIVE.total=(LIVE.total||0)+1;
+ LIVE.cnt[k]=(LIVE.cnt[k]||0)+1;
+ LIVE.my={choice:k};
+ paintVoteLive();
+ try{
+  const {error}=await sb.from('ballots').upsert({vote_id:LIVE.id,member_id:ME.id,choice:k});
+  if(error)throw error;
+  refreshVoteLive();checkOpenVote()                   // 정확한 개표는 뒤따라 맞춘다
+ }catch(e){
+  Object.assign(LIVE,before);paintVoteLive();
+  toast('투표가 안 들어갔어요 — 인터넷 확인')}}
 async function vlFinish(){try{
  const v=LIVE.vote;
  const {cnt}=await tallyOf(LIVE.id,v.candidates);
@@ -2182,7 +2217,15 @@ const ACT={
   shCloseAll();shareText(t)}
 };
 document.addEventListener('click',e=>{const el=e.target.closest('[data-a]');if(!el)return;
- const a=ACT[el.dataset.a];if(a){e.preventDefault();a(el.dataset,el,e)}});
+ const a=ACT[el.dataset.a];if(!a)return;
+ e.preventDefault();
+ // 하나가 실패해도 화면이 빈 채로 남지 않도록 — 조용히 죽지 말고 알린다
+ try{const r=a(el.dataset,el,e); if(r&&r.catch)r.catch(err=>actFail(el.dataset.a,err))}
+ catch(err){actFail(el.dataset.a,err)}});
+function actFail(name,err){
+ try{console.error('[action]',name,err)}catch(_){}
+ toast('처리하지 못했어요 — 다시 눌러주세요',3200);
+ if(sb&&HOME)logVisit('ui_error',name+': '+String(err&&err.message||err).slice(0,80))}
 document.addEventListener('input',e=>{
  if(e.target.tagName==='TEXTAREA'&&(e.target.id==='qstep'||e.target.id==='f-memo'))autoGrow(e.target);
  if(e.target.id==='q'){ui.q=e.target.value;

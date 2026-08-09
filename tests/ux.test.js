@@ -370,6 +370,24 @@ const sleep=ms=>new Promise(r=>setTimeout(r,ms));
  ok(byText('.votebar .vbg','결과 보기'),'내 표를 냈으면 결과 보기로 바뀜');
  g('(function(){OPENVOTE=null;render()})()'); await sleep(100);
  ok(!q('.votebar'),'진행 중인 투표가 없으면 배너 없음');
+
+ // 서버가 400ms 걸리도록 막아두고, 50ms 시점에 화면이 이미 바뀌었는지 본다
+ g(`(function(){
+   const slow=()=>new Promise(r=>setTimeout(()=>r({error:null,data:[]}),400));
+   sb={from:()=>({upsert:slow,select:()=>({eq:()=>slow(),maybeSingle:slow})}),rpc:slow};
+   LIVE={id:'v1',vote:{id:'v1',meal:'d',candidates:['a','DELIV'],status:'open'},cnt:{a:0,DELIV:0},total:0,my:null};
+   sheet('<div id="vlive"></div>');paintVoteLive();
+  })()`);
+ await sleep(120);
+ ok(qa('#vlive [data-a="vlCast"]').length===2,'투표 화면에 후보 2개');
+ ok(!q('#vlive .vopt.on'),'아직 아무것도 안 고른 상태');
+ click(q('#vlive [data-a="vlCast"]')); await sleep(60);   // 서버 응답(400ms)보다 훨씬 이르다
+ ok(!!q('#vlive .vopt.on'),'누르자마자 내 표로 표시됨 (서버 기다리지 않음)');
+ ok(!!byText('#vlive .vt3','1 / 2명'),'집계 숫자도 즉시 반영');
+ ok(!!byText('#vlive .cooked','내 표'),'"내 표" 배지도 바로 붙음');
+ ok(!!q('#vlive .vshare'),'내보내기 아이콘은 우상단에 따로 있음');
+ await sleep(450);
+ g('(function(){sb=null;LIVE=null})()'); await closeAll();
  g('(function(){syncOn=false;HOME=null;ME=null;MEMBERS=[];render()})()'); await sleep(80);
 
  console.log('\n[18-2-2단계] 로그인하고 돌아왔을 때 주소 처리');
