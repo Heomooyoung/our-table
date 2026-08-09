@@ -37,6 +37,11 @@ Deno.serve(async (req) => {
         headers: { Authorization: await auth("GET", path, query), "Content-Type": "application/json" },
       });
       const j = await r.json();
+      // 쿠팡이 키를 거부하거나 장애일 때 빈 목록으로 뭉개면 앱에서 '결과 없음'으로 보인다.
+      // 재료가 없는 게 아니라 검색을 못 쓰는 상태이므로 구분해서 알려준다.
+      if (j?.code === "ERROR" || (!j?.data && j?.message)) {
+        return json({ items: [], error: "upstream", detail: String(j?.message || "") }, 200);
+      }
       const items = (j?.data?.productData || []).map((p: Record<string, unknown>) => ({
         name: p.productName, price: p.productPrice, image: p.productImage,
         url: p.productUrl, rocket: !!p.isRocket,

@@ -1242,6 +1242,15 @@ async function renderFind(nm,n){
   const r=await fetch(`${OT_CONFIG.shopApi}?mode=search&q=${encodeURIComponent(nm)}&limit=${lim}`);
   const j=await r.json();const items=j.items||[];
   const el=$('#fdbody');if(!el)return;
+  // 재료가 없는 것과 검색을 못 쓰는 것은 다르다 — 섞어서 보여주면 오해한다
+  if(j.error){el.innerHTML=`<div class="sec-h" style="margin-top:4px"><div><div class="eyebrow">Find Product</div>
+    <h2>${esc(nm)}</h2></div></div>
+   <div class="empty"><b>지금은 제품 찾기를 쓸 수 없어요</b>
+    <p>브랜드·사진은 직접 적어주세요.<br>아래 버튼으로 쿠팡·컬리에서 바로 찾아볼 수 있어요.</p>
+    <div style="display:flex;gap:8px;justify-content:center;margin-top:14px">
+     <button class="btn gho" data-a="buy" data-s="c" data-n="${esc(nm)}">쿠팡에서 찾기</button>
+     <button class="btn gho" data-a="buy" data-s="k" data-n="${esc(nm)}">컬리에서 찾기</button></div></div>`;
+   return}
   const rows=items.map((p,i)=>`<button class="prod" data-a="fdPick" data-i="${i}">
    <span class="pimg" style="background-image:url(${esc(p.image||'')})"></span>
    <span class="pinfo"><span class="pn">${esc(p.name)}${p.rocket?'<span class="rk">로켓</span>':''}</span>
