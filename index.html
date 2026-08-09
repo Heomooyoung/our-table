@@ -508,6 +508,15 @@ body.gate .tabbar,body.gate .hdr{display:none}
 .demobar button{background:var(--acc-bg);color:var(--acc-ink);border-radius:99px;padding:6px 14px;font-size:12px;font-weight:700}
 .connbar{width:100%;margin-top:12px;background:var(--soft);color:var(--acc);border:1.5px solid var(--acc);
   border-radius:12px;padding:11px 14px;font-size:13px;font-weight:700;text-align:left;letter-spacing:-.01em;line-height:1.5}
+/* 투표 중 알림 배너 — 가족이 투표를 올리면 홈 맨 위에 뜬다 */
+.votebar{width:100%;margin-top:12px;display:flex;align-items:center;gap:11px;text-align:left;
+  background:var(--heart);color:#fff;border-radius:12px;padding:11px 14px;font-weight:800;letter-spacing:-.01em}
+.votebar .vbi{font-size:17px;line-height:1}
+.votebar .vbt{flex:1;font-size:13.5px;line-height:1.45}
+.votebar .vbt i{display:block;font-style:normal;font-weight:600;font-size:12px;opacity:.9;margin-top:1px}
+.votebar .vbg{background:rgba(255,255,255,.22);border-radius:99px;padding:6px 13px;font-size:12px;font-weight:800;white-space:nowrap}
+/* 투표 시트 우상단 내보내기 아이콘 */
+.vshare{position:absolute;top:6px;right:4px;color:var(--sub);z-index:2}
 
 /* ── 토스트 ── */
 #toast{position:fixed;left:50%;bottom:calc(88px + env(safe-area-inset-bottom));transform:translate(-50%,14px);
@@ -597,7 +606,8 @@ const I={
  heart:'<svg viewBox="0 0 24 24"><path d="M12 20.2s-7.1-4.6-9.1-9.1C1.5 8 3.7 4.6 6.9 4.6c2 0 3.5 1 5.1 3 1.6-2 3.1-3 5.1-3 3.2 0 5.4 3.4 4 6.5-2 4.5-9.1 9.1-9.1 9.1Z"/></svg>',
  star:'<svg viewBox="0 0 24 24"><path d="M12 3.3l2.65 5.37 5.93.86-4.29 4.18 1.01 5.9L12 16.83l-5.3 2.78 1.01-5.9L3.42 9.53l5.93-.86L12 3.3Z"/></svg>',
  srch:'<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg>',
- plus:'<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>'
+ plus:'<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>',
+ share:'<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V4"/><path d="M8.5 7.5L12 4l3.5 3.5"/><path d="M5 13v5.5a1.5 1.5 0 0 0 1.5 1.5h11a1.5 1.5 0 0 0 1.5-1.5V13"/></svg>'
 };
 function hearts(r,cls,act){let h=`<span class="hearts ${cls||''}">`;for(let i=1;i<=5;i++)h+=`<span ${act?`data-a="${act}" data-v="${i}"`:''} style="display:inline-flex">${I.star.replace('<svg','<svg class="'+(i<=r?'on':'')+'"')}</span>`;return h+'</span>'}
 function phEl(m,cls){ if(m.photo) return `<div class="ph ${cls||''}" style="background-image:url(${m.photo})"></div>`;
@@ -819,7 +829,7 @@ function vHome(){
    :`<div class="demobar">데모 데이터로 보는 중 <button data-a="demoOff">끄기</button></div>`):'';
  const connbar=(!S._demo&&window.OT_CONFIG&&typeof sb!=='undefined'&&sb&&!syncOn)
   ?`<button class="connbar" data-a="retrySync">가족과 연결이 끊겼어요 — 눌러서 다시 시도</button>`:'';
- return demobar+connbar+hero+
+ return demobar+connbar+voteBar()+hero+
   `<section class="sec"><div class="sec-h"><div><div class="eyebrow">This Week</div><h2>이번 주 저녁</h2></div>
     <button class="chip" data-a="go" data-t="plan">식단표</button></div>
     <div class="wlist">${days}</div></section>`;
@@ -952,13 +962,43 @@ function shopData(){
  const items=[...map.values()].map(e=>Object.assign(e,{need:buyAmount(e.name,e.sums,mult),ppl,mult}));
  return {wk,items,extras,ppl,base};
 }
-function buildShopText(){const {wk,items,extras}=shopData();
+/* ── 장 봐올 목록 내보내기 ──
+   "이거 이거 사와" 하고 고른 것만 깔끔하게 정리해서 카톡으로 바로 보낼 수 있게 만든다.
+   화면의 체크(=이미 산 것)와는 별개로, 보낼 항목을 여기서 다시 고를 수 있다. */
+let SHOPSEL=null;
+function shopKeys(){const {wk,items,extras}=shopData();
  const ck=k=>!!S.checked[wk+'|'+k];
+ return [...items.map(it=>({k:it.name,name:it.name,brand:it.brand||'',
+    amount:it.need||it.uses.map(u=>u.a).filter(Boolean).join(' / '),bought:ck(it.name)})),
+  ...extras.map(x=>({k:'x'+x.id,name:x.name,brand:'',amount:x.amount||'',bought:ck('x'+x.id)}))]}
+function buildShopText(sel){
+ const rows=shopKeys().filter(r=>sel?sel.has(r.k):!r.bought);
  const mon=weekOf(ui.shopWeek),sun=new Date(mon);sun.setDate(sun.getDate()+7*(ui.shopSpan||1)-1);
- const L=[`🧺 우리집 장보기 — ${relW(ui.shopWeek)}${(ui.shopSpan||1)>1?` ${ui.shopSpan}주치`:''} (${mdot(iso(mon))}~${mdot(iso(sun))})`];
- items.forEach(it=>L.push(`${ck(it.name)?'✅':'⬜'} ${it.name}${it.brand?` (${it.brand})`:''} ${it.uses.map(u=>u.a).filter(Boolean).join(' / ')}`.trim()));
- extras.forEach(x=>L.push(`${ck('x'+x.id)?'✅':'⬜'} ${x.name}${x.amount?' '+x.amount:''}`));
+ if(!rows.length)return '';
+ const L=[`🧺 장 봐올 것 (${mdot(iso(mon))}~${mdot(iso(sun))})`,''];
+ rows.forEach(r=>L.push(`• ${r.name}${r.brand?` (${r.brand})`:''}${r.amount?`  ${r.amount}`:''}`));
+ L.push('',`모두 ${rows.length}개 · 우리집 식탁`);
  return L.join('\n')}
+function shopShareOpen(){
+ const rows=shopKeys();
+ if(!rows.length){toast('보낼 목록이 아직 없어요');return}
+ SHOPSEL=new Set(rows.filter(r=>!r.bought).map(r=>r.k));
+ sheet(`<div class="shead"><button class="x icobtn" data-a="shClose" aria-label="닫기">${I.lt}</button><b>장보기 목록 보내기</b></div>
+  <div class="mut" style="margin-bottom:8px">보낼 것만 골라주세요. 고른 것만 정리해서 나갑니다.</div>
+  <div id="ssbody"></div>`);
+ shopShareRender()}
+function shopShareRender(){
+ const el=$('#ssbody');if(!el)return;
+ const rows=shopKeys(), txt=buildShopText(SHOPSEL);
+ el.innerHTML=`<div class="paper">${rows.map(r=>`<button class="sitem ${SHOPSEL.has(r.k)?'':'done'}" data-a="ssTog" data-k="${esc(r.k)}">
+   <span class="cbox">${I.chk}</span>
+   <span class="sb"><span class="snm2">${esc(r.name)}${r.amount?`<span class="need">${esc(r.amount)}</span>`:''}</span>
+    ${r.brand?`<span class="src" style="color:var(--acc)">${esc(r.brand)}</span>`:''}
+    ${r.bought?`<span class="src">이미 산 것</span>`:''}</span></button>`).join('')}</div>
+  <div class="sgrp" style="margin-top:16px">이렇게 나갑니다</div>
+  <div class="paper" style="padding:14px"><div class="mut" style="white-space:pre-wrap;font-size:13px;line-height:1.75;color:var(--ink)">${esc(txt)||'고른 항목이 없어요'}</div></div>
+  <div class="dacts"><button class="btn pri blk" data-a="ssSend">${SHOPSEL.size}개 보내기</button>
+   <button class="btn gho blk" data-a="ssAll">${SHOPSEL.size===rows.length?'전부 해제':'전부 고르기'}</button></div>`}
 function vShop(){
  const {wk,items,extras,ppl,base}=shopData();
  const ck=k=>!!S.checked[wk+'|'+k];
@@ -982,8 +1022,8 @@ function vShop(){
  // 살 것은 위, 산 것은 구분선 아래로 묶어서 (자리 이동 없이 섹션만 분리)
  const all=[...rowArr,...xArr];
  const todo=all.filter(r=>!r.c), bought=all.filter(r=>r.c);
- const rows=todo.map(r=>r.h).join('')
-  + (bought.length&&!ui.hideDone?`<div class="sdiv">구매 리스트 ${bought.length}개</div>`+bought.map(r=>r.h).join(''):'');
+ const rows=(todo.length?`<div class="sdiv">사와야 할 것 ${todo.length}개</div>`:'')+todo.map(r=>r.h).join('')
+  + (bought.length&&!ui.hideDone?`<div class="sdiv">이미 산 것 ${bought.length}개</div>`+bought.map(r=>r.h).join(''):'');
  const xrows='';
  const body = total?`<div class="prog"><div class="pt"><b>${done===total?'장보기 완료!':`살 것 ${total-done}개 남았어요`}</b>
     <span id="pgt">${done} / ${total}</span></div><div class="pbar"><i id="pgb" style="width:${total?Math.round(done/total*100):0}%"></i></div></div>
@@ -991,7 +1031,7 @@ function vShop(){
   :`<div class="empty"><b>이번 주 장 볼 게 아직 없어요</b><p>식단표에 메뉴를 채우면<br>필요한 재료가 여기 자동으로 모여요.</p>
     <button class="btn gho" style="margin-top:14px" data-a="go" data-t="plan">식단표 채우러 가기</button></div>`;
  return `<section class="sec"><div class="sec-h"><div><div class="eyebrow">Grocery List</div><h2>장보기 리스트</h2></div>
-   <button class="chip" data-a="shopShare">목록 보내기</button></div>
+   <button class="chip" data-a="shopShare">장 봐올 것 보내기</button></div>
   ${wknav(ui.shopWeek,'swk',ui.shopSpan||1)}
   <div class="chips" style="margin-bottom:12px">
    <button class="chip on" data-a="pickPeople">${ppl}인 기준</button>
@@ -1514,7 +1554,7 @@ function openVote(){
   <button class="vopt" id="vdeliv" data-a="vdeliv">${phEl(DELIV)}<span class="vnm">배달 찬스 <span class="cooked">치트키</span></span><span class="vck">${I.chk}</span></button>
   ${rows}
   <div class="vcta">
-   ${syncOn?`<button class="btn pri blk" data-a="vstartRemote">가족 폰으로 투표 링크 보내기</button>`:''}
+   ${syncOn?`<button class="btn pri blk" data-a="vstartRemote">가족에게 투표 올리기</button>`:''}
    <button class="btn ${syncOn?'gho':'pri'} blk" data-a="vstart">이 폰 하나로 돌려찍기${S.family.length>=2?` — ${S.family.length}명`:''}</button>
   </div></div>`)}
 function vTurn(){$('#vbody').innerHTML=`<div class="vturn"><div class="vt1">Vote ${V.turn+1} / ${S.family.length}</div>
@@ -1636,7 +1676,12 @@ async function syncInit(){
   if(WANTLOG){shCloseAll();openVisitLog()}
  }catch(e){}
  updateSyncBadge()}
-async function connectAsMember(initial){
+/* 이 폰에 담긴 메뉴·식단·장보기가 어느 집 것인지는 S._home으로 표시해둔다.
+   초대를 타고 다른 집으로 옮기면 옛 집 데이터를 반드시 비워야 한다 —
+   안 그러면 옛 메뉴가 새 집 목록에 남아, 같은 집인데도 폰마다 목록이 달라진다. */
+function resetLocalForHome(){
+ S.menus=[];S.plan={};S.extra={};S.checked={};S._dirty={};S.seq=2;S.today=null;save()}
+async function connectAsMember(initial,justCreated){
  const u=await sb.auth.getUser();const uid_=u.data&&u.data.user&&u.data.user.id;if(!uid_)return false;
  AUTHUSER=u.data.user;
  const {data:mem,error}=await sb.from('members').select('*');
@@ -1649,11 +1694,20 @@ async function connectAsMember(initial){
  HOME=ME.home_id;MEMBERS=mem.filter(x=>x.home_id===HOME);
  syncOn=true;updateSyncBadge();
  const {data:hi}=await sb.from('homes').select('*').eq('id',HOME).maybeSingle();if(hi)HOMEINFO=hi;
- await flushDirty();
- const {count}=await sb.from('menus').select('id',{count:'exact',head:true});
- if(!count&&S.menus.length)await pushLocalAll();   // 서버가 비어있으면 이 폰 데이터(사진 포함) 자동 이관
- else await pullAll();
+
+ if(S._home&&S._home!==HOME)resetLocalForHome();   // 다른 집으로 옮겨왔다 → 폰을 비우고 새 집 것만 받는다
+ // 이 폰의 데이터를 '내 것'으로 볼 수 있는 경우에만 서버로 올린다.
+ // 남의 집에 합류하면서 내 폰 메뉴를 가족 메뉴판에 쏟아붓지 않도록.
+ const ownData=(S._home===HOME)||!!justCreated||(!S._home&&MEMBERS.length<=1);
+ if(ownData)await flushDirty();
+ const {count}=await sb.from('menus').select('id',{count:'exact',head:true}).eq('home_id',HOME);
+ if(!count&&ownData&&S.menus.length)await pushLocalAll();   // 내가 만든 집이 비어 있으면 이 폰 데이터 이관
+ else if(!await pullAll()){
+  toast('가족 데이터를 불러오지 못했어요 — 인터넷을 확인해주세요',4000);
+  return true}                                    // 로그인은 살아 있으니 우리집을 새로 만들면 안 된다
+ S._home=HOME;save();
  subscribeRT();
+ checkOpenVote();
  if(pendingHash&&pendingHash.vote){const v=pendingHash.vote;consumePending();openVoteLive(v)}
  return true}
 
@@ -1682,7 +1736,7 @@ async function autoSetup(){
   if(error)throw error;
   HOMEINFO={id:data[0].home_id,code:data[0].code};
   logVisit('home_new',nm);
-  await connectAsMember(false);
+  await connectAsMember(false,true);   // 내가 방금 만든 집 → 이 폰 데이터를 올려도 된다
   shCloseAll();openWelcome(false);
  }catch(e){toast('시작하지 못했어요 — 인터넷을 확인해주세요')}}
 /* 환영 화면 — 만든 사람에겐 '초대 보내기'가, 합류한 사람에겐 '시작하기'가 큰 버튼이다. */
@@ -1712,7 +1766,7 @@ async function joinFromLink(){
 async function renameMe(n){
  if(!sb||!n||!ME||n===ME.name)return;
  try{const {error}=await sb.rpc('rename_me',{new_name:n});if(error)throw error;
-  ME.name=n;const {data}=await sb.from('members').select('*');if(data)MEMBERS=data;
+  ME.name=n;const {data}=await sb.from('members').select('*').eq('home_id',HOME);if(data)MEMBERS=data;
   updateGreeting()}catch(e){toast('이름을 바꾸지 못했어요')}}
 function shareInvite(){const c=HOMEINFO&&HOMEINFO.code;if(!c){toast('아직 초대 코드가 없어요');return}
  shareText(`'우리집 식탁'에 합류해줘! 링크를 열고 로그인하면 바로 우리집 메뉴판이 보여.`,OT_CONFIG.page+'#join='+c)}
@@ -1742,14 +1796,21 @@ async function oauthLogin(provider){
 /* ── 당겨오기 · 실시간 ── */
 let pullT=null;
 function pullSoon(){clearTimeout(pullT);pullT=setTimeout(()=>pullAll(),400)}
-async function pullAll(){try{
+/* 집 조건(eq home_id)을 반드시 건다.
+   RLS는 "내가 속한 모든 집"을 허용하므로, 두 집 식구인 사람이 조건 없이 읽으면
+   양쪽 메뉴가 합쳐져 온다 — 같은 집인데 폰마다 목록이 다르게 보이던 원인이다. */
+async function pullAll(){if(!HOME)return false;
+ try{
+ const H=HOME;
  const [me,pl,ex,ck,mb]=await Promise.all([
-  sb.from('menus').select('*').eq('deleted',false).order('no'),
-  sb.from('plans').select('*'),
-  sb.from('shopping_extras').select('*'),
-  sb.from('shopping_checked').select('*'),
-  sb.from('members').select('*')]);
+  sb.from('menus').select('*').eq('home_id',H).eq('deleted',false).order('no'),
+  sb.from('plans').select('*').eq('home_id',H),
+  sb.from('shopping_extras').select('*').eq('home_id',H),
+  sb.from('shopping_checked').select('*').eq('home_id',H),
+  sb.from('members').select('*').eq('home_id',H)]);
  if(me.error)throw me.error;
+ if(pl.error||ex.error||ck.error||mb.error)throw (pl.error||ex.error||ck.error||mb.error);
+ if(H!==HOME)return false;   // 받아오는 사이에 집이 바뀌었으면 옛 결과를 덮어쓰지 않는다
  S.menus=(me.data||[]).map(r=>({id:r.id,no:r.no,name:r.name,cat:r.cat||'',rating:r.rating||0,
   cookCount:r.cook_count||0,lastCookedAt:r.last_cooked_at||'',photo:r.photo_url||'',memo:r.memo||'',
   ingredients:r.ingredients||[],steps:r.steps||[],createdAt:r.created_at,updatedAt:r.updated_at}));
@@ -1758,13 +1819,13 @@ async function pullAll(){try{
  S.extra={};(ex.data||[]).forEach(r=>{(S.extra[r.week]=S.extra[r.week]||[]).push({id:r.id,name:r.name,amount:r.amount||''})});
  S.checked={};(ck.data||[]).forEach(r=>{if(r.checked)S.checked[r.week+'|'+r.item_key]=true});
  if(mb.data)MEMBERS=mb.data;
- autoCount();save();updateGreeting();render()}catch(e){}}
+ autoCount();save();updateGreeting();render();return true}catch(e){return false}}
 let RTCH=null;
 function subscribeRT(){if(RTCH||!sb)return;
  RTCH=sb.channel('home-sync');
  ['menus','plans','shopping_extras','shopping_checked','votes','ballots'].forEach(t=>{
   RTCH.on('postgres_changes',{event:'*',schema:'public',table:t},()=>{
-   if(t==='ballots'||t==='votes')refreshVoteLive();
+   if(t==='ballots'||t==='votes'){refreshVoteLive();checkOpenVote()}
    pullSoon()})});
  RTCH.subscribe()}
 window.addEventListener('online',()=>{if(syncOn)flushDirty()});
@@ -1824,7 +1885,7 @@ async function vstartRemote(){V.cands=[...V.sel,...(V.deliv?['DELIV']:[])];
    candidates:V.cands,created_by:ME.id}).select().single();
   if(error)throw error;
   logVisit('vote');
-  shClose();openVoteLive(data.id,true)}
+  shClose();openVoteLive(data.id,true);checkOpenVote()}
  catch(e){toast('투표를 만들지 못했어요 — 인터넷 확인')}}
 async function openVoteLive(id,justCreated){
  if(!syncOn){toast('우리집 계정 연결이 필요해요');return}
@@ -1856,15 +1917,44 @@ async function refreshVoteLive(){
  const opts=closed?'':(v.candidates||[]).map(k=>`<button class="vopt ${my&&my.choice===k?'on':''}" data-a="vlCast" data-k="${k}">
   ${phEl(k==='DELIV'?DELIV:(menu(k)||{name:'?',no:0,photo:''}))}<span class="vnm">${esc(nm(k))}</span>${my&&my.choice===k?'<span class="cooked">내 표</span>':''}</button>`).join('');
  const el=$('#vlive');if(!el)return;
- el.innerHTML=`<div class="vturn" style="padding:8px 0 8px"><div class="vt1">${closed?'Result':'Family Vote'}</div>
+ el.innerHTML=`${closed?'':`<button class="icobtn vshare" data-a="vlShare" aria-label="투표 링크 내보내기" title="아직 안 한 가족에게 링크 보내기">${I.share}</button>`}
+  <div class="vturn" style="padding:8px 0 8px"><div class="vt1">${closed?'Result':'Family Vote'}</div>
   <div class="vt2">오늘 ${MEAL[v.meal]}, 뭐 먹을까?</div>
   <div class="vt3">${ballots.length} / ${MEMBERS.length}명 투표${closed?' · 마감됨':' · 실시간 개표 중'}</div></div>
   ${bars}
   ${opts?`<div style="margin-top:14px">${opts}</div>`:''}
   <div class="dacts">
-   ${!closed?`<button class="btn gho blk" data-a="vlShare">가족에게 투표 링크 보내기</button>`:''}
    ${!closed&&ballots.length?`<button class="btn pri blk" data-a="vlFinish">마감하고 오늘 식단에 반영</button>`:''}
   </div>`}
+/* ── 진행 중인 투표 알림 ──
+   투표를 올리면 가족 폰에 실시간으로 신호가 간다. 앱이 열려 있으면 그 자리에서 토스트가 뜨고,
+   나중에 열어도 홈 맨 위에 배너가 남아 있어 놓치지 않는다. */
+let OPENVOTE=null, VOTESEEN=null;
+async function checkOpenVote(){
+ if(!sb||!HOME||!ME){OPENVOTE=null;return}
+ try{
+  const {data}=await sb.from('votes').select('*').eq('home_id',HOME).eq('status','open')
+   .eq('date',todayISO()).order('created_at',{ascending:false}).limit(1);
+  const v=(data||[])[0]||null;
+  const changed=(v&&v.id)!==(OPENVOTE&&OPENVOTE.id);
+  OPENVOTE=v;
+  if(v){
+   const {data:mine}=await sb.from('ballots').select('vote_id').eq('vote_id',v.id);
+   OPENVOTE.mine=!!(mine||[]).length;
+   const {total}=await tallyOf(v.id,v.candidates);OPENVOTE.total=total;
+   // 남이 올린 새 투표이고 내가 아직 안 찍었으면 한 번 알려준다
+   if(changed&&VOTESEEN!==v.id&&v.created_by!==ME.id&&!OPENVOTE.mine){
+    VOTESEEN=v.id;toast(`오늘 ${MEAL[v.meal]} 뭐 먹을지 투표가 올라왔어요`,3800)}
+  }
+  if(changed||v)render()
+ }catch(e){}}
+function voteBar(){
+ if(!OPENVOTE||ui.peek||S._demo)return '';
+ const v=OPENVOTE, done=v.mine;
+ return `<button class="votebar" data-a="voteOpen"><span class="vbi">🗳</span>
+  <span class="vbt">${done?`오늘 ${MEAL[v.meal]} 투표 진행 중`:`오늘 ${MEAL[v.meal]}, 뭐 먹을지 투표해주세요`}
+   <i>${v.total||0} / ${MEMBERS.length}명 참여${done?' · 내 표 완료':''}</i></span>
+  <span class="vbg">${done?'결과 보기':'투표하기'}</span></button>`}
 async function vlCast(k){try{
  const {error}=await sb.from('ballots').upsert({vote_id:LIVE.id,member_id:ME.id,choice:k});
  if(error)throw error;refreshVoteLive()}
@@ -1877,7 +1967,7 @@ async function vlFinish(){try{
  const win=ws[Math.floor(Math.random()*ws.length)];
  await sb.from('votes').update({status:'closed'}).eq('id',LIVE.id);
  setPlan(v.date,v.meal,win==='DELIV'?'DELIV':win);
- LIVE=null;shCloseAll();go('home');
+ LIVE=null;OPENVOTE=null;shCloseAll();go('home');checkOpenVote();
  toast(win==='DELIV'?`오늘 ${MEAL[v.meal]}은 배달 찬스!`:`오늘 ${MEAL[v.meal]}은 ${menu(win)?menu(win).name:'결정'}!`)}
  catch(e){toast('마감하지 못했어요')}}
 function vlShare(){if(!LIVE)return;
@@ -2050,6 +2140,7 @@ const ACT={
   shCloseAll();toast('이름을 바꿨어요');openSettings()},
  shareInvite:shareInvite,
  vstartRemote:vstartRemote,
+ voteOpen:()=>{if(OPENVOTE)openVoteLive(OPENVOTE.id)},
  vlCast:d=>vlCast(d.k),
  vlFinish:vlFinish,
  vlShare:vlShare,
@@ -2073,7 +2164,13 @@ const ACT={
  qFind:()=>openFind(null,$('#qing')?$('#qing').value:''),
  fdPick:d=>pickProduct(Number(d.i)),
  fdMore:()=>{FINDN=20;renderFind(FINDQ,20)},
- shopShare:()=>shareText(buildShopText())
+ shopShare:()=>shopShareOpen(),
+ ssTog:d=>{SHOPSEL.has(d.k)?SHOPSEL.delete(d.k):SHOPSEL.add(d.k);shopShareRender()},
+ ssAll:()=>{const rows=shopKeys();
+  SHOPSEL=SHOPSEL.size===rows.length?new Set():new Set(rows.map(r=>r.k));shopShareRender()},
+ ssSend:()=>{const t=buildShopText(SHOPSEL);
+  if(!t){toast('보낼 항목을 골라주세요');return}
+  shCloseAll();shareText(t)}
 };
 document.addEventListener('click',e=>{const el=e.target.closest('[data-a]');if(!el)return;
  const a=ACT[el.dataset.a];if(a){e.preventDefault();a(el.dataset,el,e)}});
