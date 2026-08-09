@@ -475,39 +475,57 @@ const sleep=ms=>new Promise(r=>setTimeout(r,ms));
  g('(function(){ui.peek=false;sb=null;render()})()'); await sleep(80);
  g('logVisit("menu_add","테스트")'); await sleep(60);
 
- console.log('\n[19단계] 둘러보기 투어');
- ok(g('TOUR.length')===5,'투어 5단계 정의');
- g('(function(){ui.tab="menus";render();tourStart()})()'); await sleep(200);
- ok(!!q('#tour'),'투어 카드 표시');
- ok(g('ui.tab')==='menus','1단계 → 메뉴판');
- ok(!!byText('#tour h4','우리집 메뉴판'),'1단계: 메뉴 등록');
- click(q('#tour [data-a="tourNext"]')); await sleep(400);
- ok(!!byText('#tour h4','브랜드'),'2단계: 브랜드 제품 검색');
+ console.log('\n[19단계] 둘러보기 — 시나리오대로 직접 해 보인다');
+ await closeAll();
+ g('(function(){ui.peek=true;ui.gate=false})()');
+ await g('tourDemoStart()'); g('render()'); await sleep(150);
+ ok(g('S.menus.length')===0,'빈 상태에서 시작 (원래 있던 것과 안 헷갈리게)');
+ ok(g('Object.keys(S.plan).length')===0,'식단표도 비어 있음');
+ g('tourStart()'); await sleep(300);
+ ok(g('TOUR.length')===6,'6단계 시나리오');
+
+ // ① 메뉴 등록 실연
+ ok(g('ui.tab')==='menus'&&!!q('#f-name'),'① 등록 시트가 실제로 열림');
+ ok(q('#f-name').value==='된장찌개','① 이름이 채워져 있음');
+ ok(qa('#ingRows .irow').length===4,'① 재료 4개도 채워져 있음');
+ ok(!!byText('#tour h4','등록해요'),'① 카드 문구');
+
+ // ② 저장 → 메뉴판에 나타남
+ click(q('#tour [data-a="tourNext"]')); await sleep(350);
+ ok(g('S.menus.length')===1,'② 실제로 등록됨 (설명만 하지 않음)');
+ ok(!!byText('.lrow .lnm','된장찌개'),'② 메뉴판 목록에 보임');
+ ok(g('SHEETS.length')===0,'② 시트는 닫힘');
+
+ // ③ 식단표에 올림
+ click(q('#tour [data-a="tourNext"]')); await sleep(350);
+ ok(g('ui.tab')==='plan','③ 식단표로 이동');
+ ok(g('S.plan[todayISO()]&&S.plan[todayISO()].d')===g('tourMenuId()'),'③ 오늘 저녁에 그 메뉴가 올라감');
+ ok(!!byText('#scr .day.today .snm','된장찌개'),'③ 식단표에 보임');
+
+ // ④ 홈
  click(q('#tour [data-a="tourNext"]')); await sleep(300);
- ok(g('ui.tab')==='home'&&g('SHEETS.length')===0,'3단계 → 홈(시트 정리됨)');
- ok(!!byText('#tour h4','가족끼리'),'3단계: 함께 고르기');
- click(q('#tour [data-a="tourNext"]')); await sleep(200);
- ok(g('ui.tab')==='plan','4단계 → 식단표');
- ok(!!byText('#tour h4','일주일 식단'),'4단계: 주간 식단');
- click(q('#tour [data-a="tourNext"]')); await sleep(200);
- ok(g('ui.tab')==='shop'&&!!byText('#tour h4','장 볼 것'),'5단계 → 장보기(핵심)');
- ok(!!byText('#tour .next','로그인하고 시작하기'),'마지막 단계 CTA');
- ok(!!q('#tour [data-a="tourPrev"]'),'앞 단계로 돌아가는 버튼');
- click(q('#tour [data-a="tourPrev"]')); await sleep(220);
- ok(g('TSTEP')===3&&g('ui.tab')==='plan','이전을 누르면 4단계 식단표로 돌아감');
- click(q('#tour [data-a="tourNext"]')); await sleep(220);
- ok(g('TSTEP')===4,'다시 앞으로도 감');
- ok(!q('#tour [data-a="tourPrev"]')||g('TSTEP')>0,'첫 단계에서는 이전 버튼 없음');
- ok(qa('#tour .tdots i.on').length===1,'진행 점 표시');
- click(q('#tour [data-a="tourEnd"]')); await sleep(150);
- ok(!q('#tour'),'그만 보기 → 카드 제거');
- // 탭 이동해도 되살아나지 않음
- click(byText('.tb','메뉴판')); await sleep(150);
- ok(!q('#tour'),'닫은 뒤에는 다시 안 뜸');
- // 로그인 화면에서는 투어가 보이면 안 됨
- g('(function(){TSTEP=0;ui.gate=true;render()})()'); await sleep(200);
- ok(!q('#tour'),'로그인 화면에선 투어 숨김');
- g('(function(){TSTEP=-1;ui.gate=false;render()})()'); await sleep(150);
+ ok(g('ui.tab')==='home'&&!!byText('#scr .bigt','된장찌개'),'④ 홈 오늘 카드에 그대로 반영');
+
+ // ⑤ 장보기 — 등록한 재료가 저절로
+ click(q('#tour [data-a="tourNext"]')); await sleep(300);
+ ok(g('ui.tab')==='shop','⑤ 장보기로 이동');
+ ['두부','애호박','대파','된장'].forEach(n=>
+   ok(!!byText('#scr .sitem .snm2',n),`⑤ ${n}이(가) 저절로 모임`));
+
+ // ⑥ 내보내기 실연
+ click(q('#tour [data-a="tourNext"]')); await sleep(400);
+ ok(!!byText('.sw .shead b','장보기 목록 보내기'),'⑥ 내보내기 시트가 실제로 열림');
+ ok(!!byText('#tour .next','로그인하고 시작하기'),'⑥ 마지막 CTA');
+ ok(g('TSTEP')===5,'⑥ 마지막 단계');
+
+ // 앞으로 돌아가기
+ click(q('#tour [data-a="tourPrev"]')); await sleep(350);
+ ok(g('TSTEP')===4&&g('ui.tab')==='shop','이전 → ⑤ 장보기로 돌아감');
+ ok(g('SHEETS.length')===0,'돌아가면 열려 있던 시트도 정리됨');
+ click(q('#tour [data-a="tourNext"]')); await sleep(400);
+ ok(g('TSTEP')===5&&!!byText('.sw .shead b','장보기 목록 보내기'),'다시 앞으로 가면 실연도 다시 됨');
+
+ g('tourEnd()'); g('(function(){ui.peek=false;S.menus=[];S.plan={};render()})()'); await closeAll();
 
  console.log('\n[20단계] 접속 로그 (만든 사람용)');
  await closeAll();

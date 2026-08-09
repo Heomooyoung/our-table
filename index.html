@@ -2262,11 +2262,11 @@ const ACT={
  logCopy:()=>{if(!AUTHUSER)return;
   navigator.clipboard.writeText(AUTHUSER.email||AUTHUSER.id).then(()=>toast('복사했어요'),()=>toast('복사가 막혀 있어요 — 길게 눌러 선택해주세요'))},
  startNow:async()=>{logVisit('tour_done');tourEnd();ui.peek=false;await demoOff();ui.gate=true;render()},
- peek:async()=>{ui.gate=false;ui.peek=true;render();await demoOn();tourStart()},
- tourNext:()=>{TSTEP++;tourRender()},
- tourPrev:()=>{if(TSTEP<=0)return;TSTEP--;shCloseAll();setTimeout(tourRender,60)},
+ peek:async()=>{ui.gate=false;ui.peek=true;await tourDemoStart();render();tourStart()},
+ tourNext:()=>{TSTEP++;TDONE=-1;tourRender()},
+ tourPrev:()=>{if(TSTEP<=0)return;TSTEP--;TDONE=-1;shCloseAll();setTimeout(tourRender,80)},
  tourEnd:()=>tourEnd(),
- tourAgain:()=>{shCloseAll();if(!S._demo){ui.peek=true;demoOn().then(tourStart)}else tourStart()},
+ tourAgain:async()=>{shCloseAll();ui.peek=true;await tourDemoStart();render();tourStart()},
  buy:d=>{const u=d.s==='c'?'https://www.coupang.com/np/search?q=':'https://www.kurly.com/search?sword=';
   openUrl(u+encodeURIComponent(d.n))},
  open:d=>openUrl(d.u),
@@ -2325,31 +2325,61 @@ document.addEventListener('change',e=>{if(e.target.id==='impF')importJson(e.targ
     if(g.name===n&&g.brand){b.value=g.brand;break outer}}}});
 
 /* ═══════════ 둘러보기 투어 ═══════════ */
+/* ── 둘러보기 시나리오 ──
+   설명만 늘어놓지 않는다. 메뉴를 실제로 등록하고 → 식단에 올리고 → 장보기에 재료가
+   모이는 것까지 눈앞에서 벌어지게 한다. 이 앱의 값어치는 기능 하나하나가 아니라
+   "한 번 적으면 나머지가 따라온다"는 연결에 있기 때문이다. */
+const DEMO_MENU={name:'된장찌개', cat:'국·찌개', rating:5,
+ ingredients:[{name:'두부',amount:'1모'},{name:'애호박',amount:'1/2개'},
+              {name:'대파',amount:'1대'},{name:'된장',amount:'2큰술'}]};
+function tourMenuId(){const m=S.menus.find(x=>x.name===DEMO_MENU.name);return m?m.id:null}
+function tourAddMenu(){
+ if(tourMenuId())return;
+ const now=new Date().toISOString();
+ S.menus.push({id:'tour-'+uid().slice(0,6),no:S.seq++,name:DEMO_MENU.name,cat:DEMO_MENU.cat,
+  rating:DEMO_MENU.rating,cookCount:0,lastCookedAt:'',createdAt:now,updatedAt:now,
+  photo:'',memo:'',steps:[],
+  ingredients:DEMO_MENU.ingredients.map(g=>Object.assign({brand:'',photo:'',url:''},g))});
+ save()}
+function tourPutPlan(){const id=tourMenuId();if(!id)return;
+ const d=todayISO();(S.plan[d]=S.plan[d]||{}).d=id;save()}   // 서버로 밀지 않는다 — 둘러보기니까
+const TOURACT={
+ // ① 등록 시트를 열고 이름·재료가 채워진 상태를 보여준다
+ form(){shCloseAll();openForm();
+  const n=$('#f-name');if(n)n.value=DEMO_MENU.name;
+  const rows=$('#ingRows');
+  if(rows)rows.innerHTML=DEMO_MENU.ingredients.map(g=>ingRowHTML(g)).join('')},
+ // ② 실제로 등록해서 메뉴판에 나타나게
+ save(){shCloseAll();tourAddMenu();ui.tab='menus';render()},
+ // ③ 등록한 메뉴를 오늘 저녁에 올린다
+ plan(){shCloseAll();tourAddMenu();tourPutPlan();ui.tab='plan';render()},
+ // ⑥ 내보내기 시트를 열어 실제로 나가는 모양을 보여준다
+ share(){shCloseAll();shopShareOpen()}};
 const TOUR=[
- {tab:'menus', t:'맛있었던 건 우리집 메뉴판에',
-  d:'가족이 “이거 맛있다” 한 메뉴를 이름 한 줄로 남겨두세요. 한 번 등록해두면 다음부터는 골라서 식단에 올리기만 하면 돼요. 별점과 해먹은 횟수로 우리집 베스트가 저절로 정해집니다.'},
- {tab:'menus', t:'재료는 브랜드까지 찾아서', demoFind:true,
-  d:'재료를 적고 돋보기를 누르면 실제 판매 중인 제품을 찾아줘요. 고르면 브랜드·사진·구매 링크가 한 번에 채워집니다. “그때 그 빵 어디 거였지?”를 다시 묻지 않아도 돼요.'},
- {tab:'home', t:'못 정하겠으면 가족끼리',
-  d:'오늘 메뉴가 한눈에 보이고, 정하기 어려우면 사다리를 타거나 가족 투표를 돌리세요. 링크를 보내면 각자 폰에서 찍고 실시간으로 개표돼요. 배달 찬스도 후보에 넣을 수 있고요.'},
- {tab:'plan', t:'일주일 식단을 한 번에',
-  d:'메뉴판에서 골라 요일에 넣기만 하면 끝. 여러 날을 한 번에 선택할 수도 있고, 한 달 달력으로 지난 식단을 돌아볼 수도 있어요.'},
- {tab:'shop', t:'핵심 — 장 볼 것이 저절로 모여요', last:true,
-  d:'짜둔 일주일 식단의 재료가 자동으로 합쳐집니다. “간장 4큰술”이 아니라 “간장 1병”처럼 사는 단위로, 우리집 인원수에 맞춰서요. 옆의 쿠팡·컬리 링크를 누르면 그 상품 페이지로 바로 갑니다.'},
+ {tab:'menus', setup:'form', t:'① 맛있었던 건 이렇게 등록해요',
+  d:'이름 한 줄이면 충분해요. 재료까지 적어두면 나중에 장보기가 저절로 모입니다. 지금 된장찌개를 올려볼게요 — <b>다음</b>을 누르면 실제로 등록됩니다.'},
+ {tab:'menus', setup:'save', t:'② 메뉴판에 쌓였습니다',
+  d:'방금 올린 메뉴가 여기 남아요. 하트와 해먹은 횟수가 쌓이면 우리집 베스트가 저절로 정해집니다. 다음부터는 다시 적을 필요 없이 <b>골라 쓰기만</b> 하면 돼요.'},
+ {tab:'plan', setup:'plan', t:'③ 주간 식단표에 올려요',
+  d:'메뉴판에서 골라 요일과 끼니에 넣기만 하면 끝. 방금 등록한 된장찌개를 <b>오늘 저녁</b>에 올렸어요. 여러 날을 한 번에 고를 수도 있습니다.'},
+ {tab:'home', t:'④ 오늘 뭐 먹는지 한눈에',
+  d:'홈을 열면 오늘 메뉴가 크게 보여요. 못 정하겠으면 사다리를 타거나 가족 투표를 올리면 됩니다. 투표를 올리면 가족 폰 첫 화면에 바로 뜨고, 누가 뭘 찍었는지는 아무도 못 봐요.'},
+ {tab:'shop', t:'⑤ 장 볼 것이 저절로 모여요',
+  d:'식단표에 넣은 메뉴의 재료가 여기 자동으로 모입니다. <b>두부 · 애호박 · 대파 · 된장</b> — 장보기 목록을 따로 적은 적이 없는데 이미 만들어져 있죠. 여러 메뉴에 겹치는 재료는 사는 단위로 합쳐줍니다.'},
+ {tab:'shop', setup:'share', last:true, t:'⑥ 골라서 카톡으로 보내면 끝',
+  d:'장 봐올 것만 체크해서 내보내면 이렇게 정리돼 나갑니다. 남편에게 그대로 보내면 <b>“그거 말고”</b> 할 일이 없어요.'},
 ];
-let TSTEP=-1;   // -1 = 투어 꺼짐 (시작 전에는 절대 뜨지 않게)
+let TSTEP=-1, TDONE=-1;   // TSTEP -1 = 투어 꺼짐 / TDONE = 그 단계의 실연을 이미 돌렸나
 function tourRender(){
  const old=$('#tour'); if(old)old.remove();
  if(TSTEP<0||TSTEP>=TOUR.length||ui.gate)return;
  const s0=TOUR[TSTEP];
- if(ui.tab!==s0.tab){ui.tab=s0.tab;render();return tourRender()}
- if(s0.demoFind){ if(!$('#fdbody')){ shCloseAll();
-   setTimeout(()=>{FINDROW=null;FINDQ='화덕브레드';FINDN=8;
-    sheet(`<div id="fdbody"><div class="sec-h" style="margin-top:4px"><div><div class="eyebrow">Find Product</div><h2>화덕브레드</h2></div></div>
-     <div class="empty"><b>찾는 중…</b></div></div>`);
-    renderFind('화덕브레드'); setTimeout(tourRender,60)},60);
-   return } }
- else if(SHEETS.length)shCloseAll();
+ if(ui.tab!==s0.tab){ui.tab=s0.tab;render()}
+ // 이 단계에 실연이 있으면 먼저 돌리고, 시트가 뜬 뒤에 카드를 그린다
+ if(s0.setup&&TDONE!==TSTEP){TDONE=TSTEP;
+  try{TOURACT[s0.setup]()}catch(e){}
+  return setTimeout(tourRender,120)}
+ if(!s0.setup&&SHEETS.length)shCloseAll();
  const el=document.createElement('div');el.className='tour';el.id='tour';
  el.innerHTML=`<div class="tourin">
    <div class="tstep">${TSTEP+1} / ${TOUR.length}</div>
@@ -2361,7 +2391,16 @@ function tourRender(){
     <button class="next ${s0.last?'go':''}" data-a="${s0.last?'startNow':'tourNext'}">${s0.last?'로그인하고 시작하기':'다음'}</button>
    </div></div>`;
  document.body.appendChild(el)}
-function tourStart(){TSTEP=0;tourRender()}
+function tourStart(){TSTEP=0;TDONE=-1;tourRender()}
+/* 둘러보기는 빈 상태에서 시작한다.
+   데모 데이터를 잔뜩 깔아두면 "내가 등록해서 생긴 것"인지 "원래 있던 것"인지 구별이 안 된다.
+   비어 있다가 하나씩 채워지는 걸 봐야 연결이 보인다. 나갈 때 원래 데이터로 되돌린다. */
+async function tourDemoStart(){
+ try{localStorage.setItem('otBackup',JSON.stringify(S))}catch(e){}
+ S=Object.assign(seed(),{menus:[],plan:{},extra:{},checked:{},counted:{},
+   seq:2,family:[],today:null,_demo:true});
+ ui=Object.assign(ui,{tab:'menus',week:0,shopWeek:0,shopSpan:1,q:'',cat:'',sort:'best',shopInit:false});
+ await flush()}
 function tourEnd(){TSTEP=-1;const t=$('#tour');if(t)t.remove()}
 
 /* ═══════════ 데모 데이터 (홍보 촬영용 · #demo 로만 임시 로드) ═══════════ */
