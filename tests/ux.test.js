@@ -170,13 +170,19 @@ const sleep=ms=>new Promise(r=>setTimeout(r,ms));
  w.history.back(); await sleep(250);
  ok(g('SHEETS.length')===0,'브라우저 뒤로가기 → 시트 닫힘');
 
- console.log('\n[11단계] 설정 · 가족 명단');
+ console.log('\n[11단계] 설정 · 우리집 식구');
  click('[data-a="settings"]'); await sleep(80);
  ok(!!byText('.sw .shead b','설정'),'설정 시트');
  ok(!byText('.sw .srow','우리집 계정 연결'),'연결 유도 문구 없음 (로그인이 유일한 입구)');
- click(byText('.sw .srow','가족 명단')); await sleep(80);
- click(qa('.sw [data-a="famDel"]')[0]); await sleep(40);
- ok(g('S.family.length')===1,'가족 삭제 동작');
+ ok(!byText('.sw .srow','가족 명단'),'"가족 명단"과 "우리집 식구"가 따로 있지 않음');
+ ok(!!byText('.sw .srow','우리집 식구'),'구성원은 한 항목으로만 보임');
+ click(byText('.sw .srow','우리집 식구')); await sleep(80);
+ ok(!!byText('.sw .shead b','우리집 식구'),'구성원 시트 열림');
+ const famN=g('famAll().length');
+ ok(qa('.sw #famList .fam').length===famN,`목록에 ${famN}명 표시`);
+ ok(!!byText('.sw','폰이 없는 식구'),'폰 없는 식구를 따로 넣는 자리 안내');
+ click(qa('.sw [data-a="famDel"]')[0]); await sleep(60);
+ ok(g('famAll().length')===famN-1,'이 폰에만 있던 이름은 뺄 수 있음');
  await closeAll();
 
  console.log('\n[12단계] 수정 검증 — 유령 히스토리 · 체크 정렬 · 검색 문구');
@@ -471,11 +477,11 @@ const sleep=ms=>new Promise(r=>setTimeout(r,ms));
  console.log('\n[20단계] 접속 로그 (만든 사람용)');
  await closeAll();
  // 관리자 등록 전 — 읽기가 RLS에 막힌 상황
- g(`(function(){AUTHUSER={id:'11111111-2222-3333-4444-555555555555',is_anonymous:true};
+ g(`(function(){AUTHUSER={id:'11111111-2222-3333-4444-555555555555',email:'me@example.com'};
   sb={from:()=>({select:()=>({order:()=>({limit:async()=>({data:null,error:{message:'denied'}})})})})}})()`);
  g('openVisitLog()'); await sleep(150);
- ok(!!byText('.sw','관리자로 등록되지'),'등록 전 → 안내 화면');
- ok(!!byText('.sw','11111111-2222-3333-4444-555555555555'),'등록에 쓸 내 계정 ID 노출');
+ ok(!!byText('.sw','접속 로그를 볼 수 없어요'),'권한 없으면 안내 화면');
+ ok(!!byText('.sw .obcode','me@example.com'),'등록에 쓸 이메일을 보여줌 (계정을 지웠다 만들어도 유지되게)');
  ok(!!q('[data-a="logCopy"]'),'ID 복사 버튼');
 
  // 관리자 — 실제 로그 화면

@@ -968,7 +968,7 @@ function shopData(){
     e.uses.push({m:m.name,a:g.amount});
     map.set(key,e)})})});
  const extras=(S.extra[wk]||[]);
- const base=Math.max(1,S.people||S.family.length||2), ppl=Math.max(1,ui.people||base), mult=ppl/base;
+ const base=Math.max(1,S.people||famAll().length||2), ppl=Math.max(1,ui.people||base), mult=ppl/base;
  const items=[...map.values()].map(e=>Object.assign(e,{need:buyAmount(e.name,e.sums,mult),ppl,mult}));
  return {wk,items,extras,ppl,base};
 }
@@ -1350,10 +1350,9 @@ function openSettings(){
   <div class="sgrp">우리집</div>
   <div class="slist">
    ${syncOn?srow('가족 초대하기',{value:'링크 보내기',action:'shareInvite'}):''}
-   ${syncOn?srow('우리집 식구',{value:MEMBERS.map(x=>esc(x.name)).join(', ')||'—',chev:false}):''}
+   ${srow('우리집 식구',{value:famAll().map(f=>esc(f.name)).join(', ')||'없음',action:'fam'})}
    ${syncOn?srow('내 이름',{value:ME?esc(ME.name):'—',action:'meRename'}):''}
    ${syncOn?srow('초대 코드',{value:HOMEINFO?HOMEINFO.code:'—',chev:false}):''}
-   ${srow('가족 명단',{value:S.family.length?S.family.length+'명':'없음',action:'fam'})}
   </div>
 
   ${(window.OT_CONFIG&&AUTHUSER)?`<div class="sgrp">계정</div>
@@ -1470,11 +1469,11 @@ async function openVisitLog(){
  const head=`<div class="shead"><button class="x icobtn" data-a="shClose" aria-label="닫기">${I.lt}</button><b>접속 로그</b></div>`;
  if(!rows){   // RLS에 막혔다 = 아직 이 계정이 관리자로 등록되기 전
   sheet(`${head}
-   <div class="mut" style="margin-bottom:12px">아직 이 계정이 관리자로 등록되지 않았어요.<br>
-    아래 ID를 복사해서 Supabase → SQL Editor 에 딱 한 번만 실행하면 됩니다.</div>
-   <div class="obcode" style="font-size:12px;letter-spacing:0;word-break:break-all;padding:14px">${esc(AUTHUSER.id)}</div>
-   <div class="dacts"><button class="btn pri blk" data-a="logCopy">ID 복사하기</button></div>
-   <div class="ghint" style="font-family:var(--mono);font-size:11px">insert into admins (user_id, memo) values ('붙여넣기', '나');</div>`);
+   <div class="mut" style="margin-bottom:12px">이 계정은 접속 로그를 볼 수 없어요.<br>
+    아래 이메일을 관리자로 등록하면 됩니다 (Supabase → SQL Editor 에서 한 번만).</div>
+   <div class="obcode" style="font-size:13px;letter-spacing:0;word-break:break-all;padding:14px">${esc(AUTHUSER.email||AUTHUSER.id)}</div>
+   <div class="dacts"><button class="btn pri blk" data-a="logCopy">복사하기</button></div>
+   <div class="ghint" style="font-family:var(--mono);font-size:11px">insert into admins (email, memo) values ('붙여넣기', '나');</div>`);
   return}
  const by={},today=new Date().toDateString();
  rows.forEach(r=>{(by[r.device]=by[r.device]||[]).push(r)});   // rows는 최신순 → 각 묶음의 [0]이 마지막 방문
@@ -1494,16 +1493,33 @@ async function openVisitLog(){
     ${opens}번 열어봄${ref?` · ${esc(ref)}에서 옴`:''}${last.user_id?'':' · 로그인 전'}</div>
    ${line?`<div style="margin-top:6px">${line}</div>`:'<div class="mut" style="font-size:12px;margin-top:6px">— 열어보기만 하고 아무것도 안 함</div>'}
   </div>`}).join('');
+ // 깔때기 — 열어본 사람 중 몇 명이 로그인까지, 우리집까지, 메뉴 등록까지 갔나
+ const had=e=>devs.filter(v=>v.some(r=>r.event===e)).length;
+ const loggedIn=devs.filter(v=>v.some(r=>r.user_id)).length;
+ const steps=[['열어봄',devs.length],['로그인',loggedIn],
+  ['우리집 생김',had('home_new')+had('join')],['메뉴 등록',had('menu_add')],
+  ['식단 배치',had('plan_set')],['투표',had('vote')]];
+ const funnel=steps.map(([k,n])=>`<div style="display:flex;align-items:center;gap:10px;padding:5px 0">
+   <span style="width:74px;font-size:12.5px;flex:none">${k}</span>
+   <span class="vtrack" style="flex:1"><span class="vfill" style="width:${Math.round(n/Math.max(1,devs.length)*100)}%"></span></span>
+   <span class="mut" style="font-family:var(--mono);font-size:12px;width:26px;text-align:right">${n}</span></div>`).join('');
+ const stuck=devs.filter(v=>!v.some(r=>r.event!=='open')).length;
+ const failed=rows.filter(r=>r.event==='login_fail').length;
  sheet(`${head}
   <div class="sec-h" style="margin-top:0"><div><div class="eyebrow">Visitors</div><h2>들어온 사람들</h2></div>
    <span class="cnt">오늘 ${todayN}명 · 전체 ${devs.length}명</span></div>
+  <div class="paper" style="padding:12px 14px">${funnel}</div>
+  ${(stuck||failed)?`<div class="mut" style="margin:10px 2px 0;font-size:12.5px">
+   ${stuck?`열어보기만 하고 나간 사람 <b>${stuck}명</b>`:''}${(stuck&&failed)?' · ':''}
+   ${failed?`로그인 실패 <b>${failed}건</b>`:''}</div>`:''}
+  <div class="sgrp" style="margin-top:18px">기기별로 무엇을 했나</div>
   <div class="paper" style="padding:2px 14px 8px">${body||'<div class="empty"><b>아직 아무도 안 들어왔어요</b></div>'}</div>
   <div class="ghint">기기 단위로 묶은 기록이에요. 방문 수·유입 경로 통계는 Vercel → Analytics 에서 따로 볼 수 있어요.</div>`)}
 
 /* ── 확인 ── */
 function openRename(){
  sheet(`<div class="sec-h" style="margin-top:4px"><div><div class="eyebrow">Our Table</div><h2>내 이름</h2></div></div>
-  <div class="mut" style="margin-bottom:4px">가족 명단·투표에 이 이름으로 보여요.</div>
+  <div class="mut" style="margin-bottom:4px">우리집 식구 목록과 투표에 이 이름으로 보여요.</div>
   <div class="fld"><label>이름</label><input id="rn-name" class="in" placeholder="예) 엄마 / 아빠 / 하몽" value="${esc(ME?ME.name:'')}" autocomplete="off"></div>
   <div class="dacts"><button class="btn pri blk" data-a="meRenameSave">저장</button></div>`)}
 function openConfirm(msg,yes,fn){CONF=fn;
@@ -1564,7 +1580,7 @@ const DELIV={name:'배달 찬스',no:0,photo:''};
 function vnm(k){return k==='DELIV'?'배달 찬스':(menu(k)?menu(k).name:'?')}
 function openVote(){
  if(S.menus.length<2){toast('메뉴가 2가지는 있어야 투표할 수 있어요');return}
- if(!syncOn&&S.family.length<2){openFamily(true);return}
+ if(!syncOn&&famAll().length<2){openFamily(true);return}
  V={meal:'d',sel:new Set(bestSorted().slice(0,3).map(m=>m.id)),deliv:false};
  const rows=bestSorted().map(m=>`<button class="vopt ${V.sel.has(m.id)?'on':''}" data-a="vsel" data-id="${m.id}">
    ${phEl(m)}<span class="vnm">${esc(m.name)}</span><span class="vck">${I.chk}</span></button>`).join('');
@@ -1575,14 +1591,14 @@ function openVote(){
   ${rows}
   <div class="vcta">
    ${syncOn?`<button class="btn pri blk" data-a="vstartRemote">가족에게 투표 올리기</button>`:''}
-   <button class="btn ${syncOn?'gho':'pri'} blk" data-a="vstart">이 폰 하나로 돌려찍기${S.family.length>=2?` — ${S.family.length}명`:''}</button>
+   <button class="btn ${syncOn?'gho':'pri'} blk" data-a="vstart">이 폰 하나로 돌려찍기${famAll().length>=2?` — ${famAll().length}명`:''}</button>
   </div></div>`)}
-function vTurn(){$('#vbody').innerHTML=`<div class="vturn"><div class="vt1">Vote ${V.turn+1} / ${S.family.length}</div>
-  <div class="vt2">${esc(S.family[V.turn].name)} 차례</div>
+function vTurn(){$('#vbody').innerHTML=`<div class="vturn"><div class="vt1">Vote ${V.turn+1} / ${V.people.length}</div>
+  <div class="vt2">${esc(V.people[V.turn].name)} 차례</div>
   <div class="vt3">폰을 건네받았으면 아래를 눌러주세요.<br>서로 화면은 보지 않기!</div></div>
   <div class="dacts"><button class="btn pri blk" data-a="vballot">투표용지 받기</button></div>`}
 function vBallot(){$('#vbody').innerHTML=`<div class="vturn" style="padding:12px 0 8px"><div class="vt1">Secret Ballot</div>
-  <div class="vt2" style="font-size:19px">${esc(S.family[V.turn].name)} — 오늘 ${MEAL[V.meal]}, 뭐가 좋아요?</div></div>
+  <div class="vt2" style="font-size:19px">${esc(V.people[V.turn].name)} — 오늘 ${MEAL[V.meal]}, 뭐가 좋아요?</div></div>
   <div style="margin-top:10px">${V.cands.map(k=>{const m=k==='DELIV'?DELIV:menu(k);
    return `<button class="vopt" data-a="vcast" data-k="${k}">${phEl(m)}<span class="vnm">${esc(m.name)}</span></button>`}).join('')}</div>`}
 function tallyV(){const cnt={};V.cands.forEach(k=>cnt[k]=0);V.votes.forEach(k=>cnt[k]++);
@@ -1590,7 +1606,7 @@ function tallyV(){const cnt={};V.cands.forEach(k=>cnt[k]=0);V.votes.forEach(k=>c
 function vResult(forced){const {cnt,winners}=tallyV();
  const win=forced||(winners.length===1?winners[0]:null);
  const bars=[...V.cands].sort((a,b)=>cnt[b]-cnt[a]).map(k=>`<div class="vbar ${win===k?'win':''}">
-  <span class="vn">${esc(vnm(k))}</span><span class="vtrack"><span class="vfill" style="width:${Math.round(cnt[k]/S.family.length*100)}%"></span></span>
+  <span class="vn">${esc(vnm(k))}</span><span class="vtrack"><span class="vfill" style="width:${Math.round(cnt[k]/Math.max(1,V.people.length)*100)}%"></span></span>
   <span class="vc">${cnt[k]}</span></div>`).join('');
  $('#vbody').innerHTML=`<div class="vturn" style="padding:12px 0 14px"><div class="vt1">Result</div>
   <div class="vt2">${win?esc(vnm(win)):'동점!'}</div>${win?'':'<div class="vt3">운명에 맡겨볼까요?</div>'}</div>
@@ -1602,15 +1618,33 @@ function vDecide(k){const meal=V.meal;
  if(k==='DELIV'){setPlan(todayISO(),meal,'DELIV');shCloseAll();go('home');toast(`오늘 ${MEAL[meal]}은 배달 찬스!`)}
  else{G.meal=meal;decide(k)}}
 
-/* ── 가족 구성원 ── */
-function famRows(){return S.family.map(f=>`<div class="fam"><b>${esc(f.name)}</b>
- <button class="xbtn" data-a="famDel" data-id="${f.id}" aria-label="빼기">${I.x}</button></div>`).join('')
- ||'<div class="mut" style="padding:8px 2px">아직 아무도 없어요 — 이름을 추가해주세요.</div>'}
-function openFamily(toVote){
- sheet(`<div class="sec-h" style="margin-top:4px"><div><div class="eyebrow">Family</div><h2>우리 식구들</h2></div>
-   <span class="cnt" id="famCnt">${S.family.length}명</span></div>
+/* ── 우리집 식구 ──
+   전에는 '우리집 식구'(로그인해서 합류한 사람)와 '가족 명단'(이 폰에서 돌려찍기용 이름)이
+   설정에 따로 있어서, 이름이 비슷한데 뜻이 달라 헷갈렸다. 이제 한 목록에 같이 보여준다.
+     · 합류함    — 자기 폰으로 로그인해서 들어온 사람. 실시간으로 같이 본다.
+     · 이 폰에서 — 아직 안 들어온 사람. 돌려찍기 투표에서 이름만 쓴다. */
+function famAll(){
+ const joined=(syncOn?MEMBERS:[]).map(m=>({id:'m:'+m.id,name:m.name,joined:true,
+  me:!!(ME&&m.id===ME.id),at:m.created_at}));
+ const local=(S.family||[]).map(f=>({id:f.id,name:f.name,joined:false}));
+ return [...joined,...local]}
+function famRows(){const all=famAll();
+ if(!all.length)return '<div class="mut" style="padding:10px 2px">아직 아무도 없어요.<br>가족에게 초대 링크를 보내주세요.</div>';
+ return all.map(f=>`<div class="fam"><b>${esc(f.name)}${f.me?' <span class="cooked">나</span>':''}</b>
+  ${f.joined?`<span class="mut" style="font-size:11.5px">합류함</span>`
+   :`<span class="mut" style="font-size:11.5px">이 폰에서만</span>
+     <button class="xbtn" data-a="famDel" data-id="${f.id}" aria-label="빼기">${I.x}</button>`}
+  </div>`).join('')}
+function openFamily(toVote){const all=famAll(), joined=all.filter(f=>f.joined).length;
+ sheet(`<div class="shead"><button class="x icobtn" data-a="shClose" aria-label="닫기">${I.lt}</button><b>우리집 식구</b></div>
+  <div class="mut" style="margin-bottom:10px">${joined?`${joined}명이 각자 폰으로 들어와 있어요.`
+    :'아직 아무도 안 들어왔어요.'} 초대 링크를 열고 로그인하면 바로 합류합니다.</div>
   <div class="paper" style="padding:6px 14px" id="famList">${famRows()}</div>
-  <div class="xadd"><input id="famN" placeholder="이름 · 예) 엄마" autocomplete="off">
+  ${syncOn?`<div class="dacts" style="margin-top:14px"><button class="btn pri blk" data-a="shareInvite">가족 초대 링크 보내기</button></div>`:''}
+  <div class="sgrp" style="margin-top:18px">폰이 없는 식구</div>
+  <div class="mut" style="margin-bottom:8px;font-size:12.5px">아이처럼 자기 폰이 없는 식구는 이름만 넣어두면,
+   한 폰을 돌려가며 하는 투표에 같이 참여시킬 수 있어요.</div>
+  <div class="xadd"><input id="famN" placeholder="이름 · 예) 막내" autocomplete="off">
    <button class="btn pri" style="height:42px;padding:0 14px" data-a="famAdd">추가</button></div>
   ${toVote?`<div class="dacts"><button class="btn pri blk" data-a="famDone">저장하고 투표 시작</button></div>
    <div class="ghint">투표는 2명부터 할 수 있어요</div>`:''}`)}
@@ -2060,7 +2094,7 @@ const ACT={
  swk:d=>{ui.shopWeek=d.d==='0'?0:ui.shopWeek+Number(d.d);render()},
  span:d=>{ui.shopSpan=Number(d.n);render()},
  hideDone:()=>{ui.hideDone=!ui.hideDone;render()},
- pickPeople:()=>{const base=Math.max(1,S.people||S.family.length||2);
+ pickPeople:()=>{const base=Math.max(1,S.people||famAll().length||2);
   openPick('몇 명이 먹나요?',[1,2,3,4,5,6,7,8].map(n=>[String(n),n+'인'+(n===base?' (우리집)':'')]),String(ui.people||base),'setPeople')},
  setPeople:d=>{ui.people=Number(d.v);shCloseAll();render()},
  pickHome:()=>openPick('홈에 보이는 끼니',[['d','저녁만'],['all','아침·점심·저녁 모두']],S.homeMeals||'d','setHome'),
@@ -2164,21 +2198,23 @@ const ACT={
   else if(V.sel.size>=4){toast('후보는 4개까지만!')}else{V.sel.add(d.id);el.classList.add('on')}},
  vdeliv:(d,el)=>{V.deliv=!V.deliv;el.classList.toggle('on',V.deliv)},
  vmeal:(d,el)=>{V.meal=d.m;el.parentElement.querySelectorAll('.chip').forEach(c=>c.classList.toggle('on',c.dataset.m===d.m))},
- vstart:()=>{if(S.family.length<2){openFamily(true);return}
+ vstart:()=>{const ppl=famAll();
+  if(ppl.length<2){openFamily(true);return}
   V.cands=[...V.sel,...(V.deliv?['DELIV']:[])];
-  if(V.cands.length<2){toast('후보를 2개 이상 골라주세요');return}V.votes=[];V.turn=0;vTurn()},
+  if(V.cands.length<2){toast('후보를 2개 이상 골라주세요');return}
+  V.people=ppl;V.votes=[];V.turn=0;vTurn()},
  vballot:vBallot,
- vcast:d=>{V.votes.push(d.k);V.turn++;V.turn<S.family.length?vTurn():vResult()},
+ vcast:d=>{V.votes.push(d.k);V.turn++;V.turn<V.people.length?vTurn():vResult()},
  vtie:()=>{const{winners}=tallyV();vResult(winners[Math.floor(Math.random()*winners.length)])},
  vre:()=>{shClose();openVote()},
  vdecide:d=>vDecide(d.k),
  fam:()=>openFamily(false),
  famAdd:()=>{const i=$('#famN'),n=i.value.trim();if(!n){i.focus();return}
   S.family.push({id:uid().slice(0,8),name:n});save();
-  $('#famList').innerHTML=famRows();const c=$('#famCnt');if(c)c.textContent=S.family.length+'명';i.value='';i.focus()},
- famDel:d=>{S.family=S.family.filter(f=>f.id!==d.id);save();
-  $('#famList').innerHTML=famRows();const c=$('#famCnt');if(c)c.textContent=S.family.length+'명'},
- famDone:()=>{if(S.family.length<2){toast('2명은 있어야 투표할 수 있어요');return}shClose();openVote()},
+  $('#famList').innerHTML=famRows();i.value='';i.focus()},
+ famDel:d=>{S.family=(S.family||[]).filter(f=>f.id!==d.id);save();
+  $('#famList').innerHTML=famRows()},
+ famDone:()=>{if(famAll().length<2){toast('2명은 있어야 투표할 수 있어요');return}shClose();openVote()},
  retrySync:async()=>{if(!sb){toast('인터넷 연결 후 가능해요');return}
   const ok=await connectAsMember(false);if(!ok)await autoSetup();
   if(syncOn)toast('가족과 다시 연결됐어요')},
@@ -2200,7 +2236,7 @@ const ACT={
  fbSend:()=>sendFeedback(),
  logOpen:()=>{shCloseAll();openVisitLog()},
  logCopy:()=>{if(!AUTHUSER)return;
-  navigator.clipboard.writeText(AUTHUSER.id).then(()=>toast('복사했어요'),()=>toast('복사가 막혀 있어요 — 길게 눌러 선택해주세요'))},
+  navigator.clipboard.writeText(AUTHUSER.email||AUTHUSER.id).then(()=>toast('복사했어요'),()=>toast('복사가 막혀 있어요 — 길게 눌러 선택해주세요'))},
  startNow:async()=>{logVisit('tour_done');tourEnd();ui.peek=false;await demoOff();ui.gate=true;render()},
  peek:async()=>{ui.gate=false;ui.peek=true;render();await demoOn();tourStart()},
  tourNext:()=>{TSTEP++;tourRender()},
