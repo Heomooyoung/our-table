@@ -17,7 +17,7 @@
 
 - 앱은 빌드 없는 단일 파일 `index.html`. 프레임워크·번들러 없음
 - 서버 변경은 `supabase/schema*.sql`에 남기고, 적용 순서는
-  `schema.sql` → `analytics.sql` → `schema-v2.sql` → `schema-v3.sql`
+  `schema.sql` → `analytics.sql` → `schema-v2.sql` → `schema-v3.sql` → `schema-v4.sql`
 - 배포는 `main`에 push하면 Vercel이 자동으로 한다
 - 화면을 바꿨으면 `npm test`(jsdom UX 테스트)를 돌리고 커밋한다
 - 서비스워커 캐시 이름(`sw.js`의 `V`)은 화면이 바뀔 때마다 올린다.

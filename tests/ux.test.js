@@ -110,10 +110,15 @@ const sleep=ms=>new Promise(r=>setTimeout(r,ms));
  ok(!!g('S.plan[todayISO()]&&S.plan[todayISO()].d'),'식단표 오늘 저녁 기록');
 
  console.log('\n[8단계] 장보기 — 자동 취합 · 체크 · 직접 추가');
- g('(function(){const k=todayISO();delete S.plan[k];save()})()');
+ // 주 2회를 확실히 만든다. 전에는 [4단계]가 남긴 '어제'에 기댔는데,
+ // 오늘이 월요일이면 어제가 지난 주라 합산이 300g으로 나와 요일 따라 실패했다.
+ g('(function(){S.plan={};save()})()');
  click(byText('.tb','식단표')); await sleep(120);
  click(qa('#scr .day.today .slot')[0]); await sleep(120);
  click(byText('.sw .prow .pnm','김치찜').closest('.prow')); await sleep(350);
+ g(`(function(){const mon=weekOf(0),ti=todayISO(),id=S.menus.find(x=>x.name==='김치찜').id;
+   for(let i=0;i<7;i++){const d=new Date(mon);d.setDate(d.getDate()+i);const k=iso(d);
+    if(k!==ti){setPlan(k,'d',id);break}}})()`);
  click(byText('.tb','장보기')); await sleep(150);
  ok(!!byText('#scr .sitem .snm2','돼지고기'),'재료 자동 취합');
  ok(!!byText('#scr .sitem .src','한돈'),'브랜드 표시');
@@ -208,8 +213,9 @@ const sleep=ms=>new Promise(r=>setTimeout(r,ms));
  const n1=preItems.length;
  click(undone[0]); await sleep(160);
  ok(!!q('#scr .sdiv'),'산 것 구분선 표시');
+ // 산 것 섹션 안에 들어 있으면 된다. 맨 끝인지까지 따지면 목록 순서가 조금만 바뀌어도 깨진다
  const doneEl=qa('#scr .sitem.done');
- ok(doneEl.length>=1&&doneEl[doneEl.length-1].querySelector('.snm2').textContent.includes(label.slice(0,2)),'체크한 항목이 산 것 섹션으로');
+ ok(doneEl.some(e=>e.querySelector('.snm2').textContent.trim()===label),'체크한 항목이 산 것 섹션으로');
  click(byText('#scr .chip','구매 완료 숨기기')); await sleep(160);
  ok(qa('#scr .sitem').length<n1,'구매 완료 숨기기 동작');
  click(byText('#scr .chip','구매 완료 보이기')); await sleep(160);
@@ -312,7 +318,8 @@ const sleep=ms=>new Promise(r=>setTimeout(r,ms));
  await closeAll();
 
  console.log('\n[17단계] 이번 피드백 반영 검증');
- // 한글 조합 엔터 중복 방지
+ // 한글 조합 엔터 중복 방지 (앞 단계가 남긴 초안은 비우고 새 폼에서)
+ g('draftClear()');
  click('.fab'); await sleep(80);
  const qi=q('#qing'); qi.value='돼지고기';
  const ev=new w.KeyboardEvent('keydown',{key:'Enter',bubbles:true,cancelable:true});
@@ -325,8 +332,8 @@ const sleep=ms=>new Promise(r=>setTimeout(r,ms));
  // 양 입력칸
  ok(q('#ingRows .iu').value===g('unitFor("돼지고기")'),'재료에 맞는 단위 자동 추천');
  ok(g('unitFor("계란")')==='알'&&g('unitFor("대파")')==='단'&&g('unitFor("간장")')==='큰술'&&g('unitFor("방울토마토")')==='개','단위 추천 규칙');
- // 메모 붙여넣기 제거
- ok(!byText('.sw button','메모 붙여넣기'),'메모 붙여넣기 UI 삭제됨');
+ // 붙여넣기는 등록 폼 안이 아니라 메뉴판에서 따로 들어간다
+ ok(!byText('.sw button','붙여넣'),'등록 폼 안에는 붙여넣기 버튼 없음');
  ok(!byText('.sw .cnt','No.'),'등록번호 표기 삭제됨');
  // 만드는 법: 입력 → 리스트로 분리
  const qs=q('#qstep'); qs.value='빵을 갈라 주세요';
@@ -574,6 +581,173 @@ const sleep=ms=>new Promise(r=>setTimeout(r,ms));
  ok(!!q('[data-a="logOpen"]'),'관리자 설정엔 접속 로그 있음');
  await closeAll();
  g('(function(){ISADMIN=false;AUTHUSER=null;sb=null})()');
+
+ // ══════════ 테스트 피드백 반영분 (2026-08-10) ══════════
+ const reset=async()=>{await closeAll();g('draftClear()');
+  // [19단계]의 둘러보기가 S._demo를 남긴다 — 데모 중엔 초안을 안 남기므로 여기서 턴다
+  g('(function(){S.plan={};S.counted={};delete S._demo;ui.peek=false;ui.q="";ui.cat="";save();render()})()');
+  await sleep(80)};
+
+ console.log('\n[21단계] 재료 칸 — 이름 고치기 · 수량 ± · 단위 시트');
+ await reset();
+ click('.fab'); await sleep(80);
+ q('#qing').value='돼지고기 300g';
+ click('[data-a="qingAdd"]'); await sleep(60);
+ const r21=q('#ingRows .irow');
+ ok(!!r21.querySelector('input.iname'),'재료 이름이 입력칸 (전엔 읽기 전용이라 못 고쳤다)');
+ ok(r21.querySelector('.iname').value==='돼지고기','이름이 채워져 있음');
+ type('#ingRows .iname','앞다리살'); await sleep(60);
+ ok(r21.dataset.name==='앞다리살','이름을 고치면 데이터도 따라감');
+ ok(!q('#ingRows select'),'단위 셀렉트(22줄 휠) 사라짐');
+ ok(r21.querySelector('.iu').value==='g'&&r21.querySelector('.iub').textContent==='g','단위는 감춘 값 + 누르는 버튼');
+ ok(qa('#ingRows .qbtn').length===2,'수량 −/+ 버튼');
+ click(qa('#ingRows .qbtn')[1]); await sleep(40);
+ ok(r21.querySelector('.iqn').value==='350','+ 는 g 단위로 50씩 (301g로 갈 일은 없다)');
+ click(qa('#ingRows .qbtn')[0]); click(qa('#ingRows .qbtn')[0]); await sleep(40);
+ ok(r21.querySelector('.iqn').value==='250','− 도 같은 폭으로');
+ click(q('#ingRows .iub')); await sleep(120);
+ ok(qa('.sw .uchip').length===g('UNITS.length'),'단위 시트에 전체 단위가 칩으로');
+ ok(q('.sw .uchip').textContent===g('unitFor("앞다리살")'),'추천 단위가 맨 앞');
+ click(byText('.sw .uchip','kg')); await sleep(120);
+ ok(r21.querySelector('.iu').value==='kg'&&r21.querySelector('.iub').textContent==='kg','고른 단위 반영');
+ ok(g('SHEETS.length')===1,'단위 시트는 닫히고 폼만 남음');
+ // 만드는 법 단계 삭제 (전엔 closest('.srow')를 찾아 아무 일도 안 일어났다)
+ q('#qstep').value='센 불에 볶기'; click('[data-a="stepAdd"]'); await sleep(60);
+ ok(qa('#stepRows .strow').length===1,'단계 추가');
+ click(q('#stepRows .xbtn')); await sleep(60);
+ ok(qa('#stepRows .strow').length===0,'단계 삭제 버튼이 실제로 지움');
+ type('#f-name','앞다리살볶음');
+ click(byText('.sw button','메뉴판에 올리기')); await sleep(450);
+ const mv=g('S.menus.find(m=>m.name==="앞다리살볶음")');
+ ok(mv&&mv.ingredients[0].name==='앞다리살'&&mv.ingredients[0].amount==='250kg','고친 이름·수량·단위가 그대로 저장됨');
+
+ console.log('\n[22단계] 쓰다 만 메뉴 임시저장');
+ await reset();
+ click('.fab'); await sleep(80);
+ type('#f-name','쓰다만찌개');
+ q('#qing').value='두부'; click('[data-a="qingAdd"]'); await sleep(500);
+ ok(!!g('draftRead()'),'쓰는 동안 초안이 남는다');
+ await closeAll();                                  // 시트를 쓸어내려 닫은 셈
+ ok(!!g('draftRead()'),'닫아도 초안은 살아 있다');
+ click('.fab'); await sleep(120);
+ ok(q('#f-name').value==='쓰다만찌개','다시 열면 이름이 되살아남');
+ ok(qa('#ingRows .irow').length===1&&q('#ingRows .iname').value==='두부','재료도 그대로');
+ ok(!!q('.sw .draftbar [data-a="draftDrop"]'),'"새로 쓰기"로 버릴 수 있음');
+ click(q('.sw [data-a="draftDrop"]')); await sleep(400);
+ ok(q('#f-name').value===''&&qa('#ingRows .irow').length===0,'새로 쓰기 → 빈 폼');
+ ok(!g('draftRead()'),'버린 초안은 사라짐');
+ type('#f-name','임시저장확인');
+ click(byText('.sw button','메뉴판에 올리기')); await sleep(450);
+ ok(!g('draftRead()'),'올리고 나면 초안도 정리됨');
+
+ console.log('\n[23단계] 기존 메뉴로 새로 만들기 (복제)');
+ await reset();
+ click(byText('.tb','메뉴판')); await sleep(120);
+ click(byText('.lrow .lnm','앞다리살볶음').closest('.lmain')); await sleep(120);
+ ok(!!byText('.sw .tbtn','새로 만들기'),'상세에 복제 버튼');
+ click(byText('.sw .tbtn','새로 만들기')); await sleep(400);
+ ok(q('#f-name').value==='앞다리살볶음','이름·내용이 그대로 옮겨옴');
+ ok(qa('#ingRows .irow').length===1,'재료도 옮겨옴');
+ ok(!!byText('.sw .copybar','새 메뉴가 됩니다'),'새 메뉴가 된다고 알려줌');
+ type('#f-name','앞다리살볶음 매운맛');
+ click(byText('.sw button','메뉴판에 올리기')); await sleep(450);
+ ok(!!g('S.menus.find(m=>m.name==="앞다리살볶음")')&&!!g('S.menus.find(m=>m.name==="앞다리살볶음 매운맛")'),
+   '원본은 그대로, 새 메뉴가 하나 더');
+
+ console.log('\n[24단계] 적어둔 레시피 붙여넣어 등록');
+ await reset();
+ click(byText('.tb','메뉴판')); await sleep(120);
+ ok(!!q('#scr [data-a="paste"]'),'메뉴판에 붙여넣기 진입로');
+ click(q('#scr [data-a="paste"]')); await sleep(120);
+ q('#pz').value='간장계란밥\n재료: 계란 2개, 간장 1큰술, 참기름 1작은술\n1. 밥에 계란후라이를 올린다\n2. 간장과 참기름을 두른다';
+ click('[data-a="pzGo"]'); await sleep(450);
+ ok(q('#f-name').value==='간장계란밥','제목 → 메뉴 이름');
+ ok(qa('#ingRows .irow').length===3,'재료 3개로 갈라짐');
+ ok(q('#ingRows .iqn').value==='2'&&q('#ingRows .iu').value==='개','양도 수량·단위로');
+ ok(qa('#stepRows .strow').length===2,'만드는 법 2단계');
+ click(byText('.sw button','메뉴판에 올리기')); await sleep(450);
+ ok(!!g('S.menus.find(m=>m.name==="간장계란밥")'),'붙여넣은 레시피가 메뉴판에 올라감');
+ // 여러 개는 한 번에
+ await reset();
+ g('openPaste()'); await sleep(120);
+ q('#pz').value='미역국\n재료: 미역 20g\n\n계란찜\n재료: 계란 3개';
+ click('[data-a="pzGo"]'); await sleep(200);
+ ok(!!byText('.sw','메뉴 2개를 찾았어요'),'여러 개면 한꺼번에 올릴지 물어봄');
+ click(byText('.sw button','전부 올리기')); await sleep(450);
+ ok(!!g('S.menus.find(m=>m.name==="미역국")')&&!!g('S.menus.find(m=>m.name==="계란찜")'),'둘 다 등록됨');
+
+ console.log('\n[25단계] 한 끼에 여러 메뉴');
+ await reset();
+ const idA=g('S.menus.find(m=>m.name==="미역국").id'), idB=g('S.menus.find(m=>m.name==="계란찜").id');
+ g(`setPlan(todayISO(),'d','${idA}')`);
+ ok(g(`slotIds(todayISO(),'d').length`)===1&&typeof g(`S.plan[todayISO()].d`)==='string',
+   '하나일 땐 문자열 그대로 (옛 데이터·서버와 맞물리게)');
+ g(`addToPlan(todayISO(),'d','${idB}')`);
+ ok(g(`slotIds(todayISO(),'d').length`)===2,'둘째 메뉴가 나란히 들어감');
+ ok(g(`slotLabel(todayISO(),'d')`)==='미역국 · 계란찜','두 이름이 함께 보임');
+ g(`addToPlan(todayISO(),'d','${idB}')`);
+ ok(g(`slotIds(todayISO(),'d').length`)===2,'같은 메뉴를 두 번 넣지는 않음');
+ g(`addToPlan(todayISO(),'d','DELIV')`);
+ ok(g(`slotIds(todayISO(),'d').join()`)==='DELIV','배달 찬스는 다른 메뉴를 밀어냄 (안 해먹는 날이니까)');
+ g(`setPlan(todayISO(),'d',['${idA}','${idB}'])`);
+ click(byText('.tb','식단표')); await sleep(150);
+ ok(!!byText('#scr .day.today .snm','미역국 · 계란찜'),'식단표 한 칸에 둘 다');
+ ok(!!q('#scr .day.today .scnt'),'개수 배지 표시');
+ click(q('#scr .day.today .slot.fill')); await sleep(150);
+ ok(qa('.sw .mrow').length===2,'칸을 누르면 든 메뉴가 목록으로');
+ ok(!!byText('.sw .mlead','메인'),'첫 번째가 메인');
+ ok(!!q('.sw [data-a="slotAdd"]'),'더 넣기 버튼');
+ click(qa('.sw .mrow .xbtn')[1]); await sleep(400);
+ ok(g(`slotIds(todayISO(),'d').length`)===1,'하나를 빼면 하나만 남음');
+ // 장보기도 두 메뉴 재료를 모두 모은다
+ g(`setPlan(todayISO(),'d',['${idA}','${idB}'])`);
+ click(byText('.tb','장보기')); await sleep(180);
+ ok(!!byText('#scr .sitem .snm2','미역')&&!!byText('#scr .sitem .snm2','계란'),'두 메뉴 재료가 함께 모임');
+ // 지난 끼니 자동 집계도 여러 개를 다 센다
+ await reset();
+ g(`(function(){const d=new Date();d.setDate(d.getDate()-1);
+   S.plan[iso(d)]={d:['${idA}','${idB}']};autoCount()})()`);
+ ok(g(`menu('${idA}').cookCount`)>=1&&g(`menu('${idB}').cookCount`)>=1,'한 칸의 메뉴를 모두 집계');
+ const c25=g(`menu('${idA}').cookCount`); g('autoCount()');
+ ok(g(`menu('${idA}').cookCount`)===c25,'다시 돌려도 중복 집계 없음');
+
+ console.log('\n[26단계] 식단표에서 메뉴 찾기');
+ await reset();
+ g(`(function(){const d=new Date();d.setDate(d.getDate()+9);setPlan(iso(d),'d','${idA}');
+   const p=new Date();p.setDate(p.getDate()-5);setPlan(iso(p),'l','${idA}')})()`);
+ click(byText('.tb','식단표')); await sleep(120);
+ click(byText('#scr .chip','메뉴 찾기')); await sleep(150);
+ ok(!!q('.sw #psq'),'찾기 시트');
+ type('#psq','미역'); await sleep(300);
+ ok(qa('.sw .psrow').length===2,'앞으로·지난 것 모두 찾아냄');
+ ok(!!byText('.sw .sgrp','앞으로')&&!!byText('.sw .sgrp','지난'),'앞으로 / 지난 것으로 나눠 보여줌');
+ type('#psq','없는것zzz'); await sleep(300);
+ ok(!!byText('.sw .empty b','식단표에 없어요'),'없으면 없다고');
+ type('#psq','미역'); await sleep(300);
+ const wantWk=g(`(function(){const d=new Date();d.setDate(d.getDate()+9);
+   return Math.round((monday(d)-weekOf(0))/(7*86400000))})()`);
+ click(q('.sw .psrow')); await sleep(400);
+ ok(g('ui.week')===wantWk&&g('ui.tab')==='plan','누르면 그 주 식단표로 건너뜀');
+ g('(function(){ui.week=0})()');
+
+ console.log('\n[27단계] 메뉴 고르기 시트 검색 · 등록하자마자 넣기(서버 반영)');
+ await reset();
+ click(byText('.tb','식단표')); await sleep(120);
+ click(qa('#scr .day.today .slot')[0]); await sleep(150);
+ ok(!!q('.sw #pkq'),'고르기 시트에 검색칸');
+ type('#pkq','계란'); await sleep(120);
+ ok(qa('.sw .prow').length>=1&&qa('.sw .prow').every(e=>e.textContent.includes('계란')),'검색으로 좁혀짐');
+ type('#pkq',''); await sleep(120);
+ // 새로 등록해서 넣기 → setPlan을 거쳐 서버로도 올라가야 한다.
+ // 전에는 S.plan을 직접 건드려서, 곧 이어진 동기화가 그 칸을 지워버렸다.
+ g('(function(){window.__pp=[];syncOn=true;pushPlan=(d,m,v)=>{window.__pp.push([d,m,v]);return Promise.resolve()};pushMenu=()=>Promise.resolve()})()');
+ click(byText('.sw .btn','새 메뉴 만들어서 넣기')); await sleep(150);
+ type('#f-name','즉석등록메뉴');
+ click(byText('.sw button','메뉴판에 올리기')); await sleep(500);
+ ok(!!byText('#scr .day.today .snm','즉석등록메뉴'),'등록하자마자 오늘 저녁에 들어감');
+ ok(g('window.__pp.length')===1,'그 배치가 서버로도 올라감 (안 올라가면 동기화 때 사라진다)');
+ g('(function(){syncOn=false})()');
+ await closeAll();
 
  console.log('\n────────────────────');
  console.log(`결과: ${pass} PASS / ${fail} FAIL`);
